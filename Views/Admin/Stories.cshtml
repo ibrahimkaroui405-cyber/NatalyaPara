@@ -69,20 +69,14 @@
                 </div>
 
                 <!-- Bottom Information -->
-                <div class="relative z-10 space-y-1.5 bg-black/50 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                <div class="relative z-10 space-y-1 bg-black/50 backdrop-blur-md p-4 rounded-2xl border border-white/10">
                     <div class="flex items-center justify-between">
-                        <span class="text-[9px] text-amber-400 font-bold uppercase tracking-widest">Laboratoire @story.BrandName</span>
+                        <span class="text-[9.5px] text-amber-400 font-bold uppercase tracking-widest">Laboratoire @story.BrandName</span>
                         <span class="text-[9px] text-slate-400 font-mono">Ordre: #@story.DisplayOrder</span>
                     </div>
-                    <h3 class="font-editorial text-base font-bold text-white leading-tight">
-                        @story.Title
-                    </h3>
-                    @if (!string.IsNullOrWhiteSpace(story.Description))
-                    {
-                        <p class="text-[11px] text-slate-300 font-light leading-snug line-clamp-2">
-                            @story.Description
-                        </p>
-                    }
+                    <div class="text-xs font-semibold text-white">
+                        Démonstration Soin
+                    </div>
                     <div class="text-[9px] text-slate-400 font-mono pt-1 truncate">
                         Fichier: @story.VideoUrl
                     </div>
@@ -105,11 +99,12 @@
         <form id="storyForm" method="post" enctype="multipart/form-data" class="space-y-4">
             @Html.AntiForgeryToken()
             <input type="hidden" name="Id" id="storyId" value="0" />
+            <input type="hidden" name="Title" id="storyTitle" value="Démonstration Soin" />
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Laboratoire / Marque *</label>
-                    <input type="text" name="BrandName" id="storyBrand" required placeholder="Ex: Eucerin, Avène, SVR..." class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-semibold" />
+                    <input type="text" name="BrandName" id="storyBrand" required placeholder="Ex: Eucerin, ISDIN, Dermedic..." class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-semibold" />
                 </div>
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Badge Tag *</label>
@@ -135,16 +130,6 @@
                 </div>
             </div>
 
-            <div class="space-y-1">
-                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Titre / Soin Démonstré *</label>
-                <input type="text" name="Title" id="storyTitle" required placeholder="Ex: Anti-Pigment Sérum Duo & Hyaluron-Filler" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-bold" />
-            </div>
-
-            <div class="space-y-1">
-                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Description / Bénéfice</label>
-                <textarea name="Description" id="storyDescription" rows="2" placeholder="Réduit visiblement les taches pigmentaires..." class="w-full py-2 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black"></textarea>
-            </div>
-
             <!-- Video File Upload & URL -->
             <div class="space-y-2 pt-2 border-t border-slate-100">
                 <label class="text-xs font-bold text-slate-800 uppercase tracking-wider block">
@@ -166,23 +151,10 @@
                 <input type="text" name="PosterUrl" id="storyPosterUrl" placeholder="Ou URL image poster (ex: https://images.unsplash.com/...)" class="w-full py-2 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-mono text-[11px]" />
             </div>
 
-            <!-- Linked Product & Active -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-                <div class="space-y-1">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Associer à un Produit</label>
-                    <select name="AssociatedProductId" id="storyProduct" class="w-full py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black">
-                        <option value="">-- Aucun --</option>
-                        @foreach (var p in products)
-                        {
-                            <option value="@p.Id">#@p.Id - @p.Name (@p.Brand)</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="flex items-center gap-2 pt-6">
-                    <input type="checkbox" name="IsActive" id="storyIsActive" value="true" checked class="w-4 h-4 rounded text-black focus:ring-black" />
-                    <label for="storyIsActive" class="text-xs font-bold text-slate-800">Afficher immédiatement sur l'accueil</label>
-                </div>
+            <!-- Active Checkbox -->
+            <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                <input type="checkbox" name="IsActive" id="storyIsActive" value="true" checked class="w-4 h-4 rounded text-black focus:ring-black" />
+                <label for="storyIsActive" class="text-xs font-bold text-slate-800">Afficher immédiatement sur l'accueil</label>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
@@ -205,12 +177,10 @@
         document.getElementById('storyBrand').value = "Eucerin";
         document.getElementById('storyBadgeText').value = "Story Dermo";
         document.getElementById('storyBadgeColor').value = "red";
-        document.getElementById('storyTitle').value = "";
-        document.getElementById('storyDescription').value = "";
+        document.getElementById('storyTitle').value = "Démonstration Soin";
         document.getElementById('storyVideoUrl').value = "/videos/v1.mp4";
         document.getElementById('storyPosterUrl').value = "";
         document.getElementById('storyOrder').value = "1";
-        document.getElementById('storyProduct').value = "";
         document.getElementById('storyIsActive').checked = true;
         
         document.getElementById('storyModal').classList.remove('hidden');
@@ -224,12 +194,10 @@
         document.getElementById('storyBrand').value = brand;
         document.getElementById('storyBadgeText').value = badge;
         document.getElementById('storyBadgeColor').value = color || "red";
-        document.getElementById('storyTitle').value = title;
-        document.getElementById('storyDescription').value = desc;
+        document.getElementById('storyTitle').value = "Démonstration Soin";
         document.getElementById('storyVideoUrl').value = videoUrl;
         document.getElementById('storyPosterUrl').value = posterUrl;
         document.getElementById('storyOrder').value = order;
-        document.getElementById('storyProduct').value = prodId ? prodId : "";
         document.getElementById('storyIsActive').checked = isActive;
         
         document.getElementById('storyModal').classList.remove('hidden');

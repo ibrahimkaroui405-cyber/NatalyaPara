@@ -480,24 +480,11 @@
                             </button>
                         </div>
 
-                        <!-- Bottom: Story Title / Product if any -->
-                        @if (!string.IsNullOrWhiteSpace(story.Title) || story.AssociatedProductId.HasValue)
-                        {
-                            <div class="relative z-10 space-y-1 bg-black/40 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 mt-auto">
-                                <div class="text-[9.5px] font-bold uppercase tracking-wider text-amber-300">Laboratoire @story.BrandName</div>
-                                <div class="text-xs font-bold text-white line-clamp-1">@story.Title</div>
-                                @if (story.AssociatedProductId.HasValue && story.AssociatedProductId.Value > 0)
-                                {
-                                    <div class="pt-1.5 flex items-center justify-between">
-                                        <span class="text-[9.5px] text-slate-300">Démonstration Soin</span>
-                                        <button onclick="addToCart(@story.AssociatedProductId.Value, 1)" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-900 text-[9.5px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer">
-                                            <span class="material-symbols-outlined text-xs">shopping_bag</span>
-                                            <span>Panier</span>
-                                        </button>
-                                    </div>
-                                }
-                            </div>
-                        }
+                        <!-- Bottom: Story Lab Name & Démonstration Soin only -->
+                        <div class="relative z-10 bg-black/45 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/10 mt-auto">
+                            <div class="text-[9.5px] font-bold uppercase tracking-wider text-amber-300">Laboratoire @story.BrandName</div>
+                            <div class="text-xs font-medium text-slate-200">Démonstration Soin</div>
+                        </div>
                     </div>
                 }
             </div>

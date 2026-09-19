@@ -920,8 +920,7 @@ namespace PharmaTrust.Controllers
         {
             if (string.IsNullOrWhiteSpace(story.Title))
             {
-                TempData["ErrorMessage"] = "Le titre de la story est obligatoire.";
-                return RedirectToAction(nameof(Stories));
+                story.Title = "Démonstration Soin";
             }
 
             var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
@@ -956,7 +955,7 @@ namespace PharmaTrust.Controllers
             }
 
             _productService.AddStoryReel(story);
-            TempData["SuccessMessage"] = $"La story « {story.Title} » a été ajoutée avec succès !";
+            TempData["SuccessMessage"] = $"La story vidéo « {story.BrandName} » a été ajoutée avec succès !";
             return RedirectToAction(nameof(Stories));
         }
 
@@ -967,8 +966,7 @@ namespace PharmaTrust.Controllers
         {
             if (string.IsNullOrWhiteSpace(story.Title))
             {
-                TempData["ErrorMessage"] = "Le titre de la story est obligatoire.";
-                return RedirectToAction(nameof(Stories));
+                story.Title = "Démonstration Soin";
             }
 
             var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
