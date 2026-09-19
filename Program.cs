@@ -5,10 +5,24 @@ using PharmaTrust.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Ensure App_Data directory exists for SQLite database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=App_Data/natalyapara.db";
-var dbPath = connectionString.Replace("Data Source=", "").Trim();
-var dbDir = Path.GetDirectoryName(dbPath);
+// Ensure absolute path for SQLite database in App_Data
+var contentRoot = builder.Environment.ContentRootPath;
+var defaultDbPath = Path.Combine(contentRoot, "App_Data", "natalyapara.db");
+var rawConn = builder.Configuration.GetConnectionString("DefaultConnection");
+string connectionString;
+if (string.IsNullOrEmpty(rawConn))
+{
+    connectionString = $"Data Source={defaultDbPath}";
+}
+else
+{
+    var rawPath = rawConn.Replace("Data Source=", "").Trim();
+    var fullPath = Path.IsPathRooted(rawPath) ? rawPath : Path.Combine(contentRoot, rawPath);
+    connectionString = $"Data Source={fullPath}";
+}
+
+var dbFilePath = connectionString.Replace("Data Source=", "").Trim();
+var dbDir = Path.GetDirectoryName(dbFilePath);
 if (!string.IsNullOrEmpty(dbDir) && !Directory.Exists(dbDir))
 {
     Directory.CreateDirectory(dbDir);
