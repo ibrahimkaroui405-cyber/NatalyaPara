@@ -53,6 +53,17 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; }
         .font-editorial { font-family: 'Playfair Display', Georgia, serif; }
+        .material-symbols-outlined {
+            font-display: block;
+            width: 1em;
+            height: 1em;
+            overflow: hidden;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+        }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .drawer-custom-scrollbar::-webkit-scrollbar { width: 5px; }
@@ -89,13 +100,13 @@
             <div class="flex items-center gap-2.5 sm:gap-4">
                 <!-- Mobile Menu (Rayons & Catégories) Toggle Button -->
                 <button id="mobileMenuBtn" class="text-[#15803D] hover:bg-emerald-50 w-9 h-9 sm:w-10 sm:h-10 rounded-xl lg:hidden flex items-center justify-center transition-colors border border-emerald-200/90 hover:border-emerald-300 bg-emerald-50/70 shadow-xs" aria-label="Rayons &amp; Catégories" title="Rayons &amp; Catégories">
-                    <span class="material-symbols-outlined text-xl sm:text-2xl">grid_view</span>
+                    <svg class="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24"><path d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
                 </button>
 
                 <!-- Rayons & Catégories Mega Menu (Icon-only Button Before Logo for Desktop) -->
                 <div id="megaMenuWrapper" class="relative group/megamenu hidden lg:block">
                     <button id="megaMenuTriggerBtn" type="button" onclick="toggleMegaMenu(event)" class="w-10 h-10 rounded-xl bg-slate-50/90 hover:bg-emerald-50 text-[#15803D] hover:text-[#166534] border border-slate-200/90 hover:border-emerald-300 flex items-center justify-center transition-all shadow-xs group-hover/megamenu:bg-emerald-50 group-hover/megamenu:border-emerald-300" title="Rayons & Catégories" aria-label="Rayons & Catégories" aria-expanded="false">
-                        <span class="material-symbols-outlined text-xl">grid_view</span>
+                        <svg class="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24"><path d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
                     </button>
 
                     <!-- Seamless Hover Bridge & Dropdown Card -->
@@ -162,8 +173,8 @@
 
                 <!-- Brand Logo (Green Leaf & NATALYA) -->
                 <a class="flex items-center gap-2 sm:gap-2.5 group py-1 select-none" asp-controller="Home" asp-action="Index">
-                    <div class="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-[#15803D] flex items-center justify-center shadow-xs group-hover:scale-105 transition-all duration-300 flex-shrink-0">
-                        <span class="material-symbols-outlined text-lg sm:text-xl lg:text-2xl" style="font-variation-settings: 'FILL' 1;">eco</span>
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-[#15803D] flex items-center justify-center shadow-xs group-hover:scale-105 transition-all duration-300 flex-shrink-0 overflow-hidden">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 fill-[#15803D] shrink-0" viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A9.49 9.49 0 0 0 12 21c6.07 0 10-4.93 10-11V3h-5zm-5 11c-2.45 0-4.6-1.12-6-2.88.94-3.14 3.06-6.14 8-7.12V19z"/></svg>
                     </div>
                     <div class="text-left">
                         <div class="text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-slate-900 block leading-none">
