@@ -1,0 +1,363 @@
+@model PharmaTrust.Models.Order?
+@{
+    ViewData["Title"] = "Suivi de Commande en Temps Réel - Natalya Parapharmacie";
+    string? searchNum = ViewBag.SearchOrderNumber as string;
+    string? searchPhone = ViewBag.SearchPhone as string;
+    var matchingOrders = ViewBag.MatchingOrders as List<PharmaTrust.Models.Order> ?? new();
+    bool hasSearched = !string.IsNullOrWhiteSpace(searchNum) || !string.IsNullOrWhiteSpace(searchPhone);
+
+    int currentStep = 1;
+    if (Model != null)
+    {
+        switch (Model.Status.ToLower())
+        {
+            case "en attente":
+                currentStep = 1;
+                break;
+            case "en préparation":
+                currentStep = 2;
+                break;
+            case "expédiée":
+                currentStep = 3;
+                break;
+            case "livrée":
+                currentStep = 4;
+                break;
+            case "annulée":
+                currentStep = -1;
+                break;
+            default:
+                currentStep = 1;
+                break;
+        }
+    }
+}
+
+<main class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 reveal-up">
+    
+    <!-- Top Breadcrumb & Title -->
+    <div class="max-w-4xl mx-auto mb-8 text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-3 border border-emerald-200">
+            <span class="material-symbols-outlined text-sm text-[#15803D]">local_shipping</span>
+            <span>Espace Client & Traçabilité Officinale</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Suivi de votre <span class="text-[#15803D]">Commande</span>
+        </h1>
+        <p class="text-slate-500 text-xs sm:text-sm font-light mt-2 max-w-lg mx-auto">
+            Consultez en direct l'avancement de la préparation et de l'acheminement de vos soins dermo-cosmétiques.
+        </p>
+    </div>
+
+    <!-- Search Form Card -->
+    <div class="max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm mb-10">
+        <form method="get" asp-controller="Cart" asp-action="TrackOrder" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+                <div class="sm:col-span-6 relative">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Numéro de Commande</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg">receipt_long</span>
+                        <input type="text" name="orderNumber" value="@searchNum" placeholder="Ex: CMD-94281"
+                               class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] transition-all" />
+                    </div>
+                </div>
+
+                <div class="sm:col-span-6 relative">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Ou par Numéro de Téléphone</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg">phone_iphone</span>
+                        <input type="text" name="phone" value="@searchPhone" placeholder="Ex: 06 12 34 56 78"
+                               class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] transition-all" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                <span class="text-[11px] text-slate-400 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">info</span>
+                    Le numéro de commande vous a été communiqué lors de la validation.
+                </span>
+                <button type="submit" class="w-full sm:w-auto px-7 py-3 bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-base">search</span>
+                    <span>Rechercher la Commande</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- If multiple orders found for phone, show switcher -->
+    @if (matchingOrders.Count > 1)
+    {
+        <div class="max-w-3xl mx-auto mb-8 bg-emerald-50/60 border border-emerald-200 rounded-2xl p-4 sm:p-5">
+            <div class="text-xs font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm text-[#15803D]">folder</span>
+                <span>Plusieurs commandes trouvées pour vos coordonnées (@matchingOrders.Count commandes) :</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                @foreach (var ord in matchingOrders)
+                {
+                    bool isCurrent = Model?.OrderNumber == ord.OrderNumber;
+                    <a asp-controller="Cart" asp-action="TrackOrder" asp-route-orderNumber="@ord.OrderNumber"
+                       class="p-3 rounded-xl border @(isCurrent ? "bg-[#15803D] text-white border-[#15803D]" : "bg-white text-slate-800 border-slate-200 hover:border-emerald-300") transition-all text-left shadow-2xs">
+                        <div class="font-mono font-bold text-xs">@ord.OrderNumber</div>
+                        <div class="text-[11px] opacity-80 mt-0.5">@ord.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
+                        <div class="text-[11px] font-semibold mt-1">@ord.TotalAmount.ToString("F2") DT &bull; @ord.Status</div>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- ORDER DETAILS DISPLAY -->
+    @if (Model != null)
+    {
+        <div class="max-w-3xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-10">
+            
+            <!-- Order Header Ribbon -->
+            <div class="p-6 sm:p-8 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <div class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Détails de la Commande</div>
+                    <h2 class="text-2xl font-mono font-extrabold text-white flex items-center gap-2">
+                        @Model.OrderNumber
+                    </h2>
+                    <div class="text-xs text-slate-300 mt-1 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-xs text-emerald-400">calendar_today</span>
+                        <span>Passée le @Model.OrderDate.ToString("dd MMMM yyyy à HH:mm")</span>
+                    </div>
+                </div>
+
+                <!-- Status Pill -->
+                <div class="self-start sm:self-center">
+                    @if (Model.Status == "Livrée")
+                    {
+                        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-xs font-bold uppercase tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            Commande Livrée
+                        </span>
+                    }
+                    else if (Model.Status == "Expédiée")
+                    {
+                        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-400/40 text-xs font-bold uppercase tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+                            Colis en Cours de Livraison
+                        </span>
+                    }
+                    else if (Model.Status == "En préparation")
+                    {
+                        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-400/40 text-xs font-bold uppercase tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                            Préparation en Pharmacie
+                        </span>
+                    }
+                    else if (Model.Status == "Annulée")
+                    {
+                        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/20 text-red-300 border border-red-400/40 text-xs font-bold uppercase tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                            Commande Annulée
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/40 text-xs font-bold uppercase tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                            En Attente de Confirmation
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <!-- STEPPER PROGRESS BAR (4 Steps) -->
+            @if (currentStep > 0)
+            {
+                <div class="p-6 sm:p-8 bg-slate-50 border-b border-slate-200">
+                    <div class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-6 flex items-center justify-between">
+                        <span>Progression de la Commande</span>
+                        <span class="text-[#15803D] font-bold">Étape @currentStep sur 4</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 relative">
+                        
+                        <!-- Step 1 -->
+                        <div class="flex flex-col items-center text-center relative z-10">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs @(currentStep >= 1 ? "bg-[#15803D] text-white shadow-sm" : "bg-slate-200 text-slate-500") mb-2">
+                                <span class="material-symbols-outlined text-lg">check</span>
+                            </div>
+                            <span class="text-[11px] font-bold @(currentStep >= 1 ? "text-slate-900" : "text-slate-400")">1. Validée</span>
+                            <span class="text-[10px] text-slate-500">Commande reçue</span>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="flex flex-col items-center text-center relative z-10">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs @(currentStep >= 2 ? "bg-[#15803D] text-white shadow-sm" : "bg-slate-200 text-slate-500") mb-2">
+                                <span class="material-symbols-outlined text-lg">medication</span>
+                            </div>
+                            <span class="text-[11px] font-bold @(currentStep >= 2 ? "text-slate-900" : "text-slate-400")">2. Préparation</span>
+                            <span class="text-[10px] text-slate-500">Contrôle officinal</span>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="flex flex-col items-center text-center relative z-10">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs @(currentStep >= 3 ? "bg-[#15803D] text-white shadow-sm" : "bg-slate-200 text-slate-500") mb-2">
+                                <span class="material-symbols-outlined text-lg">local_shipping</span>
+                            </div>
+                            <span class="text-[11px] font-bold @(currentStep >= 3 ? "text-slate-900" : "text-slate-400")">3. Expédition</span>
+                            <span class="text-[10px] text-slate-500">Remis au livreur</span>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="flex flex-col items-center text-center relative z-10">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs @(currentStep >= 4 ? "bg-[#15803D] text-white shadow-sm" : "bg-slate-200 text-slate-500") mb-2">
+                                <span class="material-symbols-outlined text-lg">home</span>
+                            </div>
+                            <span class="text-[11px] font-bold @(currentStep >= 4 ? "text-slate-900" : "text-slate-400")">4. Livrée</span>
+                            <span class="text-[10px] text-slate-500">Paiement espèces</span>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="p-6 bg-red-50 border-b border-red-200 flex items-center gap-3 text-red-700 text-xs">
+                    <span class="material-symbols-outlined text-xl text-red-600">cancel</span>
+                    <div>
+                        <strong class="font-bold">Cette commande a été annulée.</strong>
+                        <p class="text-[11px] text-red-600 font-light mt-0.5">Le stock réservé a été réintégré et aucun paiement n'est dû.</p>
+                    </div>
+                </div>
+            }
+
+            <!-- Body: Items and Delivery Info -->
+            <div class="p-6 sm:p-8 space-y-6">
+                
+                <!-- Client & Delivery Information -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm text-[#15803D]">person</span>
+                            <span>Destinataire</span>
+                        </div>
+                        <div class="font-bold text-slate-900 text-xs sm:text-sm">@Model.CustomerName</div>
+                        <div class="text-xs text-slate-600 mt-1 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">call</span>
+                            <span>@Model.Phone</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.Email))
+                        {
+                            <div class="text-xs text-slate-600 mt-0.5 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">mail</span>
+                                <span>@Model.Email</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm text-[#15803D]">location_on</span>
+                            <span>Adresse de Livraison</span>
+                        </div>
+                        <div class="font-bold text-slate-900 text-xs">@Model.Address</div>
+                        <div class="text-xs text-slate-600 mt-1">@Model.PostalCode @Model.City, Tunisie</div>
+                        <div class="text-[11px] text-emerald-800 font-bold mt-2 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">payments</span>
+                            <span>@Model.PaymentMethod</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products in Order -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Soins Commandés (@Model.Items.Count)</h3>
+                    <div class="border border-slate-200 rounded-2xl divide-y divide-slate-100 overflow-hidden">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="p-4 flex items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+                                        <img src="@item.ImageUrl" alt="@item.ProductName" class="w-full h-full object-cover rounded-lg" onerror="this.src='/images/placeholder.jpg'" />
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="text-[9px] uppercase font-bold text-slate-400">@item.Brand</div>
+                                        <div class="text-xs font-bold text-slate-900 truncate">@item.ProductName</div>
+                                        <div class="text-[11px] text-slate-500">Quantité : @item.Quantity &bull; @item.UnitPrice.ToString("F2") DT / unité</div>
+                                    </div>
+                                </div>
+                                <div class="text-right flex-shrink-0 font-bold text-slate-900 text-xs sm:text-sm">
+                                    @item.Subtotal.ToString("F2") DT
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Totals Summary -->
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2 text-xs">
+                    <div class="flex justify-between items-center text-slate-600">
+                        <span>Sous-total soins :</span>
+                        <span class="font-medium">@Model.Subtotal.ToString("F2") DT</span>
+                    </div>
+                    <div class="flex justify-between items-center text-slate-600">
+                        <span>Frais de livraison :</span>
+                        <span class="font-bold text-[#15803D]">@(Model.ShippingFee == 0 ? "Gratuite (Offerte)" : $"{Model.ShippingFee:F2} DT")</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-200 text-sm font-bold text-slate-900">
+                        <span>Montant Total à régler au livreur :</span>
+                        <span class="text-base text-[#15803D]">@Model.TotalAmount.ToString("F2") DT</span>
+                    </div>
+                </div>
+
+                <!-- Need assistance -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                    <a asp-controller="Home" asp-action="Index" class="text-xs font-bold text-slate-700 hover:text-[#15803D] flex items-center gap-1.5 transition-colors">
+                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+                        <span>Retour à la Boutique</span>
+                    </a>
+                    <button type="button" onclick="window.print()" class="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-2xs flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">print</span>
+                        <span>Imprimer le Récapitulatif</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    else if (hasSearched)
+    {
+        <!-- NOT FOUND STATE -->
+        <div class="max-w-xl mx-auto bg-white p-8 rounded-3xl border border-red-200 text-center shadow-sm">
+            <div class="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-4 border border-red-100">
+                <span class="material-symbols-outlined text-3xl">search_off</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Aucune commande trouvée</h3>
+            <p class="text-xs text-slate-500 font-light leading-relaxed mb-6">
+                Aucune commande ne correspond aux critères saisis (@(searchNum ?? searchPhone)). Veuillez vérifier le numéro au format <strong>CMD-XXXXX</strong> ou saisir le numéro de téléphone utilisé lors de la commande.
+            </p>
+            <a asp-controller="Cart" asp-action="TrackOrder" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-black text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all">
+                <span>Nouvelle Recherche</span>
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- DEFAULT HELPFUL GUIDE -->
+        <div class="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-[#15803D] flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-xl">mark_email_read</span>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-900">Numéro de Commande</h4>
+                    <p class="text-[11px] text-slate-500 font-light mt-0.5">Retrouvez votre référence au format <strong>CMD-XXXXX</strong> affichée lors de la confirmation.</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-xl">support_agent</span>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-900">Assistance Officine</h4>
+                    <p class="text-[11px] text-slate-500 font-light mt-0.5">Notre équipe pharmaceutique est à votre écoute au <strong>+216 73 000 000</strong>.</p>
+                </div>
+            </div>
+        </div>
+    }
+</main>

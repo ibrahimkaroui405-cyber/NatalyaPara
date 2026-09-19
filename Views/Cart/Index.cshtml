@@ -1,0 +1,160 @@
+@model PharmaTrust.Models.Cart
+@{
+    ViewData["Title"] = "Mon Panier - Natalya Paris";
+    decimal freeShippingThreshold = 49.00m;
+    decimal amountLeftForFreeShipping = Math.Max(0, freeShippingThreshold - Model.Subtotal);
+    decimal progressPercent = Math.Min(100, (Model.Subtotal / freeShippingThreshold) * 100);
+}
+
+<main class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 reveal-up">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8 border-b border-emerald-100 pb-4">
+        <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[9.5px] font-bold uppercase tracking-wider mb-1.5 border border-emerald-200">
+                <span class="material-symbols-outlined text-xs text-[#15803D]">shopping_basket</span>
+                <span>Votre Panier Officinal</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl text-slate-900 font-extrabold tracking-tight">
+                Panier &amp; <span class="text-[#15803D]">Commande</span>
+            </h1>
+        </div>
+        <a asp-controller="Products" asp-action="Index" class="text-slate-700 hover:text-[#15803D] font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors">
+            <span class="material-symbols-outlined text-xs">arrow_back</span> Poursuivre mes achats
+        </a>
+    </div>
+
+    @if (Model.Items.Any())
+    {
+        <!-- Free Shipping Progress Bar -->
+        <div class="bg-white border border-emerald-100 rounded-2xl p-4 sm:p-5 mb-8 shadow-sm">
+            <div class="flex items-center justify-between text-xs mb-2.5">
+                <span class="font-medium text-slate-700">
+                    @if (amountLeftForFreeShipping > 0)
+                    {
+                        <span>Plus que <strong class="text-[#15803D] font-bold">@amountLeftForFreeShipping.ToString("F2") Dinar</strong> pour bénéficier de la <strong class="text-slate-900">Livraison Gratuite</strong></span>
+                    }
+                    else
+                    {
+                        <span class="text-[#15803D] font-bold flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-base text-[#15803D]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                            Félicitations ! Vous bénéficiez de la Livraison Gratuite.
+                        </span>
+                    }
+                </span>
+                <span class="font-bold text-emerald-700 text-[11px] bg-emerald-50 px-2 py-0.5 rounded-md">Seuil : 49,00 Dinar</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                <div class="bg-gradient-to-r from-emerald-500 to-[#15803D] h-full rounded-full transition-all duration-500" style="width: @progressPercent%"></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Cart Items List -->
+            <div class="lg:col-span-8 space-y-4">
+                @foreach (var item in Model.Items)
+                {
+                    <div id="cart-row-@item.Product.Id" class="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-5 shadow-sm hover:border-emerald-500/80 transition-all">
+                        <div class="w-20 h-20 rounded-xl bg-slate-50 overflow-hidden border border-slate-100 flex-shrink-0 flex items-center justify-center p-2">
+                            <img src="@item.Product.ImageUrl" alt="@item.Product.Name" class="w-full h-full object-cover rounded-lg" />
+                        </div>
+                        
+                        <div class="flex-1 w-full text-center sm:text-left">
+                            <div class="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                                @if (item.Product.RxRequired)
+                                {
+                                    <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] px-2 py-0.5 rounded font-bold uppercase">Sur Ordonnance</span>
+                                }
+                                <span class="text-[9.5px] text-emerald-700 font-bold uppercase tracking-widest">@item.Product.Brand</span>
+                            </div>
+                            <a asp-controller="Products" asp-action="Details" asp-route-id="@item.Product.Id" class="text-base font-bold text-slate-900 hover:text-[#15803D] transition-colors line-clamp-1">
+                                @item.Product.Name
+                            </a>
+                            <div class="text-[#15803D] font-bold text-sm mt-1">
+                                @item.Product.Price.ToString("F2") Dinar
+                            </div>
+                        </div>
+
+                        <!-- Quantity Selector & Actions -->
+                        <div class="flex items-center justify-between sm:justify-end gap-5 w-full sm:w-auto">
+                            <div class="flex items-center border border-slate-200 rounded-xl h-10 bg-slate-50 px-1">
+                                <button onclick="updateCartQty(@item.Product.Id, @(item.Quantity - 1))" class="w-8 h-8 text-slate-600 hover:bg-white rounded-lg transition-colors flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-sm">remove</span>
+                                </button>
+                                <span class="font-bold text-slate-900 text-xs px-3">@item.Quantity</span>
+                                <button onclick="updateCartQty(@item.Product.Id, @(item.Quantity + 1))" class="w-8 h-8 text-slate-600 hover:bg-white rounded-lg transition-colors flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                </button>
+                            </div>
+
+                            <div class="text-base font-bold text-slate-900 min-w-[75px] text-right">
+                                @item.Subtotal.ToString("F2") Dinar
+                            </div>
+
+                            <button onclick="removeFromCart(@item.Product.Id)" title="Supprimer l'article" class="text-slate-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50">
+                                <span class="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Order Summary Sidebar -->
+            <div class="lg:col-span-4">
+                <div class="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5 sticky top-28">
+                    <h3 class="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3">
+                        Récapitulatif
+                    </h3>
+
+                    <div class="space-y-3 text-xs text-slate-600 font-light">
+                        <div class="flex justify-between">
+                            <span>Sous-total (@Model.TotalItems soins)</span>
+                            <span class="font-bold text-slate-900" id="summarySubtotal">@Model.Subtotal.ToString("F2") Dinar</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>Livraison</span>
+                            <span class="font-bold text-emerald-700" id="summaryShipping">
+                                @(Model.ShippingFee == 0 ? "GRATUITE" : $"{Model.ShippingFee:F2} Dinar")
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-4 flex justify-between items-baseline">
+                        <span class="font-bold text-slate-900 text-base">Total TTC</span>
+                        <span class="text-2xl text-[#15803D] font-extrabold" id="summaryTotal">@Model.GrandTotal.ToString("F2") Dinar</span>
+                    </div>
+
+                    <!-- Promo Code Input -->
+                    <div class="flex gap-2 pt-1">
+                        <input type="text" placeholder="Code privilège..." class="flex-1 px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#15803D]" />
+                        <button class="px-4 py-2.5 bg-emerald-50 hover:bg-[#15803D] hover:text-white border border-emerald-200 text-[#15803D] font-bold text-xs uppercase tracking-wider rounded-xl transition-all">Appliquer</button>
+                    </div>
+
+                    <a asp-controller="Cart" asp-action="Checkout" class="w-full py-4 bg-[#15803D] hover:bg-[#166534] text-white text-xs uppercase tracking-[0.18em] font-bold rounded-xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all">
+                        <span>Valider ma Commande</span>
+                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                    </a>
+
+                    <div class="pt-2 text-center text-[10px] text-slate-400 flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-[#15803D]">verified_user</span>
+                        <span>Officine Sousse, Enfidha &bull; Paiement Sécurisé &bull; Traçabilité 100%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bg-white p-12 rounded-3xl border border-emerald-100 text-center py-16 shadow-sm max-w-lg mx-auto">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-[#15803D] flex items-center justify-center mx-auto mb-4 border border-emerald-200">
+                <span class="material-symbols-outlined text-3xl">shopping_bag</span>
+            </div>
+            <h3 class="text-2xl text-slate-900 font-bold mb-2">Votre Panier est Vide</h3>
+            <p class="text-xs text-slate-500 mb-6 font-light leading-relaxed">
+                Explorez notre catalogue certifié de vitamines pures et soins dermo-cosmétiques.
+            </p>
+            <a asp-controller="Products" asp-action="Index" class="inline-flex items-center gap-2 px-8 py-3.5 bg-[#15803D] text-white text-xs font-bold uppercase tracking-[0.18em] rounded-xl hover:bg-[#166534] transition-all shadow-md">
+                Découvrir la Boutique <span class="material-symbols-outlined text-xs">arrow_forward</span>
+            </a>
+        </div>
+    }
+</main>

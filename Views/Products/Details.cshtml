@@ -1,0 +1,201 @@
+@model PharmaTrust.Models.Product
+@{
+    ViewData["Title"] = $"{Model.Name} - Soin d'Exception Natalya Paris";
+    var relatedProducts = ViewData["RelatedProducts"] as List<PharmaTrust.Models.Product> ?? new List<PharmaTrust.Models.Product>();
+}
+
+<main class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 reveal-up">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-xs text-slate-400 mb-6 select-none">
+        <a class="hover:text-[#15803D] transition-colors flex items-center gap-1" asp-controller="Home" asp-action="Index">
+            <span class="material-symbols-outlined text-sm">home</span>
+            Accueil
+        </a>
+        <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
+        <a class="hover:text-[#15803D] transition-colors" asp-controller="Products" asp-action="Index" asp-route-category="@Model.CategorySlug">@Model.CategoryName</a>
+        <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
+        <span class="text-emerald-800 font-bold line-clamp-1">@Model.Name</span>
+    </nav>
+
+    <!-- Product Hero Section -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-10 mb-16">
+        <!-- Image Showcase -->
+        <div class="md:col-span-6 lg:col-span-5 bg-white rounded-3xl border border-slate-200/90 p-6 md:p-8 flex flex-col items-center justify-center relative shadow-sm">
+            <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
+                @if (!Model.InStock)
+                {
+                    <span class="bg-slate-800 text-white text-[10px] px-3 py-1 rounded-full flex items-center gap-1 font-bold uppercase tracking-wider shadow-md">
+                        <span class="material-symbols-outlined text-xs">block</span>
+                        Rupture de Stock
+                    </span>
+                }
+                else if (Model.StockQuantity <= 3)
+                {
+                    <span class="bg-amber-100 text-amber-950 border border-amber-300 text-[10px] px-3 py-1 rounded-full flex items-center gap-1 font-bold uppercase tracking-wider shadow-sm animate-pulse">
+                        <span class="material-symbols-outlined text-xs">warning</span>
+                        Plus que @Model.StockQuantity en stock !
+                    </span>
+                }
+                else if (Model.RxRequired)
+                {
+                    <span class="bg-white text-emerald-900 border border-emerald-300 text-[10px] px-3 py-1 rounded-full flex items-center gap-1 font-bold uppercase tracking-wider shadow-sm">
+                        <span class="material-symbols-outlined text-xs">verified</span>
+                        Sur Ordonnance
+                    </span>
+                }
+                else
+                {
+                    <span class="bg-[#15803D] text-white text-[10px] px-3 py-1 rounded-full flex items-center gap-1 font-bold uppercase tracking-wider shadow-sm">
+                        <span class="material-symbols-outlined text-xs">verified</span>
+                        En Stock Officine (@Model.StockQuantity unités)
+                    </span>
+                }
+            </div>
+            <div class="w-full aspect-square rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center p-4">
+                <img class="w-full h-full object-cover rounded-xl @(!Model.InStock ? "grayscale-[60%]" : "")" src="@Model.ImageUrl" alt="@Model.Name" />
+            </div>
+        </div>
+
+        <!-- Product Info & Purchase -->
+        <div class="md:col-span-6 lg:col-span-7 flex flex-col justify-center">
+            <div class="flex items-center gap-3 mb-3">
+                <a asp-controller="Products" asp-action="Index" asp-route-brand="@Model.Brand" class="bg-emerald-50 border border-emerald-200 text-[#15803D] hover:bg-emerald-100 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1 rounded-full transition-colors">
+                    @Model.Brand
+                </a>
+            </div>
+
+            <h1 class="text-3xl sm:text-4xl text-slate-900 mb-3 font-extrabold tracking-tight leading-tight">
+                @Model.Name
+            </h1>
+
+            <p class="text-sm text-slate-500 mb-6 font-light leading-relaxed max-w-xl">
+                @Model.ShortDescription
+            </p>
+
+            <div class="text-2xl sm:text-3xl text-slate-900 mb-6 font-bold flex items-baseline gap-3">
+                <span class="text-[#15803D]">@Model.Price.ToString("F2") Dinar</span>
+                @if (Model.OriginalPrice.HasValue && Model.OriginalPrice.Value > Model.Price)
+                {
+                    <span class="text-base text-slate-400 line-through font-light">@Model.OriginalPrice.Value.ToString("F2") Dinar</span>
+                }
+                <span class="text-xs text-slate-400 font-normal ml-2">TVA incluse &bull; Officine Sousse, Enfidha</span>
+            </div>
+
+            <!-- Purchase Box -->
+            <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-sm mb-6">
+                @if (Model.InStock)
+                {
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                        <!-- Quantity Selector -->
+                        <div class="flex items-center justify-between border border-slate-200 rounded-xl h-12 w-full sm:w-36 bg-slate-50 px-2">
+                            <button type="button" id="btnDecreaseQty" class="w-8 h-8 text-slate-600 hover:bg-white rounded-lg transition-colors flex items-center justify-center">
+                                <span class="material-symbols-outlined text-sm">remove</span>
+                            </button>
+                            <input type="number" id="detailQty" value="1" min="1" max="@Model.StockQuantity" readonly class="font-bold text-slate-900 w-10 text-center bg-transparent border-0 focus:outline-none text-sm" />
+                            <button type="button" id="btnIncreaseQty" class="w-8 h-8 text-slate-600 hover:bg-white rounded-lg transition-colors flex items-center justify-center">
+                                <span class="material-symbols-outlined text-sm">add</span>
+                            </button>
+                        </div>
+
+                        <!-- Action Buttons in Green Parapharmacie Identity -->
+                        <button type="button" onclick="addToCart(@Model.Id, parseInt(document.getElementById('detailQty').value))" class="h-12 flex-1 bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold uppercase tracking-[0.15em] rounded-xl flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all">
+                            <span class="material-symbols-outlined text-lg">shopping_bag</span>
+                            Ajouter au Panier
+                        </button>
+
+                        <button type="button" onclick="buyNow(@Model.Id, parseInt(document.getElementById('detailQty').value))" class="h-12 flex-1 border-2 border-[#15803D] text-[#15803D] hover:bg-emerald-50 text-xs font-bold uppercase tracking-[0.15em] rounded-xl flex items-center justify-center gap-2 transition-all">
+                            Acheter Immédiatement
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-2">
+                        <div class="text-sm font-bold text-slate-900 uppercase tracking-wider">Ce soin est actuellement en rupture de stock</div>
+                        <p class="text-xs text-slate-500 font-light">Notre laboratoire prépare un réapprovisionnement sous 48 à 72h.</p>
+                        <button disabled class="w-full py-3 bg-slate-200 text-slate-400 font-bold text-xs uppercase tracking-wider rounded-xl cursor-not-allowed">
+                            Produit Épuisé
+                        </button>
+                    </div>
+                }
+            </div>
+
+            <!-- Reassurance Banner -->
+            <div class="bg-gradient-to-r from-emerald-50/50 via-teal-50/30 to-white border border-emerald-100 p-4 rounded-2xl flex items-start gap-3.5">
+                <div class="w-9 h-9 rounded-xl bg-emerald-100 text-[#15803D] flex items-center justify-center shrink-0 border border-emerald-200 font-bold">
+                    <span class="material-symbols-outlined text-lg">local_shipping</span>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Expédition Express Officine 24/48h</h4>
+                    <p class="text-xs text-slate-500 font-light mt-0.5">Emballage sécurisé de qualité pharmaceutique et suivi en temps réel.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Tabs -->
+    <div class="mb-16 bg-white rounded-3xl border border-slate-200/90 p-6 md:p-10 shadow-sm">
+        <div class="border-b border-slate-200 flex gap-8 mb-6">
+            <button id="tabBtnDesc" onclick="switchTab('desc')" class="tab-btn active-tab text-xs font-bold uppercase tracking-widest text-[#15803D] border-b-2 border-[#15803D] pb-3 whitespace-nowrap px-1">Description &amp; Bienfaits</button>
+            <button id="tabBtnIngr" onclick="switchTab('ingr')" class="tab-btn text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-[#15803D] pb-3 whitespace-nowrap px-1 transition-colors">Formule &amp; Ingrédients</button>
+            <button id="tabBtnDosage" onclick="switchTab('dosage')" class="tab-btn text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-[#15803D] pb-3 whitespace-nowrap px-1 transition-colors">Posologie &amp; Conseils</button>
+        </div>
+
+        <div id="tabContentDesc" class="tab-content text-slate-600 text-sm leading-relaxed space-y-4 max-w-3xl font-light">
+            <p>@Model.FullDescription</p>
+            <p class="p-4 rounded-xl bg-emerald-50/60 border border-emerald-100 text-emerald-900 text-xs">
+                ✦ Formulé sous contrôle dermatologique et biologique selon les standards européens BPF (Bonnes Pratiques de Fabrication), garantissant une pureté optimale et une tolérance maximale.
+            </p>
+        </div>
+
+        <div id="tabContentIngr" class="tab-content hidden text-slate-600 text-sm leading-relaxed space-y-4 max-w-3xl font-light">
+            <h4 class="font-bold text-slate-900 text-sm mb-3 uppercase tracking-wider">Composition Intégrale :</h4>
+            <ul class="space-y-2.5">
+                @foreach (var ing in Model.Ingredients)
+                {
+                    <li class="flex items-center gap-2.5">
+                        <span class="w-2 h-2 rounded-full bg-[#15803D]"></span>
+                        <span class="text-xs sm:text-sm text-slate-700">@ing</span>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div id="tabContentDosage" class="tab-content hidden text-slate-600 text-sm leading-relaxed space-y-4 max-w-3xl font-light">
+            <h4 class="font-bold text-slate-900 text-sm mb-3 uppercase tracking-wider">Rituel &amp; Conseils d'Officine :</h4>
+            <ul class="space-y-2.5">
+                @foreach (var dose in Model.DosageInstructions)
+                {
+                    <li class="flex items-center gap-2.5">
+                        <span class="w-2 h-2 rounded-full bg-[#15803D]"></span>
+                        <span class="text-xs sm:text-sm text-slate-700">@dose</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</main>
+
+<script>
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('text-[#15803D]', 'border-[#15803D]', 'border-b-2');
+            btn.classList.add('text-slate-400');
+        });
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+
+        if (tab === 'desc') {
+            document.getElementById('tabBtnDesc').classList.add('text-[#15803D]', 'border-[#15803D]', 'border-b-2');
+            document.getElementById('tabBtnDesc').classList.remove('text-slate-400');
+            document.getElementById('tabContentDesc').classList.remove('hidden');
+        } else if (tab === 'ingr') {
+            document.getElementById('tabBtnIngr').classList.add('text-[#15803D]', 'border-[#15803D]', 'border-b-2');
+            document.getElementById('tabBtnIngr').classList.remove('text-slate-400');
+            document.getElementById('tabContentIngr').classList.remove('hidden');
+        } else if (tab === 'dosage') {
+            document.getElementById('tabBtnDosage').classList.add('text-[#15803D]', 'border-[#15803D]', 'border-b-2');
+            document.getElementById('tabBtnDosage').classList.remove('text-slate-400');
+            document.getElementById('tabContentDosage').classList.remove('hidden');
+        }
+    }
+</script>

@@ -1,0 +1,241 @@
+@model List<PharmaTrust.Models.SpecialOffer>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Gestion des Offres Spéciales";
+    var products = ViewBag.Products as List<PharmaTrust.Models.Product> ?? new List<PharmaTrust.Models.Product>();
+}
+
+<div class="space-y-8 max-w-6xl">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-wider mb-2 border border-red-200">
+                <span class="material-symbols-outlined text-xs">local_fire_department</span>
+                <span>Section Accueil &bull; Spotlight Promos</span>
+            </div>
+            <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Nos Offres Spéciales (@Model.Count)</h1>
+            <p class="text-xs text-slate-500 mt-1">Créez, modifiez et ordonnez les cartes d'offres promotionnelles affichées sur la page d'accueil.</p>
+        </div>
+
+        <button type="button" onclick="openCreateOfferModal()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-sm">
+            <span class="material-symbols-outlined text-sm">add_circle</span>
+            <span>Nouvelle Offre Spéciale</span>
+        </button>
+    </div>
+
+    <!-- Live Cards Grid (Visual Preview) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach (var offer in Model)
+        {
+            <div class="relative rounded-3xl overflow-hidden bg-slate-950 text-white p-6 flex flex-col justify-between h-[340px] border @(offer.IsActive ? "border-slate-800 ring-2 ring-emerald-500/20" : "border-red-900/40 opacity-60") shadow-lg group">
+                <!-- Background Image -->
+                <div class="absolute inset-0 z-0 opacity-45 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style="background-image: url('@offer.ImageUrl');"></div>
+                <div class="absolute inset-0 z-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/30"></div>
+
+                <!-- Top Bar: Status + Actions -->
+                <div class="relative z-10 flex items-center justify-between gap-2">
+                    <span class="inline-block bg-white/20 backdrop-blur-md border border-white/25 text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-xs">
+                        @offer.Badge
+                    </span>
+
+                    <div class="flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-xl border border-white/15">
+                        <form asp-controller="Admin" asp-action="ToggleSpecialOffer" asp-route-id="@offer.Id" method="post" class="inline">
+                            <button type="submit" class="p-1 rounded-lg text-xs transition-colors @(offer.IsActive ? "text-emerald-400 hover:bg-emerald-950/60" : "text-slate-400 hover:bg-slate-800")" title="@(offer.IsActive ? "Actif (cliquez pour désactiver)" : "Inactif (cliquez pour activer)")">
+                                <span class="material-symbols-outlined text-sm">@(offer.IsActive ? "visibility" : "visibility_off")</span>
+                            </button>
+                        </form>
+                        <button type="button" onclick="openEditOfferModal(@offer.Id, '@Html.Raw(Html.Encode(offer.Badge))', '@Html.Raw(Html.Encode(offer.Title))', '@Html.Raw(Html.Encode(offer.Description))', @offer.OriginalPrice, @offer.PromoPrice, '@offer.ImageUrl', '@offer.ThemeStyle', @(offer.AssociatedProductId?.ToString() ?? "null"), @offer.DisplayOrder, @(offer.IsActive ? "true" : "false"))" class="p-1 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 transition-colors" title="Modifier">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                        <form asp-controller="Admin" asp-action="DeleteSpecialOffer" asp-route-id="@offer.Id" method="post" onsubmit="return confirm('Supprimer définitivement cette offre spéciale ?');" class="inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="p-1 text-red-400 hover:text-red-200 rounded-lg hover:bg-red-900/40 transition-colors" title="Supprimer">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Middle Content -->
+                <div class="relative z-10 space-y-1.5 my-auto">
+                    <h3 class="font-editorial text-xl font-bold text-white leading-tight">
+                        @offer.Title
+                    </h3>
+                    <p class="text-xs text-slate-200 font-light leading-snug line-clamp-2">
+                        @offer.Description
+                    </p>
+                </div>
+
+                <!-- Bottom Bar: Price & Linked Product -->
+                <div class="relative z-10 pt-3 flex items-center justify-between gap-2 border-t border-white/15">
+                    <div>
+                        @if (offer.OriginalPrice > 0)
+                        {
+                            <div class="text-[10px] text-slate-400 font-medium line-through">@offer.OriginalPrice.ToString("F2") DT</div>
+                        }
+                        <div class="font-editorial text-xl font-bold text-emerald-300">@offer.PromoPrice.ToString("F2") DT</div>
+                    </div>
+                    
+                    <div class="text-right">
+                        <span class="text-[9px] uppercase font-mono text-slate-400 block">Ordre: #@offer.DisplayOrder</span>
+                        @if (offer.AssociatedProductId.HasValue)
+                        {
+                            <span class="text-[9.5px] font-semibold text-amber-300 flex items-center gap-0.5 justify-end">
+                                <span class="material-symbols-outlined text-xs">link</span>
+                                Produit #@offer.AssociatedProductId
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal: Create / Edit Special Offer -->
+<div id="offerModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+            <h3 id="offerModalTitle" class="font-editorial text-xl font-bold text-slate-900">Nouvelle Offre Spéciale</h3>
+            <button type="button" onclick="closeOfferModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
+                <span class="material-symbols-outlined text-sm">close</span>
+            </button>
+        </div>
+
+        <form id="offerForm" method="post" enctype="multipart/form-data" class="space-y-4">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" id="offerId" value="0" />
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Badge Tag *</label>
+                    <input type="text" name="Badge" id="offerBadge" required placeholder="-25% • Édition Limitée" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-semibold text-red-600" />
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Ordre d'affichage</label>
+                    <input type="number" name="DisplayOrder" id="offerOrder" value="1" min="1" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black" />
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Titre de l'Offre *</label>
+                <input type="text" name="Title" id="offerTitle" required placeholder="Ex: Coffret Rituel Éclat & Anti-Âge" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-bold" />
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Description Courte</label>
+                <textarea name="Description" id="offerDescription" rows="2" placeholder="Le duo incontournable : Sérum Concentré + Crème Divine..." class="w-full py-2 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Prix Promotionnel (DT) *</label>
+                    <input type="number" step="0.01" name="PromoPrice" id="offerPromoPrice" required placeholder="39.99" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-bold text-emerald-700" />
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Prix d'Origine Barré (DT)</label>
+                    <input type="number" step="0.01" name="OriginalPrice" id="offerOriginalPrice" placeholder="54.00" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black" />
+                </div>
+            </div>
+
+            <!-- Image Upload & URL -->
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+                <label class="text-xs font-bold text-slate-800 uppercase tracking-wider block">Image de Fond de la Carte</label>
+                <div class="flex items-center gap-3">
+                    <label class="flex-1 cursor-pointer flex flex-col items-center justify-center p-3.5 border-2 border-dashed border-slate-300 hover:border-black rounded-2xl bg-slate-50 hover:bg-slate-100 transition-all text-center">
+                        <span class="material-symbols-outlined text-xl text-slate-500 mb-0.5">upload_file</span>
+                        <span class="text-xs font-bold text-slate-700">Choisir une photo sur PC</span>
+                        <span class="text-[9.5px] text-slate-400">JPG, PNG, WebP</span>
+                        <input type="file" name="imageFile" accept="image/*" class="hidden" onchange="previewOfferImage(this)" />
+                    </label>
+                    <div class="w-20 h-20 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                        <img id="offerImgPreview" src="/images/hero_skincare.jpg" alt="Aperçu" class="w-full h-full object-cover" />
+                    </div>
+                </div>
+                <input type="text" name="ImageUrl" id="offerImageUrl" placeholder="Ou URL image (ex: /images/hero_skincare.jpg)" class="w-full py-2 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-mono text-[11px]" />
+            </div>
+
+            <!-- Linked Product & Active -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Associer à un Produit</label>
+                    <select name="AssociatedProductId" id="offerProduct" class="w-full py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black">
+                        <option value="">-- Aucun (Ajout générique) --</option>
+                        @foreach (var p in products)
+                        {
+                            <option value="@p.Id">#@p.Id - @p.Name (@p.Brand)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2 pt-6">
+                    <input type="checkbox" name="IsActive" id="offerIsActive" value="true" checked class="w-4 h-4 rounded text-black focus:ring-black" />
+                    <label for="offerIsActive" class="text-xs font-bold text-slate-800">Afficher immédiatement sur l'accueil</label>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button type="button" onclick="closeOfferModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider">
+                    Annuler
+                </button>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
+                    Enregistrer l'Offre
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openCreateOfferModal() {
+        document.getElementById('offerModalTitle').textContent = "Nouvelle Offre Spéciale";
+        document.getElementById('offerForm').action = "/Admin/CreateSpecialOffer";
+        document.getElementById('offerId').value = "0";
+        document.getElementById('offerBadge').value = "-25% • Édition Limitée";
+        document.getElementById('offerTitle').value = "";
+        document.getElementById('offerDescription').value = "";
+        document.getElementById('offerPromoPrice').value = "";
+        document.getElementById('offerOriginalPrice').value = "";
+        document.getElementById('offerImageUrl').value = "/images/hero_skincare.jpg";
+        document.getElementById('offerImgPreview').src = "/images/hero_skincare.jpg";
+        document.getElementById('offerProduct').value = "";
+        document.getElementById('offerIsActive').checked = true;
+        
+        document.getElementById('offerModal').classList.remove('hidden');
+        document.getElementById('offerModal').classList.add('flex');
+    }
+
+    function openEditOfferModal(id, badge, title, desc, origPrice, promoPrice, imgUrl, theme, prodId, order, isActive) {
+        document.getElementById('offerModalTitle').textContent = "Modifier l'Offre Spéciale";
+        document.getElementById('offerForm').action = "/Admin/EditSpecialOffer";
+        document.getElementById('offerId').value = id;
+        document.getElementById('offerBadge').value = badge;
+        document.getElementById('offerTitle').value = title;
+        document.getElementById('offerDescription').value = desc;
+        document.getElementById('offerPromoPrice').value = promoPrice;
+        document.getElementById('offerOriginalPrice').value = origPrice > 0 ? origPrice : "";
+        document.getElementById('offerImageUrl').value = imgUrl;
+        document.getElementById('offerImgPreview').src = imgUrl || "/images/hero_skincare.jpg";
+        document.getElementById('offerOrder').value = order;
+        document.getElementById('offerProduct').value = prodId ? prodId : "";
+        document.getElementById('offerIsActive').checked = isActive;
+        
+        document.getElementById('offerModal').classList.remove('hidden');
+        document.getElementById('offerModal').classList.add('flex');
+    }
+
+    function closeOfferModal() {
+        document.getElementById('offerModal').classList.add('hidden');
+        document.getElementById('offerModal').classList.remove('flex');
+    }
+
+    function previewOfferImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('offerImgPreview').src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>

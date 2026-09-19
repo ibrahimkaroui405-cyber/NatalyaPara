@@ -1,0 +1,248 @@
+@model List<PharmaTrust.Models.Order>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Commandes & Expéditions";
+    string searchQuery = ViewBag.SearchQuery as string ?? "";
+    string selectedStatus = ViewBag.SelectedStatus as string ?? "";
+
+    int currentPage = ViewBag.CurrentPage as int? ?? 1;
+    int pageSize = ViewBag.PageSize as int? ?? 10;
+    int totalCount = ViewBag.FilteredCount as int? ?? Model.Count;
+    int totalPages = ViewBag.TotalPages as int? ?? 1;
+    bool hasPreviousPage = ViewBag.HasPreviousPage as bool? ?? false;
+    bool hasNextPage = ViewBag.HasNextPage as bool? ?? false;
+}
+
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-[10px] font-bold uppercase tracking-wider mb-2 border border-slate-200">
+                <span class="material-symbols-outlined text-xs text-[#15803D]">local_shipping</span>
+                <span>Flux de Commandes Officinales</span>
+            </div>
+            <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Suivi des Commandes (@totalCount)</h1>
+            <p class="text-xs text-slate-500 mt-1">Consultez les commandes en direct, mettez à jour les statuts et gérez les réintégrations automatiques de stock.</p>
+        </div>
+        <a asp-controller="Admin" asp-action="Stock" class="bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-sm self-start sm:self-auto">
+            <span class="material-symbols-outlined text-sm">shelves</span>
+            <span>Gestion des Stocks</span>
+        </a>
+    </div>
+
+    <!-- Orders Filter & Search Bar -->
+    <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <form asp-controller="Admin" asp-action="Orders" method="get" class="flex-1 w-full flex flex-wrap items-center gap-3">
+            <div class="relative flex-1 min-w-[220px]">
+                <input type="text" name="q" value="@searchQuery" placeholder="Rechercher par N° commande, client, ville, téléphone..." class="w-full py-2.5 pl-9 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-black" />
+                <span class="material-symbols-outlined text-slate-400 text-sm absolute left-3 top-3">search</span>
+            </div>
+
+            <select name="status" onchange="this.form.submit()" class="py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs focus:outline-none focus:border-black cursor-pointer">
+                <option value="">Tous les statuts</option>
+                <option value="En attente" selected="@(selectedStatus == "En attente")">En attente</option>
+                <option value="En préparation" selected="@(selectedStatus == "En préparation")">En préparation</option>
+                <option value="Expédiée" selected="@(selectedStatus == "Expédiée")">Expédiée</option>
+                <option value="Livrée" selected="@(selectedStatus == "Livrée")">Livrée</option>
+                <option value="Annulée" selected="@(selectedStatus == "Annulée")">Annulée (Stock restitué)</option>
+            </select>
+
+            <button type="submit" class="px-5 py-2.5 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-all">
+                Filtrer
+            </button>
+        </form>
+
+        @if (!string.IsNullOrEmpty(searchQuery) || !string.IsNullOrEmpty(selectedStatus))
+        {
+            <a asp-controller="Admin" asp-action="Orders" class="text-xs text-slate-500 hover:text-black flex items-center gap-1 font-semibold flex-shrink-0">
+                <span class="material-symbols-outlined text-sm">close</span> Effacer les filtres
+            </a>
+        }
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-slate-50/80 text-slate-400 uppercase tracking-wider border-b border-slate-200">
+                        <th class="py-3.5 px-6 font-semibold">N° Commande</th>
+                        <th class="py-3.5 px-6 font-semibold">Client &amp; Contact</th>
+                        <th class="py-3.5 px-6 font-semibold">Date</th>
+                        <th class="py-3.5 px-6 font-semibold">Articles Commandés</th>
+                        <th class="py-3.5 px-6 font-semibold">Total TTC</th>
+                        <th class="py-3.5 px-6 font-semibold">Statut Commande</th>
+                        <th class="py-3.5 px-6 font-semibold text-right">Action Statut</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (Model.Any())
+                    {
+                        @foreach (var order in Model)
+                        {
+                            <tr class="hover:bg-slate-50/70 transition-colors">
+                                <td class="py-4 px-6">
+                                    <div class="font-mono font-bold text-slate-900 text-[13px]">@order.OrderNumber</div>
+                                    <span class="text-[10px] text-slate-400 block mt-0.5">Espèces à la livraison</span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="font-bold text-slate-900">@order.CustomerName</div>
+                                    <div class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                        <span class="material-symbols-outlined text-xs">call</span> @order.Phone
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5">@order.City - @order.Address</div>
+                                </td>
+                                <td class="py-4 px-6 text-slate-500 whitespace-nowrap">
+                                    @order.OrderDate.ToString("dd/MM/yyyy")
+                                    <span class="text-[10px] text-slate-400 block">@order.OrderDate.ToString("HH:mm")</span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="space-y-1.5 max-w-xs">
+                                        @foreach (var item in order.Items)
+                                        {
+                                            <div class="flex items-center gap-2">
+                                                <img src="@item.ImageUrl" alt="@item.ProductName" class="w-6 h-6 rounded-md object-cover border border-slate-200" />
+                                                <div class="truncate text-[11px]">
+                                                    <span class="font-bold text-slate-800">x@(item.Quantity)</span> @item.ProductName
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 font-bold text-slate-900 text-sm whitespace-nowrap">
+                                    @order.TotalAmount.ToString("F2") DT
+                                </td>
+                                <td class="py-4 px-6 whitespace-nowrap">
+                                    @if (order.Status == "Livrée")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Livrée
+                                        </span>
+                                    }
+                                    else if (order.Status == "Expédiée")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-800 text-[10px] font-bold border border-blue-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Expédiée
+                                        </span>
+                                    }
+                                    else if (order.Status == "En préparation")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span> En préparation
+                                        </span>
+                                    }
+                                    else if (order.Status == "Annulée")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-800 text-[10px] font-bold border border-red-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span> Annulée (Restitué)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-[10px] font-bold border border-slate-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> @order.Status
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-4 px-6 text-right whitespace-nowrap">
+                                    <form asp-controller="Admin" asp-action="UpdateOrderStatus" method="post" class="inline-flex items-center gap-1">
+                                        <input type="hidden" name="orderNumber" value="@order.OrderNumber" />
+                                        <select name="status" onchange="this.form.submit()" class="py-1 px-2.5 rounded-xl border border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-800 focus:outline-none focus:border-black cursor-pointer">
+                                            <option value="En attente" selected="@(order.Status == "En attente")">En attente</option>
+                                            <option value="En préparation" selected="@(order.Status == "En préparation")">En préparation</option>
+                                            <option value="Expédiée" selected="@(order.Status == "Expédiée")">Expédiée</option>
+                                            <option value="Livrée" selected="@(order.Status == "Livrée")">Livrée</option>
+                                            <option value="Annulée" selected="@(order.Status == "Annulée")">Annulée (Restituer stock)</option>
+                                        </select>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="py-12 text-center text-slate-400">
+                                Aucune commande trouvée pour ces critères.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <!-- Orders Table Pagination Bar -->
+            <div class="p-4 sm:p-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+                <div class="text-xs text-slate-500 font-medium text-center sm:text-left">
+                    Affichage de <strong class="text-slate-900 font-bold">@((currentPage - 1) * pageSize + 1)</strong> à 
+                    <strong class="text-slate-900 font-bold">@(Math.Min(currentPage * pageSize, totalCount))</strong> sur 
+                    <strong class="text-slate-900 font-bold">@totalCount</strong> commandes
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-wrap justify-center">
+                    <!-- Prev -->
+                    @if (hasPreviousPage)
+                    {
+                        <a asp-controller="Admin" asp-action="Orders" 
+                           asp-route-page="@(currentPage - 1)" 
+                           asp-route-q="@searchQuery" 
+                           asp-route-status="@selectedStatus"
+                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs">
+                            <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            <span class="hidden sm:inline">Précédent</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-100 bg-slate-100/60 text-slate-300 text-xs font-bold cursor-not-allowed select-none">
+                            <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            <span class="hidden sm:inline">Précédent</span>
+                        </span>
+                    }
+
+                    <!-- Page Numbers -->
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        var isCur = i == currentPage;
+                        if (i == 1 || i == totalPages || (i >= currentPage - 2 && i <= currentPage + 2))
+                        {
+                            <a asp-controller="Admin" asp-action="Orders" 
+                               asp-route-page="@i" 
+                               asp-route-q="@searchQuery" 
+                               asp-route-status="@selectedStatus"
+                               class="w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all shadow-2xs @(isCur ? "bg-black text-white shadow-sm" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100")">
+                                @i
+                            </a>
+                        }
+                        else if (i == currentPage - 3 || i == currentPage + 3)
+                        {
+                            <span class="w-7 h-7 flex items-center justify-center text-slate-400 font-bold text-xs select-none">&hellip;</span>
+                        }
+                    }
+
+                    <!-- Next -->
+                    @if (hasNextPage)
+                    {
+                        <a asp-controller="Admin" asp-action="Orders" 
+                           asp-route-page="@(currentPage + 1)" 
+                           asp-route-q="@searchQuery" 
+                           asp-route-status="@selectedStatus"
+                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs">
+                            <span class="hidden sm:inline">Suivant</span>
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-100 bg-slate-100/60 text-slate-300 text-xs font-bold cursor-not-allowed select-none">
+                            <span class="hidden sm:inline">Suivant</span>
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

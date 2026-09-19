@@ -1,0 +1,163 @@
+@model PharmaTrust.Models.Cart
+@{
+    ViewData["Title"] = "Validation de Commande - Natalya Paris";
+}
+
+<main class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 reveal-up">
+    <!-- Breadcrumb & Header -->
+    <div class="mb-8 border-b border-emerald-100 pb-4 flex items-center justify-between">
+        <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[9.5px] font-bold uppercase tracking-wider mb-1.5 border border-emerald-200">
+                <span class="material-symbols-outlined text-xs text-[#15803D]">verified_user</span>
+                <span>Finalisation Sécurisée</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl text-slate-900 font-extrabold tracking-tight">
+                Validation de <span class="text-[#15803D]">Commande</span>
+            </h1>
+        </div>
+        <a asp-controller="Products" asp-action="Index" class="text-slate-700 hover:text-[#15803D] font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors">
+            <span class="material-symbols-outlined text-xs">arrow_back</span> Continuer mes achats
+        </a>
+    </div>
+
+    <form asp-controller="Cart" asp-action="ProcessCheckout" method="post" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Customer Info & Shipping Form -->
+        <div class="lg:col-span-8 space-y-6">
+            <!-- Contact Info -->
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 shadow-sm space-y-4">
+                <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                    <div class="w-8 h-8 rounded-full bg-[#15803D] text-white flex items-center justify-center font-bold text-xs shadow-xs">1</div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 leading-tight">Coordonnées de Contact</h3>
+                        <p class="text-[11px] text-slate-400">Pour le suivi par SMS et la confirmation de commande</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-800 mb-1.5">Prénom &amp; Nom <span class="text-red-500">*</span></label>
+                        <input type="text" name="fullName" required minlength="2" placeholder="ex. Sonia Ben Salem" class="w-full px-4 py-2.5 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] focus:bg-white focus:outline-none transition-all" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-800 mb-1.5">Numéro de Téléphone <span class="text-red-500">*</span></label>
+                        <input type="tel" name="phone" required minlength="8" placeholder="ex. 98 123 456 / 06 12 34 56 78" class="w-full px-4 py-2.5 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] focus:bg-white focus:outline-none transition-all" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-800 mb-1.5">Adresse E-mail <span class="text-slate-400 text-[10px] font-normal">(optionnel)</span></label>
+                        <input type="email" name="email" placeholder="votre.email@exemple.com" class="w-full px-4 py-2.5 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] focus:bg-white focus:outline-none transition-all" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Address -->
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 shadow-sm space-y-4">
+                <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                    <div class="w-8 h-8 rounded-full bg-[#15803D] text-white flex items-center justify-center font-bold text-xs shadow-xs">2</div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 leading-tight">Adresse de Livraison</h3>
+                        <p class="text-[11px] text-slate-400">Livraison à domicile rapide sous 24h à 48h</p>
+                    </div>
+                </div>
+                <div class="space-y-4 pt-1">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-800 mb-1.5">Ville / Région <span class="text-red-500">*</span></label>
+                        <input type="text" name="city" required minlength="2" placeholder="ex. Sousse, Enfidha, Tunis, Monastir, Sfax..." class="w-full px-4 py-2.5 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] focus:bg-white focus:outline-none transition-all" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-800 mb-1.5">Adresse de Livraison Complète <span class="text-red-500">*</span></label>
+                        <input type="text" name="address" required minlength="5" placeholder="Numéro, rue, quartier, résidence, appartement..." class="w-full px-4 py-2.5 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] focus:bg-white focus:outline-none transition-all" />
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- Mode de Paiement : Paiement à la Livraison -->
+            <div class="bg-white border-2 border-emerald-500/80 rounded-2xl p-6 sm:p-7 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-[#15803D] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                            <span class="material-symbols-outlined text-sm">payments</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900 leading-tight">Mode de Paiement</h3>
+                            <p class="text-[11px] text-emerald-700 font-semibold">Paiement à la Livraison (Cash on Delivery)</p>
+                        </div>
+                    </div>
+                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">verified</span> Sans Frais en Ligne
+                    </span>
+                </div>
+
+                <div class="bg-emerald-50/40 rounded-xl p-4 border border-emerald-100 flex items-start gap-3.5">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-[#15803D] flex items-center justify-center flex-shrink-0 mt-0.5 border border-emerald-200">
+                        <span class="material-symbols-outlined text-xl">handshake</span>
+                    </div>
+                    <div class="text-xs text-slate-700 space-y-1">
+                        <div class="font-bold text-slate-900 text-sm">Réglez directement à la réception de votre colis</div>
+                        <p class="font-light leading-relaxed text-slate-600">
+                            Aucune carte bancaire requise sur le site. Vous payez en toute sérénité en espèces lors de la remise en main propre de vos produits par le coursier.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Summary -->
+        <div class="lg:col-span-4">
+            <div class="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5 sticky top-28">
+                <h3 class="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3">
+                    Récapitulatif de Commande
+                </h3>
+
+                <div class="space-y-3 max-h-60 overflow-y-auto pr-1 hide-scrollbar divide-y divide-slate-100">
+                    @foreach (var item in Model.Items)
+                    {
+                        <div class="flex items-center justify-between pt-3 first:pt-0 text-xs">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center p-1 flex-shrink-0">
+                                    <img src="@item.Product.ImageUrl" alt="@item.Product.Name" class="w-full h-full object-cover rounded-lg" />
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="font-semibold text-slate-900 line-clamp-1">@item.Product.Name</div>
+                                    <div class="text-[11px] text-slate-400">Qté : @item.Quantity &bull; @item.Product.Price.ToString("F2") Dinar</div>
+                                </div>
+                            </div>
+                            <span class="font-bold text-slate-900 text-sm">@item.Subtotal.ToString("F2") Dinar</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="border-t border-slate-100 pt-3 space-y-2 text-xs text-slate-600 font-light">
+                    <div class="flex justify-between">
+                        <span>Sous-total (@Model.TotalItems soins)</span>
+                        <span class="font-bold text-slate-900">@Model.Subtotal.ToString("F2") Dinar</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Livraison à domicile</span>
+                        <span class="font-bold text-emerald-700">
+                            @(Model.ShippingFee == 0 ? "GRATUITE" : $"{Model.ShippingFee:F2} Dinar")
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center text-slate-600">
+                        <span>Mode de règlement</span>
+                        <span class="font-bold text-slate-900">À la livraison</span>
+                    </div>
+                    <div class="flex justify-between text-base font-bold text-slate-900 pt-3 border-t border-slate-100 items-baseline">
+                        <span>Total TTC à Régler</span>
+                        <span class="text-2xl text-[#15803D] font-extrabold">@Model.GrandTotal.ToString("F2") Dinar</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-4 bg-[#15803D] hover:bg-[#166534] text-white text-xs uppercase tracking-[0.18em] font-bold rounded-xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all">
+                    <span>Confirmer ma Commande</span>
+                    <span class="material-symbols-outlined text-sm">check</span>
+                </button>
+
+                <div class="pt-2 text-center text-[10px] text-slate-400 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-[#15803D]">verified_user</span>
+                    <span>100% Officinal &bull; Contrôle Pharmacien &bull; Support 24/7</span>
+                </div>
+            </div>
+        </div>
+    </form>
+</main>
+

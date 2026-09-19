@@ -1,0 +1,267 @@
+@model PharmaTrust.Models.ProductCatalogViewModel
+@{
+    ViewData["Title"] = "Catalogue Produits - Natalya Parapharmacie";
+}
+
+<main class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+    <!-- Catalog Header & Breadcrumb -->
+    <div class="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-r from-slate-50 via-white to-amber-50/30 border border-slate-200/80 p-6 sm:p-8">
+        <!-- Subtle Ambient Color Lights -->
+        <div class="absolute -top-16 -right-16 w-80 h-80 bg-amber-200/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-16 left-1/3 w-80 h-80 bg-teal-200/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute top-1/2 -left-16 w-60 h-60 bg-rose-200/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10">
+            <!-- Breadcrumb Navigation -->
+            <nav class="flex items-center gap-2 text-xs text-slate-400 mb-3 select-none font-medium">
+                <a class="hover:text-slate-900 transition-colors flex items-center gap-1" asp-controller="Home" asp-action="Index">
+                    <span class="material-symbols-outlined text-sm">home</span>
+                    Accueil
+                </a>
+                <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
+                <a class="hover:text-slate-900 transition-colors" asp-controller="Products" asp-action="Index">Catalogue</a>
+                @if (!string.IsNullOrEmpty(Model.SelectedCategory) && Model.SelectedCategory.ToLower() != "all")
+                {
+                    var activeCatObj = Model.Categories.FirstOrDefault(c => string.Equals(c.Slug, Model.SelectedCategory, StringComparison.OrdinalIgnoreCase));
+                    <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
+                    <a asp-controller="Products" asp-action="Index" asp-route-category="@Model.SelectedCategory" class="hover:text-slate-900 transition-colors">@(activeCatObj?.Name ?? Model.SelectedCategory)</a>
+                }
+                @if (!string.IsNullOrEmpty(Model.SelectedSubCategory))
+                {
+                    <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
+                    <span class="text-slate-900 font-bold">@Model.SelectedSubCategory</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.SelectedBrand))
+                {
+                    <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
+                    <span class="text-slate-900 font-bold">@Model.SelectedBrand</span>
+                }
+            </nav>
+            
+            <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                <div>
+                    <!-- Luxury Dark & Gold Trust Pill -->
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider mb-2.5 shadow-sm">
+                        <span class="material-symbols-outlined text-xs text-amber-400" style="font-variation-settings: 'FILL' 1;">stars</span>
+                        <span>Officine Agréée &bull; 100% Produits Authentiques</span>
+                    </div>
+
+                    <!-- Multi-Tone Title -->
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl text-slate-900 font-extrabold tracking-tight leading-tight">
+                        @if (!string.IsNullOrEmpty(Model.SelectedSubCategory))
+                        {
+                            <span>Rayon <span class="bg-gradient-to-r from-[#15803D] via-teal-600 to-amber-600 bg-clip-text text-transparent">@Model.SelectedSubCategory</span></span>
+                        }
+                        else if (!string.IsNullOrEmpty(Model.SelectedCategory) && Model.SelectedCategory.ToLower() != "all")
+                        {
+                            var activeCatObj = Model.Categories.FirstOrDefault(c => string.Equals(c.Slug, Model.SelectedCategory, StringComparison.OrdinalIgnoreCase));
+                            <span>Rayon <span class="bg-gradient-to-r from-[#15803D] via-teal-600 to-amber-600 bg-clip-text text-transparent">@(activeCatObj?.Name ?? Model.SelectedCategory)</span></span>
+                        }
+                        else if (!string.IsNullOrEmpty(Model.SelectedBrand))
+                        {
+                            <span>Laboratoire <span class="bg-gradient-to-r from-[#15803D] via-teal-600 to-amber-600 bg-clip-text text-transparent">@Model.SelectedBrand</span></span>
+                        }
+                        else
+                        {
+                            <span>Haute Parapharmacie &amp; <span class="bg-gradient-to-r from-[#15803D] via-teal-600 to-amber-600 bg-clip-text text-transparent">Soins d'Officine</span></span>
+                        }
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-2 max-w-2xl font-light leading-relaxed">
+                        Explorez nos soins dermo-cosmétiques certifiés, compléments purs et formules pharmaceutiques d'excellence.
+                    </p>
+                </div>
+
+                <!-- Link to Brands -->
+                <a asp-controller="Products" asp-action="Marques" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-[#15803D] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-sm w-fit flex-shrink-0 group">
+                    <span class="material-symbols-outlined text-sm text-amber-400">award_star</span>
+                    <span>Nos Laboratoires</span>
+                    <span class="material-symbols-outlined text-xs transition-transform group-hover:translate-x-1">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Filters Strip (If filtered by Category, SubCategory, or Brand) -->
+    @if ((!string.IsNullOrEmpty(Model.SelectedCategory) && Model.SelectedCategory.ToLower() != "all") || !string.IsNullOrEmpty(Model.SelectedSubCategory) || !string.IsNullOrEmpty(Model.SelectedBrand))
+    {
+        var activeCat = Model.Categories.FirstOrDefault(c => string.Equals(c.Slug, Model.SelectedCategory, StringComparison.OrdinalIgnoreCase));
+        <div class="mb-6 p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs text-slate-400 font-medium">Filtres actifs :</span>
+                
+                @if (activeCat != null)
+                {
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-[#15803D] border border-emerald-200 text-xs font-bold shadow-2xs">
+                        <span class="material-symbols-outlined text-sm">@activeCat.Icon</span>
+                        <span>@activeCat.Name</span>
+                    </span>
+                }
+                
+                @if (!string.IsNullOrEmpty(Model.SelectedSubCategory))
+                {
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100/80 text-emerald-900 border border-emerald-300 text-xs font-bold shadow-2xs">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        <span>@Model.SelectedSubCategory</span>
+                    </span>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.SelectedBrand))
+                {
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold shadow-2xs">
+                        <span class="material-symbols-outlined text-sm text-amber-600">verified</span>
+                        <span>@Model.SelectedBrand</span>
+                    </span>
+                }
+            </div>
+
+            <a asp-controller="Products" asp-action="Index" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-red-50 text-slate-600 hover:text-red-600 text-xs font-bold transition-colors border border-slate-200 hover:border-red-200">
+                <span class="material-symbols-outlined text-xs">close</span>
+                <span>Réinitialiser les filtres</span>
+            </a>
+        </div>
+    }
+
+    <!-- Search & Toolbar -->
+    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 mb-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <form asp-controller="Products" asp-action="Index" method="get" class="flex-1 w-full flex items-center gap-2">
+            <input type="hidden" name="category" value="@Model.SelectedCategory" />
+            <input type="hidden" name="subCategory" value="@Model.SelectedSubCategory" />
+            <input type="hidden" name="sort" value="@Model.SortOrder" />
+            <input type="hidden" name="brand" value="@Model.SelectedBrand" />
+            <div class="relative flex-1">
+                <input type="text" name="q" value="@Model.SearchQuery" placeholder="Rechercher par actif, soin, référence ou besoin..." 
+                       class="w-full py-2.5 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:bg-white text-xs transition-all" />
+                <span class="material-symbols-outlined text-slate-400 text-lg absolute left-3 top-2.5">search</span>
+            </div>
+            <button type="submit" class="px-5 py-2.5 bg-slate-900 hover:bg-[#15803D] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm">
+                Rechercher
+            </button>
+        </form>
+
+        <div class="flex items-center justify-between md:justify-end w-full md:w-auto gap-4 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+            <div class="text-xs text-slate-500 whitespace-nowrap">
+                <strong class="text-slate-900 font-bold">@Model.TotalProducts</strong> soins disponibles
+            </div>
+            <form asp-controller="Products" asp-action="Index" method="get" class="flex items-center gap-2">
+                <input type="hidden" name="category" value="@Model.SelectedCategory" />
+                <input type="hidden" name="subCategory" value="@Model.SelectedSubCategory" />
+                <input type="hidden" name="q" value="@Model.SearchQuery" />
+                <input type="hidden" name="brand" value="@Model.SelectedBrand" />
+                <select name="sort" onchange="this.form.submit()" class="py-2 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs focus:outline-none focus:border-slate-400 cursor-pointer transition-all">
+                    <option value="featured" selected="@(Model.SortOrder == "featured")">Trier : En Vedette</option>
+                    <option value="price-low" selected="@(Model.SortOrder == "price-low")">Prix : Croissant</option>
+                    <option value="price-high" selected="@(Model.SortOrder == "price-high")">Prix : Décroissant</option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Product Grid -->
+    @if (Model.Products.Any())
+    {
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            @foreach (var product in Model.Products)
+            {
+                <partial name="_ProductCard" model="product" />
+            }
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <!-- Pagination Controls -->
+            <div class="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="text-xs text-slate-500 font-medium text-center sm:text-left">
+                    Affichage de <strong class="text-slate-900 font-bold">@((Model.CurrentPage - 1) * Model.PageSize + 1)</strong> à 
+                    <strong class="text-slate-900 font-bold">@(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalProducts))</strong> sur 
+                    <strong class="text-slate-900 font-bold">@Model.TotalProducts</strong> soins disponibles
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-wrap justify-center">
+                    <!-- Previous Button -->
+                    @if (Model.HasPreviousPage)
+                    {
+                        <a asp-controller="Products" asp-action="Index" 
+                           asp-route-page="@(Model.CurrentPage - 1)" 
+                           asp-route-category="@Model.SelectedCategory" 
+                           asp-route-subCategory="@Model.SelectedSubCategory" 
+                           asp-route-brand="@Model.SelectedBrand" 
+                           asp-route-q="@Model.SearchQuery" 
+                           asp-route-sort="@Model.SortOrder"
+                           class="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs" title="Page précédente">
+                            <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            <span class="hidden sm:inline">Précédent</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-100 bg-slate-50 text-slate-300 text-xs font-bold cursor-not-allowed select-none">
+                            <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            <span class="hidden sm:inline">Précédent</span>
+                        </span>
+                    }
+
+                    <!-- Page Number Pills -->
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        var isCurrent = i == Model.CurrentPage;
+                        if (i == 1 || i == Model.TotalPages || (i >= Model.CurrentPage - 2 && i <= Model.CurrentPage + 2))
+                        {
+                            <a asp-controller="Products" asp-action="Index" 
+                               asp-route-page="@i" 
+                               asp-route-category="@Model.SelectedCategory" 
+                               asp-route-subCategory="@Model.SelectedSubCategory" 
+                               asp-route-brand="@Model.SelectedBrand" 
+                               asp-route-q="@Model.SearchQuery" 
+                               asp-route-sort="@Model.SortOrder"
+                               class="w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold transition-all shadow-xs @(isCurrent ? "bg-[#15803D] text-white shadow-sm shadow-emerald-700/20" : "bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:text-[#15803D]")">
+                                @i
+                            </a>
+                        }
+                        else if (i == Model.CurrentPage - 3 || i == Model.CurrentPage + 3)
+                        {
+                            <span class="w-8 h-8 flex items-center justify-center text-slate-400 font-bold text-xs select-none">&hellip;</span>
+                        }
+                    }
+
+                    <!-- Next Button -->
+                    @if (Model.HasNextPage)
+                    {
+                        <a asp-controller="Products" asp-action="Index" 
+                           asp-route-page="@(Model.CurrentPage + 1)" 
+                           asp-route-category="@Model.SelectedCategory" 
+                           asp-route-subCategory="@Model.SelectedSubCategory" 
+                           asp-route-brand="@Model.SelectedBrand" 
+                           asp-route-q="@Model.SearchQuery" 
+                           asp-route-sort="@Model.SortOrder"
+                           class="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs" title="Page suivante">
+                            <span class="hidden sm:inline">Suivant</span>
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-100 bg-slate-50 text-slate-300 text-xs font-bold cursor-not-allowed select-none">
+                            <span class="hidden sm:inline">Suivant</span>
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center py-16 shadow-sm max-w-lg mx-auto">
+            <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center mx-auto mb-4 border border-amber-200">
+                <span class="material-symbols-outlined text-3xl">search_off</span>
+            </div>
+            <h3 class="text-xl text-slate-900 font-bold mb-2">Aucun produit trouvé</h3>
+            <p class="text-xs text-slate-500 mb-6 font-light leading-relaxed">
+                Nous n'avons trouvé aucun soin correspondant à vos critères de recherche ou de filtre.
+            </p>
+            <a asp-controller="Products" asp-action="Index" class="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-[#15803D] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm">
+                Réinitialiser la sélection
+            </a>
+        </div>
+    }
+</main>

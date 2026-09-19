@@ -1,0 +1,231 @@
+@model PharmaTrust.Models.AdminLoginViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Connexion Espace Pharmacien";
+}
+
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-[#090D16]">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Natalya Parapharmacie</title>
+    
+    <!-- Fonts & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#15803D",
+                        "obsidian": "#090D16",
+                        "dark-card": "#0F172A",
+                    },
+                    fontFamily: {
+                        "editorial": ["Playfair Display", "Georgia", "serif"],
+                        "sans": ["Plus Jakarta Sans", "Inter", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #11221b 0%, #090d16 65%, #05070c 100%);
+        }
+        .font-editorial { font-family: 'Playfair Display', Georgia, serif; }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-full flex flex-col justify-between text-slate-100 antialiased selection:bg-emerald-500 selection:text-white relative overflow-x-hidden">
+
+    <!-- Ambient Glow Effects -->
+    <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-emerald-600/15 rounded-full blur-[140px] pointer-events-none -z-10"></div>
+    <div class="fixed bottom-0 right-0 w-[500px] h-[400px] bg-emerald-900/10 rounded-full blur-[160px] pointer-events-none -z-10"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+        <a asp-controller="Home" asp-action="Index" class="flex items-center gap-3 group">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-emerald-400 text-white flex items-center justify-center shadow-lg shadow-emerald-900/40 group-hover:scale-105 transition-all">
+                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">spa</span>
+            </div>
+            <div>
+                <span class="font-editorial text-xl font-bold tracking-tight text-white block leading-tight">NATALYA</span>
+                <span class="text-[8px] font-sans font-bold tracking-[0.25em] uppercase text-emerald-400 block -mt-0.5">Parapharmacie d'Exception</span>
+            </div>
+        </a>
+
+        <a asp-controller="Home" asp-action="Index" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 px-4 py-2 rounded-xl transition-all">
+            <span class="material-symbols-outlined text-sm">storefront</span>
+            <span class="hidden sm:inline">Retour à la boutique</span>
+        </a>
+    </header>
+
+    <!-- Main Content Form Section -->
+    <main class="flex-1 flex items-center justify-center px-4 py-8">
+        <div class="w-full max-w-md">
+            
+            <!-- Login Card -->
+            <div class="glass-panel rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+                
+                <!-- Card Header -->
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-wider mb-4 shadow-inner">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Portail Administrateur &bull; Officine</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-bold font-editorial text-white tracking-tight">Authentification</h1>
+                    <p class="text-xs text-slate-400 mt-2 font-light">
+                        Veuillez vous identifier pour accéder au tableau de bord de gestion officinale.
+                    </p>
+                </div>
+
+                <!-- Flash / TempData Messages -->
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="mb-6 p-4 rounded-2xl bg-emerald-950/80 border border-emerald-800/80 text-emerald-200 text-xs flex items-center gap-3">
+                        <span class="material-symbols-outlined text-emerald-400 text-base">check_circle</span>
+                        <span>@TempData["SuccessMessage"]</span>
+                    </div>
+                }
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="mb-6 p-4 rounded-2xl bg-red-950/80 border border-red-800/80 text-red-200 text-xs flex items-start gap-3">
+                        <span class="material-symbols-outlined text-red-400 text-base shrink-0 mt-0.5">error</span>
+                        <div class="space-y-1">
+                            @foreach (var modelState in ViewData.ModelState.Values)
+                            {
+                                foreach (var error in modelState.Errors)
+                                {
+                                    <p>@error.ErrorMessage</p>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Login Form -->
+                <form asp-controller="Admin" asp-action="Login" method="post" class="space-y-5" id="loginForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ReturnUrl" value="@Model?.ReturnUrl" />
+
+                    <!-- Username / Email Field -->
+                    <div>
+                        <label asp-for="UsernameOrEmail" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                            Identifiant ou E-mail <span class="text-emerald-400">*</span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <span class="material-symbols-outlined text-lg">person</span>
+                            </div>
+                            <input asp-for="UsernameOrEmail" id="usernameInput" required autofocus placeholder="admin_natalya ou admin@natalyapara.com" class="w-full pl-11 pr-4 py-3 bg-slate-900/90 border border-slate-700/90 rounded-2xl text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" />
+                        </div>
+                        <span asp-validation-for="UsernameOrEmail" class="text-red-400 text-[11px] mt-1 block"></span>
+                    </div>
+
+                    <!-- Password Field with Show/Hide Toggle -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label asp-for="Password" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                                Mot de passe <span class="text-emerald-400">*</span>
+                            </label>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <span class="material-symbols-outlined text-lg">lock</span>
+                            </div>
+                            <input asp-for="Password" id="passwordInput" type="password" required placeholder="••••••••••••" class="w-full pl-11 pr-11 py-3 bg-slate-900/90 border border-slate-700/90 rounded-2xl text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" />
+                            <button type="button" id="togglePasswordBtn" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200 transition-colors" title="Afficher/Masquer le mot de passe">
+                                <span class="material-symbols-outlined text-lg" id="passwordIcon">visibility</span>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-red-400 text-[11px] mt-1 block"></span>
+                    </div>
+
+                    <!-- Remember Me Checkbox -->
+                    <div class="flex items-center justify-between pt-1">
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input asp-for="RememberMe" type="checkbox" class="w-4 h-4 rounded-lg bg-slate-900 border-slate-700 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900 accent-emerald-500 cursor-pointer" />
+                            <span class="text-xs text-slate-300 font-medium">Maintenir ma session active</span>
+                        </label>
+                        <span class="text-[11px] text-slate-400 font-light">14 jours</span>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submitLoginBtn" class="w-full py-3.5 bg-gradient-to-r from-[#15803D] via-[#16A34A] to-[#15803D] hover:opacity-95 text-white text-xs uppercase tracking-[0.2em] font-bold rounded-2xl shadow-xl shadow-emerald-950/50 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] group mt-3">
+                        <span class="material-symbols-outlined text-base group-hover:translate-x-0.5 transition-transform">login</span>
+                        <span>Se Connecter</span>
+                    </button>
+                </form>
+
+                <!-- Demo Credentials Helper / 1-Click Fill -->
+                <div class="mt-8 pt-6 border-t border-slate-800/90 text-center">
+                    <p class="text-[11px] text-slate-400 font-medium mb-3">Identifiants Administrateur Sécurisés :</p>
+                    <button type="button" onclick="fillDemoCredentials()" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-emerald-400 hover:text-emerald-300 text-xs font-mono transition-all group shadow-sm">
+                        <span class="material-symbols-outlined text-sm text-slate-400 group-hover:text-emerald-400 transition-colors">key</span>
+                        <span>admin_natalya</span>
+                        <span class="text-slate-500">&bull;</span>
+                        <span>Natalya@Pharma#2026!</span>
+                        <span class="ml-1 text-[10px] uppercase font-sans font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md">Remplir</span>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Security Footer Note -->
+            <div class="text-center mt-6 space-y-2">
+                <div class="inline-flex items-center gap-1.5 text-slate-400 text-xs">
+                    <span class="material-symbols-outlined text-sm text-emerald-400">verified_user</span>
+                    <span>Accès chiffré &bull; Protection des données de santé et officine</span>
+                </div>
+                <p class="text-[11px] text-slate-400">
+                    &copy; @DateTime.Now.Year Natalya Parapharmacie &bull; Sousse, Enfidha
+                </p>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Interactive Scripts -->
+    <script>
+        // Password Visibility Toggle
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const passwordInput = document.getElementById('passwordInput');
+        const passwordIcon = document.getElementById('passwordIcon');
+
+        if (togglePasswordBtn && passwordInput && passwordIcon) {
+            togglePasswordBtn.addEventListener('click', () => {
+                const isPassword = passwordInput.getAttribute('type') === 'password';
+                passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                passwordIcon.textContent = isPassword ? 'visibility_off' : 'visibility';
+            });
+        }
+
+        // 1-Click Demo Fill
+        function fillDemoCredentials() {
+            const userInput = document.getElementById('usernameInput');
+            const passInput = document.getElementById('passwordInput');
+            if (userInput && passInput) {
+                userInput.value = 'admin_natalya';
+                passInput.value = 'Natalya@Pharma#2026!';
+                passInput.focus();
+            }
+        }
+    </script>
+</body>
+</html>

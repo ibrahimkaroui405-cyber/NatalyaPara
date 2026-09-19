@@ -1,0 +1,97 @@
+@model PharmaTrust.Controllers.AdminDashboardViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Tableau de Bord";
+}
+
+<div class="space-y-8">
+    <!-- Welcome Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Tableau de Bord Officinal</h1>
+            <p class="text-xs text-slate-500 mt-1">Supervision de votre catalogue de soins, stocks et flux de commandes en temps réel.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a asp-controller="Admin" asp-action="Stock" class="bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-sm">shelves</span>
+                <span>Gestion des Stocks</span>
+            </a>
+            <a asp-controller="Admin" asp-action="CreateProduct" class="bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm">add</span>
+                <span>Nouveau Soin</span>
+            </a>
+            <a asp-controller="Admin" asp-action="Orders" class="bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-emerald-600">local_shipping</span>
+                <span>Commandes (@Model.TotalOrdersCount)</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-2xl border @(Model.LowStockProductsCount > 0 || Model.OutOfStockProducts > 0 ? "border-amber-300 bg-amber-50/20" : "border-slate-200") shadow-sm flex items-center justify-between">
+            <div>
+                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Stocks Critiques</div>
+                <div class="text-3xl font-bold @(Model.OutOfStockProducts > 0 ? "text-red-600" : Model.LowStockProductsCount > 0 ? "text-amber-600" : "text-slate-900")">
+                    @(Model.LowStockProductsCount + Model.OutOfStockProducts)
+                </div>
+                <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                    <span class="text-red-600 font-bold">@Model.OutOfStockProducts rupture(s)</span> &bull; 
+                    <span class="text-amber-700 font-semibold">@Model.LowStockProductsCount faible(s)</span>
+                </div>
+            </div>
+            <a asp-controller="Admin" asp-action="Stock" class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 hover:bg-amber-100 transition-colors">
+                <span class="material-symbols-outlined text-2xl">notification_important</span>
+            </a>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Commandes Clients</div>
+                <div class="text-3xl font-bold text-slate-900">@Model.TotalOrdersCount</div>
+                <div class="text-[11px] text-slate-500 mt-1">Commandes enregistrées</div>
+            </div>
+            <a asp-controller="Admin" asp-action="Orders" class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-900 hover:bg-slate-200 transition-colors">
+                <span class="material-symbols-outlined text-2xl">shopping_cart_checkout</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Orders Section -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+                <h3 class="font-editorial text-lg font-bold text-slate-900">Dernières Commandes</h3>
+                <p class="text-xs text-slate-400">Flux d'achats récents</p>
+            </div>
+            <a asp-controller="Admin" asp-action="Orders" class="text-xs font-bold uppercase tracking-wider text-black hover:underline">
+                Voir Tout &rarr;
+            </a>
+        </div>
+
+        <div class="space-y-3">
+            @if (Model.RecentOrders.Any())
+            {
+                @foreach (var ord in Model.RecentOrders)
+                {
+                    <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-xs hover:border-slate-300 transition-all">
+                        <div>
+                            <div class="font-bold text-slate-900 font-mono">@ord.OrderNumber</div>
+                            <div class="text-[11px] text-slate-500">@ord.CustomerName &bull; @ord.City</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-slate-900">@ord.TotalAmount.ToString("F2") DT</div>
+                            <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full @(ord.Status == "Livrée" ? "bg-emerald-50 text-emerald-800" : ord.Status == "Annulée" ? "bg-red-50 text-red-800" : "bg-amber-50 text-amber-800")">
+                                @ord.Status
+                            </span>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="py-8 text-center text-slate-400 text-xs">Aucune commande enregistrée.</div>
+            }
+        </div>
+    </div>
+</div>

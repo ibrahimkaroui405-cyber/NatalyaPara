@@ -1,0 +1,312 @@
+/* Natalya Parapharmacie - Minimalist Luxury (Noir Épuré & Platine) */
+
+:root {
+    --primary: #0F172A;
+    --primary-hover: #000000;
+    --primary-light: #F1F5F9;
+    --secondary: #334155;
+    --platinum: #94A3B8;
+    --platinum-light: #F8FAFC;
+    --platinum-border: #E2E8F0;
+    --obsidian: #090D16;
+    --bg-main: #F8FAFC;
+    --text-main: #0F172A;
+    --text-muted: #64748B;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.font-editorial {
+    font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Material Symbols alignment */
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined', sans-serif;
+    font-weight: normal;
+    font-style: normal;
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    vertical-align: middle;
+}
+
+/* Scrollbar Utility */
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Smooth Interactive Elements */
+a {
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* Number input spinners hide */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* Minimalist luxury interactions */
+.hover-lift {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px -10px rgba(15, 23, 42, 0.08);
+}
+
+.platinum-gradient-text {
+    background: linear-gradient(135deg, #0F172A 0%, #334155 60%, #64748B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.reveal-up {
+    animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Video Reel Showcase Styles */
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 12px rgba(255, 255, 255, 0);
+        transform: scale(1.05);
+    }
+}
+
+.video-play-pulse {
+    animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+@keyframes eqBar {
+    0%, 100% { height: 4px; }
+    50% { height: 16px; }
+}
+
+.eq-bar-1 { animation: eqBar 0.8s ease-in-out infinite alternate; }
+.eq-bar-2 { animation: eqBar 1.2s ease-in-out infinite 0.2s alternate; }
+.eq-bar-3 { animation: eqBar 0.9s ease-in-out infinite 0.4s alternate; }
+.eq-bar-4 { animation: eqBar 1.1s ease-in-out infinite 0.1s alternate; }
+
+.video-card-glass {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Parapharmacie Green Color Identity */
+:root {
+    --para-green: #15803D;
+    --para-green-hover: #166534;
+    --para-green-light: #F0FDF4;
+    --para-green-border: #BBF7D0;
+    --para-green-accent: #16A34A;
+    --gold-champagne: #C5A059;
+    --gold-champagne-light: #F9F6F0;
+    --gold-champagne-border: #E5DAC2;
+    --gold-champagne-dark: #916F2E;
+}
+
+.bg-para-green {
+    background-color: #15803D;
+}
+
+.text-para-green {
+    color: #15803D;
+}
+
+.border-para-green {
+    border-color: #15803D;
+}
+
+.gold-gradient-text {
+    background: linear-gradient(135deg, #15803D 0%, #16A34A 50%, #047857 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.gold-gradient-bg {
+    background: linear-gradient(135deg, #15803D 0%, #16A34A 50%, #047857 100%);
+}
+
+.gold-border-glow {
+    border-color: rgba(21, 128, 61, 0.4);
+    box-shadow: 0 0 20px rgba(21, 128, 61, 0.15);
+}
+
+.paris-glass {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.paris-glass-dark {
+    background: rgba(9, 13, 22, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(21, 128, 61, 0.3);
+}
+
+/* Button Shimmer Effect */
+.btn-paris-luxury {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-paris-luxury::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 20%;
+    height: 200%;
+    background: linear-gradient(
+        60deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.35) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(25deg);
+    transition: none;
+}
+
+.btn-paris-luxury:hover::after {
+    left: 140%;
+    transition: all 0.8s ease-in-out;
+}
+
+/* Hero Category Tabs Progress */
+.hero-tab-progress {
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.hero-tab.active .hero-tab-progress {
+    background-color: #15803D;
+}
+
+.hero-slide {
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-slide-img {
+    transition: transform 6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Floating WhatsApp / Support Button */
+.floating-whatsapp {
+    position: fixed;
+    bottom: 76px;
+    right: 16px;
+    z-index: 40;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+@media (min-width: 768px) {
+    .floating-whatsapp {
+        bottom: 24px;
+        right: 24px;
+    }
+}
+.floating-whatsapp:hover {
+    transform: scale(1.08);
+    box-shadow: 0 10px 25px rgba(21, 128, 61, 0.35);
+}
+
+@keyframes float-gentle {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-4px); }
+}
+
+.animate-float-gentle {
+    animation: float-gentle 4s ease-in-out infinite;
+}
+
+@keyframes pulse-emerald-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.25); }
+    50% { box-shadow: 0 0 0 8px rgba(21, 128, 61, 0); }
+}
+
+.animate-emerald-glow {
+    animation: pulse-emerald-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 100% Full Screen Height Hero Section on Mobile & Desktop */
+.hero-slider-section {
+    height: calc(100vh - 148px) !important;
+    height: calc(100dvh - 148px) !important;
+    min-height: calc(100vh - 148px) !important;
+    min-height: calc(100dvh - 148px) !important;
+}
+
+@media (min-width: 640px) {
+    .hero-slider-section {
+        height: calc(100vh - 160px) !important;
+        height: calc(100dvh - 160px) !important;
+        min-height: calc(100dvh - 160px) !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    .hero-slider-section {
+        height: calc(100vh - 104px) !important;
+        min-height: 580px !important;
+        max-height: 760px !important;
+    }
+}
+
+/* Hide scrollbar for Chrome, Safari, Opera and modern browsers */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}

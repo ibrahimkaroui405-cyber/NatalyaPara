@@ -1,0 +1,154 @@
+@model List<PharmaTrust.Models.Category>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Gestion des Catégories & Icônes";
+}
+
+<div class="space-y-8 max-w-5xl">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Univers &amp; Catégories (@Model.Count)</h1>
+            <p class="text-xs text-slate-500 mt-1">Personnalisez les rayons de votre parapharmacie avec vos propres photos/icônes importées depuis votre ordinateur.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Categories List (7 cols) -->
+        <div class="lg:col-span-7 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+            <h3 class="font-editorial text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">Catégories Actives</h3>
+
+            <div class="space-y-3">
+                @foreach (var cat in Model)
+                {
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-slate-300 transition-all">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-900 shadow-sm overflow-hidden p-1">
+                                @if (cat.Icon.StartsWith("/") || cat.Icon.StartsWith("http"))
+                                {
+                                    <img src="@cat.Icon" alt="@cat.Name" class="w-full h-full object-cover rounded-xl" onerror="this.src='https://placehold.co/100x100?text=Cat'" />
+                                }
+                                else
+                                {
+                                    <span class="material-symbols-outlined text-2xl text-slate-800">@cat.Icon</span>
+                                }
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold text-slate-900">@cat.Name</div>
+                                <div class="text-[10px] text-slate-400 font-mono">Slug: @cat.Slug &bull; @cat.ItemCount soins</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a asp-controller="Admin" asp-action="Products" asp-route-category="@cat.Slug" class="p-1.5 text-slate-500 hover:text-black rounded-lg hover:bg-slate-200 transition-colors" title="Voir les produits de ce rayon">
+                                <span class="material-symbols-outlined text-base">visibility</span>
+                            </a>
+                            <form asp-controller="Admin" asp-action="DeleteCategory" asp-route-id="@cat.Id" method="post" onsubmit="return confirm('Supprimer la catégorie « @cat.Name » ?');" class="inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors" title="Supprimer">
+                                    <span class="material-symbols-outlined text-base">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Add Category Form with PC Image Upload (5 cols) -->
+        <div class="lg:col-span-5 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
+            <div>
+                <h3 class="font-editorial text-lg font-bold text-slate-900">Nouvelle Catégorie</h3>
+                <p class="text-xs text-slate-400">Ajoutez un nouvel univers avec votre propre visuel.</p>
+            </div>
+
+            <form asp-controller="Admin" asp-action="AddCategory" method="post" enctype="multipart/form-data" class="space-y-4">
+                @Html.AntiForgeryToken()
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Nom de la Catégorie *</label>
+                    <input type="text" name="Name" required placeholder="Ex: Solaire &amp; Protection UV" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Identifiant URL (Slug)</label>
+                    <input type="text" name="Slug" placeholder="Ex: solaire-uv (auto si vide)" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+
+                <!-- PC File Upload Section -->
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <label class="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                        📸 Importer l'Image / Icône depuis votre PC
+                    </label>
+                    
+                    <div class="flex items-center gap-3">
+                        <label class="flex-1 cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 hover:border-black rounded-2xl bg-slate-50 hover:bg-slate-100 transition-all text-center">
+                            <span class="material-symbols-outlined text-2xl text-slate-500 mb-1">upload_file</span>
+                            <span class="text-xs font-bold text-slate-700">Choisir une image sur le PC</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5">PNG, JPG, SVG, WebP</span>
+                            <input type="file" name="iconFile" id="iconFileInput" accept="image/*" class="hidden" onchange="previewCategoryUpload(this)" />
+                        </label>
+                        
+                        <div id="catPreviewBox" class="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 p-1">
+                            <img id="catPreviewImg" src="" alt="Aperçu" class="w-full h-full object-cover rounded-xl hidden" />
+                            <span id="catPreviewPlaceholder" class="material-symbols-outlined text-2xl text-slate-400">image</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ou choisir une icône rapide -->
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                    <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Ou choisir une icône standard :</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="selectQuickIcon('spa')" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 hover:bg-black hover:text-white transition-all flex items-center gap-1 border border-slate-200">
+                            <span class="material-symbols-outlined text-sm">spa</span> Soin
+                        </button>
+                        <button type="button" onclick="selectQuickIcon('medication')" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 hover:bg-black hover:text-white transition-all flex items-center gap-1 border border-slate-200">
+                            <span class="material-symbols-outlined text-sm">medication</span> Santé
+                        </button>
+                        <button type="button" onclick="selectQuickIcon('sunny')" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 hover:bg-black hover:text-white transition-all flex items-center gap-1 border border-slate-200">
+                            <span class="material-symbols-outlined text-sm">sunny</span> Solaire
+                        </button>
+                        <button type="button" onclick="selectQuickIcon('child_care')" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 hover:bg-black hover:text-white transition-all flex items-center gap-1 border border-slate-200">
+                            <span class="material-symbols-outlined text-sm">child_care</span> Bébé
+                        </button>
+                    </div>
+                    <input type="hidden" name="Icon" id="iconHiddenInput" value="spa" />
+                </div>
+
+                <div class="pt-3">
+                    <button type="submit" class="w-full py-3.5 bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-[0.16em] rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-base">add</span>
+                        Créer la Catégorie
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewCategoryUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.getElementById('catPreviewImg');
+                    const placeholder = document.getElementById('catPreviewPlaceholder');
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function selectQuickIcon(iconName) {
+            document.getElementById('iconHiddenInput').value = iconName;
+            const img = document.getElementById('catPreviewImg');
+            const placeholder = document.getElementById('catPreviewPlaceholder');
+            img.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            placeholder.innerText = iconName;
+        }
+    </script>
+}

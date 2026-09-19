@@ -1,0 +1,243 @@
+@model List<PharmaTrust.Models.StoryReel>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Gestion des Stories & Démonstrations Vidéo";
+    var products = ViewBag.Products as List<PharmaTrust.Models.Product> ?? new List<PharmaTrust.Models.Product>();
+    var brands = ViewBag.Brands as List<string> ?? new List<string>();
+}
+
+<div class="space-y-8 max-w-6xl">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-[#15803D] text-[10px] font-bold uppercase tracking-wider mb-2 border border-emerald-200">
+                <span class="w-2 h-2 rounded-full bg-[#15803D] animate-ping"></span>
+                <span>Section Accueil &bull; Stories • Rituels en Direct</span>
+            </div>
+            <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Stories &amp; Démonstrations (@Model.Count)</h1>
+            <p class="text-xs text-slate-500 mt-1">Ajoutez, modifiez ou supprimez vos vidéos de démonstration de soins (format vertical Reels / Stories).</p>
+        </div>
+
+        <button type="button" onclick="openCreateStoryModal()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-sm">
+            <span class="material-symbols-outlined text-sm">video_call</span>
+            <span>Nouvelle Story Vidéo</span>
+        </button>
+    </div>
+
+    <!-- Live Cards Grid (Interactive Video Previews) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach (var story in Model)
+        {
+            <div class="reel-card group relative rounded-[28px] overflow-hidden bg-slate-950 text-white min-h-[460px] shadow-[0_20px_45px_rgba(0,0,0,0.14)] border @(story.IsActive ? "border-slate-800" : "border-red-900/40 opacity-60") flex flex-col justify-between p-5 transition-all duration-300">
+                
+                <!-- Autoplay Video Background -->
+                <video autoplay muted loop playsinline preload="auto" poster="@story.PosterUrl" class="reel-video absolute inset-0 w-full h-full object-cover">
+                    <source src="@story.VideoUrl" type="video/mp4" />
+                </video>
+                <div class="absolute inset-0 z-0 bg-gradient-to-t from-black/80 via-black/20 to-black/60 pointer-events-none"></div>
+
+                <!-- Top: Brand Badges & Admin Actions -->
+                <div class="relative z-10 flex items-center justify-between gap-2">
+                    <span class="px-3 py-1 rounded-full text-white text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 shadow-md backdrop-blur-md @(story.BadgeColor == "emerald" ? "bg-emerald-600/90" : story.BadgeColor == "teal" ? "bg-teal-600/90" : story.BadgeColor == "amber" ? "bg-amber-600/90" : story.BadgeColor == "indigo" ? "bg-indigo-600/90" : "bg-red-600/90")">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                        <span>@story.BadgeText</span>
+                    </span>
+
+                    <div class="flex items-center gap-1 bg-black/70 backdrop-blur-md p-1 rounded-xl border border-white/20">
+                        <form asp-controller="Admin" asp-action="ToggleStory" asp-route-id="@story.Id" method="post" class="inline">
+                            <button type="submit" class="p-1 rounded-lg text-xs transition-colors @(story.IsActive ? "text-emerald-400 hover:bg-emerald-950/60" : "text-slate-400 hover:bg-slate-800")" title="@(story.IsActive ? "Actif (cliquez pour désactiver)" : "Inactif (cliquez pour activer)")">
+                                <span class="material-symbols-outlined text-sm">@(story.IsActive ? "visibility" : "visibility_off")</span>
+                            </button>
+                        </form>
+                        <button type="button" onclick="openEditStoryModal(@story.Id, '@Html.Raw(Html.Encode(story.BrandName))', '@Html.Raw(Html.Encode(story.BadgeText))', '@story.BadgeColor', '@Html.Raw(Html.Encode(story.Title))', '@Html.Raw(Html.Encode(story.Description))', '@story.VideoUrl', '@story.PosterUrl', @(story.AssociatedProductId?.ToString() ?? "null"), @story.DisplayOrder, @(story.IsActive ? "true" : "false"))" class="p-1 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 transition-colors" title="Modifier">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                        <form asp-controller="Admin" asp-action="DeleteStory" asp-route-id="@story.Id" method="post" onsubmit="return confirm('Supprimer définitivement cette story vidéo ?');" class="inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="p-1 text-red-400 hover:text-red-200 rounded-lg hover:bg-red-900/40 transition-colors" title="Supprimer">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Center: Video play indicator -->
+                <div class="relative z-10 flex flex-col items-center justify-center my-auto py-6">
+                    <div class="w-12 h-12 rounded-full bg-black/40 text-white border border-white/30 flex items-center justify-center backdrop-blur-md">
+                        <span class="material-symbols-outlined text-xl">play_arrow</span>
+                    </div>
+                </div>
+
+                <!-- Bottom Information -->
+                <div class="relative z-10 space-y-1.5 bg-black/50 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[9px] text-amber-400 font-bold uppercase tracking-widest">Laboratoire @story.BrandName</span>
+                        <span class="text-[9px] text-slate-400 font-mono">Ordre: #@story.DisplayOrder</span>
+                    </div>
+                    <h3 class="font-editorial text-base font-bold text-white leading-tight">
+                        @story.Title
+                    </h3>
+                    @if (!string.IsNullOrWhiteSpace(story.Description))
+                    {
+                        <p class="text-[11px] text-slate-300 font-light leading-snug line-clamp-2">
+                            @story.Description
+                        </p>
+                    }
+                    <div class="text-[9px] text-slate-400 font-mono pt-1 truncate">
+                        Fichier: @story.VideoUrl
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal: Create / Edit Story Reel -->
+<div id="storyModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+            <h3 id="storyModalTitle" class="font-editorial text-xl font-bold text-slate-900">Nouvelle Story Vidéo</h3>
+            <button type="button" onclick="closeStoryModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
+                <span class="material-symbols-outlined text-sm">close</span>
+            </button>
+        </div>
+
+        <form id="storyForm" method="post" enctype="multipart/form-data" class="space-y-4">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" id="storyId" value="0" />
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Laboratoire / Marque *</label>
+                    <input type="text" name="BrandName" id="storyBrand" required placeholder="Ex: Eucerin, Avène, SVR..." class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-semibold" />
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Badge Tag *</label>
+                    <input type="text" name="BadgeText" id="storyBadgeText" required placeholder="Ex: Story Dermo, Story Soin" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-semibold" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Couleur du Badge</label>
+                    <select name="BadgeColor" id="storyBadgeColor" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-semibold">
+                        <option value="red">Rouge Médical</option>
+                        <option value="emerald">Vert Émeraude</option>
+                        <option value="teal">Sarcelle / Soin</option>
+                        <option value="indigo">Bleu Indigo</option>
+                        <option value="amber">Ambre Solaire</option>
+                        <option value="rose">Rose Dermo</option>
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Ordre d'affichage</label>
+                    <input type="number" name="DisplayOrder" id="storyOrder" value="1" min="1" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black" />
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Titre / Soin Démonstré *</label>
+                <input type="text" name="Title" id="storyTitle" required placeholder="Ex: Anti-Pigment Sérum Duo & Hyaluron-Filler" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-bold" />
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Description / Bénéfice</label>
+                <textarea name="Description" id="storyDescription" rows="2" placeholder="Réduit visiblement les taches pigmentaires..." class="w-full py-2 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black"></textarea>
+            </div>
+
+            <!-- Video File Upload & URL -->
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+                <label class="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                    🎥 Vidéo de la Story (Format MP4 / WebM)
+                </label>
+                <label class="cursor-pointer flex flex-col items-center justify-center p-3.5 border-2 border-dashed border-slate-300 hover:border-black rounded-2xl bg-slate-50 hover:bg-slate-100 transition-all text-center">
+                    <span class="material-symbols-outlined text-xl text-slate-500 mb-0.5">video_file</span>
+                    <span class="text-xs font-bold text-slate-700">Importer une vidéo MP4 depuis votre PC</span>
+                    <span class="text-[9.5px] text-slate-400">Fichier MP4, WebM (Format vertical recommandé)</span>
+                    <input type="file" name="videoFile" accept="video/mp4,video/webm" class="hidden" />
+                </label>
+                <input type="text" name="VideoUrl" id="storyVideoUrl" placeholder="Ou chemin vidéo existant (ex: /videos/v1.mp4)" class="w-full py-2 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-mono text-[11px]" />
+            </div>
+
+            <!-- Poster Image Upload & URL -->
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+                <label class="text-xs font-bold text-slate-800 uppercase tracking-wider block">Image de Couverture / Poster (Optionnel)</label>
+                <input type="file" name="posterFile" accept="image/*" class="w-full py-1.5 text-xs text-slate-500 file:mr-3 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-black" />
+                <input type="text" name="PosterUrl" id="storyPosterUrl" placeholder="Ou URL image poster (ex: https://images.unsplash.com/...)" class="w-full py-2 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black font-mono text-[11px]" />
+            </div>
+
+            <!-- Linked Product & Active -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Associer à un Produit</label>
+                    <select name="AssociatedProductId" id="storyProduct" class="w-full py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-black">
+                        <option value="">-- Aucun --</option>
+                        @foreach (var p in products)
+                        {
+                            <option value="@p.Id">#@p.Id - @p.Name (@p.Brand)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2 pt-6">
+                    <input type="checkbox" name="IsActive" id="storyIsActive" value="true" checked class="w-4 h-4 rounded text-black focus:ring-black" />
+                    <label for="storyIsActive" class="text-xs font-bold text-slate-800">Afficher immédiatement sur l'accueil</label>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button type="button" onclick="closeStoryModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider">
+                    Annuler
+                </button>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
+                    Enregistrer la Story
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openCreateStoryModal() {
+        document.getElementById('storyModalTitle').textContent = "Nouvelle Story Vidéo";
+        document.getElementById('storyForm').action = "/Admin/CreateStory";
+        document.getElementById('storyId').value = "0";
+        document.getElementById('storyBrand').value = "Eucerin";
+        document.getElementById('storyBadgeText').value = "Story Dermo";
+        document.getElementById('storyBadgeColor').value = "red";
+        document.getElementById('storyTitle').value = "";
+        document.getElementById('storyDescription').value = "";
+        document.getElementById('storyVideoUrl').value = "/videos/v1.mp4";
+        document.getElementById('storyPosterUrl').value = "";
+        document.getElementById('storyOrder').value = "1";
+        document.getElementById('storyProduct').value = "";
+        document.getElementById('storyIsActive').checked = true;
+        
+        document.getElementById('storyModal').classList.remove('hidden');
+        document.getElementById('storyModal').classList.add('flex');
+    }
+
+    function openEditStoryModal(id, brand, badge, color, title, desc, videoUrl, posterUrl, prodId, order, isActive) {
+        document.getElementById('storyModalTitle').textContent = "Modifier la Story Vidéo";
+        document.getElementById('storyForm').action = "/Admin/EditStory";
+        document.getElementById('storyId').value = id;
+        document.getElementById('storyBrand').value = brand;
+        document.getElementById('storyBadgeText').value = badge;
+        document.getElementById('storyBadgeColor').value = color || "red";
+        document.getElementById('storyTitle').value = title;
+        document.getElementById('storyDescription').value = desc;
+        document.getElementById('storyVideoUrl').value = videoUrl;
+        document.getElementById('storyPosterUrl').value = posterUrl;
+        document.getElementById('storyOrder').value = order;
+        document.getElementById('storyProduct').value = prodId ? prodId : "";
+        document.getElementById('storyIsActive').checked = isActive;
+        
+        document.getElementById('storyModal').classList.remove('hidden');
+        document.getElementById('storyModal').classList.add('flex');
+    }
+
+    function closeStoryModal() {
+        document.getElementById('storyModal').classList.add('hidden');
+        document.getElementById('storyModal').classList.remove('flex');
+    }
+</script>

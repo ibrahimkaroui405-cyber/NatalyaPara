@@ -1,0 +1,248 @@
+@model List<PharmaTrust.Models.Product>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Gestion des Produits & Soins";
+    var categories = ViewBag.Categories as List<PharmaTrust.Models.Category> ?? new List<PharmaTrust.Models.Category>();
+    var brands = ViewBag.Brands as List<string> ?? new List<string>();
+    string searchQuery = ViewBag.SearchQuery as string ?? "";
+    string selectedCategory = ViewBag.SelectedCategory as string ?? "";
+    string selectedBrand = ViewBag.SelectedBrand as string ?? "";
+
+    int currentPage = ViewBag.CurrentPage as int? ?? 1;
+    int pageSize = ViewBag.PageSize as int? ?? 10;
+    int totalCount = ViewBag.TotalCount as int? ?? Model.Count;
+    int totalPages = ViewBag.TotalPages as int? ?? 1;
+    bool hasPreviousPage = ViewBag.HasPreviousPage as bool? ?? false;
+    bool hasNextPage = ViewBag.HasNextPage as bool? ?? false;
+}
+
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Catalogue des Produits (@totalCount)</h1>
+            <p class="text-xs text-slate-500 mt-1">Ajoutez, modifiez, ajustez les prix et gérez les disponibilités de vos soins.</p>
+        </div>
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+            <a asp-controller="Admin" asp-action="Stock" class="bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-sm text-emerald-600">shelves</span>
+                <span>Gestion Stocks</span>
+            </a>
+            <a asp-controller="Admin" asp-action="CreateProduct" class="bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-sm">add</span>
+                <span>Nouveau Soin</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <form asp-controller="Admin" asp-action="Products" method="get" class="flex-1 w-full flex flex-wrap items-center gap-3">
+            <div class="relative flex-1 min-w-[200px]">
+                <input type="text" name="q" value="@searchQuery" placeholder="Rechercher par nom, marque, référence..." class="w-full py-2 pl-9 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-black" />
+                <span class="material-symbols-outlined text-slate-400 text-sm absolute left-3 top-2.5">search</span>
+            </div>
+            
+            <select name="category" onchange="this.form.submit()" class="py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs focus:outline-none focus:border-black cursor-pointer">
+                <option value="">Toutes les catégories</option>
+                @foreach (var cat in categories)
+                {
+                    <option value="@cat.Slug" selected="@(selectedCategory == cat.Slug)">@cat.Name</option>
+                }
+            </select>
+
+            <select name="brand" onchange="this.form.submit()" class="py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs focus:outline-none focus:border-black cursor-pointer">
+                <option value="">Toutes les marques</option>
+                @foreach (var brand in brands)
+                {
+                    <option value="@brand" selected="@(selectedBrand == brand)">@brand</option>
+                }
+            </select>
+
+            <button type="submit" class="px-5 py-2 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-all">
+                Filtrer
+            </button>
+        </form>
+
+        @if (!string.IsNullOrEmpty(searchQuery) || !string.IsNullOrEmpty(selectedCategory) || !string.IsNullOrEmpty(selectedBrand))
+        {
+            <a asp-controller="Admin" asp-action="Products" class="text-xs text-slate-500 hover:text-black flex items-center gap-1 font-semibold flex-shrink-0">
+                <span class="material-symbols-outlined text-sm">close</span> Effacer les filtres
+            </a>
+        }
+    </div>
+
+    <!-- Products Table -->
+    <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-slate-50/80 text-slate-400 uppercase tracking-wider border-b border-slate-200">
+                        <th class="py-3.5 px-6 font-semibold">ID</th>
+                        <th class="py-3.5 px-6 font-semibold">Produit</th>
+                        <th class="py-3.5 px-6 font-semibold">Catégorie</th>
+                        <th class="py-3.5 px-6 font-semibold">Prix Public</th>
+                        <th class="py-3.5 px-6 font-semibold">Statut Stock</th>
+                        <th class="py-3.5 px-6 font-semibold">Réglementation</th>
+                        <th class="py-3.5 px-6 font-semibold text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (Model.Any())
+                    {
+                        @foreach (var prod in Model)
+                        {
+                            <tr class="hover:bg-slate-50/70 transition-colors">
+                                <td class="py-4 px-6 font-mono text-slate-400 text-[11px]">#@prod.Id</td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-3.5">
+                                        <img src="@prod.ImageUrl" alt="@prod.Name" class="w-12 h-12 rounded-xl object-cover bg-slate-50 border border-slate-200 shrink-0" />
+                                        <div>
+                                            <div class="font-bold text-slate-900 max-w-xs line-clamp-1">@prod.Name</div>
+                                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">@prod.Brand</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 text-slate-600 font-medium">@prod.CategoryName</td>
+                                <td class="py-4 px-6 font-bold text-slate-900">
+                                    @prod.Price.ToString("F2") Dinar
+                                </td>
+                                <td class="py-4 px-6">
+                                    @if (!prod.InStock || prod.StockQuantity <= 0)
+                                    {
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 text-[10px] font-bold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span> Rupture
+                                        </span>
+                                    }
+                                    else if (prod.StockQuantity <= 5)
+                                    {
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Faible (@prod.StockQuantity)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> En stock (@prod.StockQuantity)
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-4 px-6">
+                                    @if (prod.RxRequired)
+                                    {
+                                        <span class="px-2.5 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px] font-bold uppercase">Sur Ordonnance</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-slate-400 text-[10px]">Libre Accès</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a asp-controller="Products" asp-action="Details" asp-route-id="@prod.Id" target="_blank" class="p-1.5 text-slate-400 hover:text-black rounded-lg hover:bg-slate-100 transition-colors" title="Voir sur la boutique">
+                                            <span class="material-symbols-outlined text-base">visibility</span>
+                                        </a>
+                                        <a asp-controller="Admin" asp-action="EditProduct" asp-route-id="@prod.Id" class="p-1.5 text-slate-600 hover:text-black rounded-lg hover:bg-slate-100 transition-colors" title="Modifier le soin">
+                                            <span class="material-symbols-outlined text-base">edit</span>
+                                        </a>
+                                        <form asp-controller="Admin" asp-action="DeleteProduct" asp-route-id="@prod.Id" method="post" onsubmit="return confirm('Confirmez-vous la suppression définitive de « @prod.Name » ?');" class="inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors" title="Supprimer">
+                                                <span class="material-symbols-outlined text-base">delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="py-12 text-center text-slate-400">
+                                Aucun produit ne correspond aux critères de recherche.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <!-- Admin Table Pagination Bar -->
+            <div class="p-4 sm:p-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+                <div class="text-xs text-slate-500 font-medium text-center sm:text-left">
+                    Affichage de <strong class="text-slate-900 font-bold">@((currentPage - 1) * pageSize + 1)</strong> à 
+                    <strong class="text-slate-900 font-bold">@(Math.Min(currentPage * pageSize, totalCount))</strong> sur 
+                    <strong class="text-slate-900 font-bold">@totalCount</strong> produits
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-wrap justify-center">
+                    <!-- Prev -->
+                    @if (hasPreviousPage)
+                    {
+                        <a asp-controller="Admin" asp-action="Products" 
+                           asp-route-page="@(currentPage - 1)" 
+                           asp-route-q="@searchQuery" 
+                           asp-route-category="@selectedCategory" 
+                           asp-route-brand="@selectedBrand"
+                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs">
+                            <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            <span class="hidden sm:inline">Précédent</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-100 bg-slate-100/60 text-slate-300 text-xs font-bold cursor-not-allowed select-none">
+                            <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            <span class="hidden sm:inline">Précédent</span>
+                        </span>
+                    }
+
+                    <!-- Page Numbers -->
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        var isCur = i == currentPage;
+                        if (i == 1 || i == totalPages || (i >= currentPage - 2 && i <= currentPage + 2))
+                        {
+                            <a asp-controller="Admin" asp-action="Products" 
+                               asp-route-page="@i" 
+                               asp-route-q="@searchQuery" 
+                               asp-route-category="@selectedCategory" 
+                               asp-route-brand="@selectedBrand"
+                               class="w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all shadow-2xs @(isCur ? "bg-black text-white shadow-sm" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100")">
+                                @i
+                            </a>
+                        }
+                        else if (i == currentPage - 3 || i == currentPage + 3)
+                        {
+                            <span class="w-7 h-7 flex items-center justify-center text-slate-400 font-bold text-xs select-none">&hellip;</span>
+                        }
+                    }
+
+                    <!-- Next -->
+                    @if (hasNextPage)
+                    {
+                        <a asp-controller="Admin" asp-action="Products" 
+                           asp-route-page="@(currentPage + 1)" 
+                           asp-route-q="@searchQuery" 
+                           asp-route-category="@selectedCategory" 
+                           asp-route-brand="@selectedBrand"
+                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs">
+                            <span class="hidden sm:inline">Suivant</span>
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-100 bg-slate-100/60 text-slate-300 text-xs font-bold cursor-not-allowed select-none">
+                            <span class="hidden sm:inline">Suivant</span>
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,288 @@
+@model PharmaTrust.Models.BrandsPageViewModel
+@{
+    ViewData["Title"] = "Grandes Marques & Laboratoires Partenaires - Natalya Parapharmacie";
+}
+
+<main class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+    <!-- Header with Luxury Ambient Accents (Same Style as Catalogue) -->
+    <div class="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-r from-slate-50 via-white to-amber-50/30 border border-slate-200/80 p-6 sm:p-8">
+        <!-- Subtle Ambient Color Lights -->
+        <div class="absolute -top-16 -right-16 w-80 h-80 bg-amber-200/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-16 left-1/3 w-80 h-80 bg-teal-200/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute top-1/2 -left-16 w-60 h-60 bg-rose-200/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10">
+            <!-- Breadcrumb Navigation -->
+            <nav class="flex items-center gap-2 text-xs text-slate-400 mb-3 select-none font-medium">
+                <a class="hover:text-slate-900 transition-colors flex items-center gap-1" asp-controller="Home" asp-action="Index">
+                    <span class="material-symbols-outlined text-sm">home</span>
+                    Accueil
+                </a>
+                <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
+                <a class="hover:text-slate-900 transition-colors" asp-controller="Products" asp-action="Index">Catalogue</a>
+                <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
+                <span class="text-slate-900 font-bold">Marques & Laboratoires</span>
+            </nav>
+
+            <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                <div>
+                    <!-- Luxury Dark & Gold Trust Pill -->
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider mb-2.5 shadow-sm">
+                        <span class="material-symbols-outlined text-xs text-amber-400" style="font-variation-settings: 'FILL' 1;">stars</span>
+                        <span>Officine Agréée &bull; 100% Produits Authentiques</span>
+                    </div>
+
+                    <!-- Multi-Tone Title -->
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl text-slate-900 font-extrabold tracking-tight leading-tight">
+                        Grandes Marques &amp; <span class="bg-gradient-to-r from-[#15803D] via-teal-600 to-amber-600 bg-clip-text text-transparent">Laboratoires</span>
+                    </h1>
+
+                    <p class="text-xs sm:text-sm text-slate-600 mt-2 max-w-2xl font-light leading-relaxed">
+                        Explorez l'ensemble de nos marques dermo-cosmétiques certifiées, laboratoires pharmaceutiques et soins d'officine.
+                    </p>
+                </div>
+
+                <!-- Link to Catalog Button -->
+                <a asp-controller="Products" asp-action="Index" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-[#15803D] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-sm w-fit flex-shrink-0 group">
+                    <span class="material-symbols-outlined text-sm text-amber-400">inventory_2</span>
+                    <span>Tout le Catalogue</span>
+                    <span class="material-symbols-outlined text-xs transition-transform group-hover:translate-x-1">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Search Filter Tag (if active) -->
+    @if (!string.IsNullOrEmpty(Model.SearchQuery))
+    {
+        <div class="mb-6 p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[#15803D] text-sm">filter_alt</span>
+                <span class="text-xs text-slate-700">
+                    Recherche active :
+                    <strong class="text-slate-900 font-bold ml-1">« @Model.SearchQuery »</strong>
+                    <span class="text-slate-500 ml-1">(@Model.TotalBrands marques trouvées)</span>
+                </span>
+            </div>
+            <a asp-controller="Products" asp-action="Marques" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-emerald-200 text-slate-700 hover:text-red-600 text-xs font-semibold transition-colors shadow-xs">
+                <span class="material-symbols-outlined text-xs">close</span>
+                Réinitialiser
+            </a>
+        </div>
+    }
+
+    <!-- Search & Toolbar (Same Style as Catalogue) -->
+    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 mb-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <form asp-controller="Products" asp-action="Marques" method="get" class="flex-1 w-full flex items-center gap-2">
+            <input type="hidden" name="sort" value="@Model.SortOrder" />
+            <div class="relative flex-1">
+                <input type="text" name="q" value="@Model.SearchQuery" placeholder="Rechercher un laboratoire ou une marque (ex. Bioderma, Mustela, ACM...)" 
+                       class="w-full py-2.5 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:bg-white text-xs transition-all" />
+                <span class="material-symbols-outlined text-slate-400 text-lg absolute left-3 top-2.5">search</span>
+            </div>
+            <button type="submit" class="px-5 py-2.5 bg-slate-900 hover:bg-[#15803D] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm">
+                Rechercher
+            </button>
+        </form>
+
+        <div class="flex items-center justify-between md:justify-end w-full md:w-auto gap-4 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+            <div class="text-xs text-slate-500 whitespace-nowrap">
+                <strong class="text-slate-900 font-bold">@Model.TotalBrands</strong> marques répertoriées
+            </div>
+            <form asp-controller="Products" asp-action="Marques" method="get" class="flex items-center gap-2">
+                <input type="hidden" name="q" value="@Model.SearchQuery" />
+                <select name="sort" onchange="this.form.submit()" class="py-2 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs focus:outline-none focus:border-slate-400 cursor-pointer transition-all">
+                    <option value="popular" selected="@(Model.SortOrder == "popular")">Trier : Les plus populaires</option>
+                    <option value="az" selected="@(Model.SortOrder == "az")">Ordre alphabétique (A - Z)</option>
+                    <option value="za" selected="@(Model.SortOrder == "za")">Ordre alphabétique (Z - A)</option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Brand Cards Grid (Luxury Dermo-Cosmetics Directory) -->
+    @if (Model.Brands.Any())
+    {
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            @foreach (var brand in Model.Brands)
+            {
+                var initials = !string.IsNullOrWhiteSpace(brand.LogoInitials) ? brand.LogoInitials : (!string.IsNullOrWhiteSpace(brand.Name) && brand.Name.Length >= 2 ? brand.Name.Substring(0, 2).ToUpper() : "NP");
+                
+                <!-- Individual Brand Card (Clickable -> Opens /Products?brand=...) -->
+                <a asp-controller="Products" asp-action="Index" asp-route-brand="@brand.Name" 
+                   class="group relative bg-white rounded-3xl border border-slate-200/80 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_20px_45px_rgba(21,128,61,0.12)] hover:-translate-y-2 hover:border-emerald-400 overflow-hidden shadow-xs">
+                    
+                    <!-- Top Ambient Banner Background with Monogram Watermark -->
+                    <div class="relative px-5 pt-5 pb-4 bg-gradient-to-br from-slate-50 via-emerald-50/40 to-amber-50/20 border-b border-slate-100 overflow-hidden">
+                        <!-- Subtle Glow & Large Background Monogram Watermark -->
+                        <div class="absolute -right-6 -top-6 w-28 h-28 bg-emerald-300/20 rounded-full blur-2xl group-hover:scale-150 group-hover:bg-emerald-400/30 transition-all duration-500 pointer-events-none"></div>
+                        <div class="absolute right-2 -bottom-3 text-6xl font-serif font-black text-slate-200/50 select-none pointer-events-none group-hover:text-emerald-200/60 group-hover:scale-110 transition-all duration-300">
+                            @initials
+                        </div>
+
+                        <div class="relative z-10 flex items-start justify-between gap-3">
+                            <!-- Luxury Emblem Badge (Dark Obsidian & Emerald Border) -->
+                            <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white flex items-center justify-center font-black text-base tracking-wider shadow-md border-2 border-emerald-500/40 group-hover:border-emerald-400 group-hover:scale-105 group-hover:shadow-emerald-900/30 transition-all duration-300 flex-shrink-0">
+                                @if (!string.IsNullOrEmpty(brand.LogoUrl))
+                                {
+                                    <img src="@brand.LogoUrl" alt="@brand.Name" class="w-full h-full object-contain p-2 rounded-2xl" onerror="this.style.display='none'" />
+                                }
+                                <span class="bg-gradient-to-br from-white via-slate-100 to-emerald-200 bg-clip-text text-transparent">@initials</span>
+                            </div>
+
+                            <!-- Product Count Badge & Tag -->
+                            <div class="flex flex-col items-end gap-1">
+                                @if (brand.ProductCount > 0)
+                                {
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/90 text-[#15803D] text-[11px] font-extrabold shadow-2xs group-hover:bg-[#15803D] group-hover:text-white group-hover:border-[#15803D] transition-all">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 group-hover:bg-white animate-pulse"></span>
+                                        <span>@brand.ProductCount soin@(brand.ProductCount > 1 ? "s" : "")</span>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">
+                                        Partenaire
+                                    </span>
+                                }
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-700 transition-colors">
+                                    Officine Agréée
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Body Content -->
+                    <div class="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                            <!-- Brand Name -->
+                            <h3 class="font-black text-slate-900 text-lg tracking-tight group-hover:text-[#15803D] transition-colors line-clamp-1 mb-1.5">
+                                @brand.Name
+                            </h3>
+
+                            <!-- Micro-tags / Trust Indicators -->
+                            <div class="flex items-center gap-2 flex-wrap mb-2.5 text-[11px]">
+                                <span class="inline-flex items-center gap-1 text-slate-700 font-bold bg-slate-50 px-2.5 py-0.5 rounded-lg border border-slate-200/70">
+                                    <span class="material-symbols-outlined text-xs text-amber-500" style="font-variation-settings: 'FILL' 1;">stars</span>
+                                    <span>4.9</span>
+                                </span>
+                                <span class="inline-flex items-center gap-1 text-emerald-800 font-semibold bg-emerald-50/70 px-2.5 py-0.5 rounded-lg border border-emerald-200/80">
+                                    <span class="material-symbols-outlined text-xs text-[#15803D]">verified</span>
+                                    <span>Authentique</span>
+                                </span>
+                            </div>
+
+                            <!-- Description -->
+                            <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed font-light min-h-[34px]">
+                                @(string.IsNullOrEmpty(brand.Description) 
+                                    ? $"Gamme complète de soins haute tolérance et formules certifiées {brand.Name}." 
+                                    : brand.Description)
+                            </p>
+                        </div>
+
+                        <!-- Card Action Footer -->
+                        <div class="pt-3.5 mt-3.5 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700 group-hover:text-[#15803D] transition-colors flex items-center gap-1">
+                                <span>Explorer la collection</span>
+                            </span>
+                            <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 group-hover:bg-[#15803D] group-hover:text-white flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-2xs">
+                                <span class="material-symbols-outlined text-sm transition-transform duration-300 group-hover:translate-x-0.5">arrow_forward</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+
+        <!-- Pagination for Brand Cards Directory -->
+        @if (Model.TotalPages > 1)
+        {
+            <div class="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs">
+                <div class="text-xs text-slate-500 font-medium text-center sm:text-left">
+                    Affichage de <strong class="text-slate-900 font-bold">@((Model.CurrentPage - 1) * Model.PageSize + 1)</strong> à 
+                    <strong class="text-slate-900 font-bold">@(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalBrands))</strong> sur 
+                    <strong class="text-slate-900 font-bold">@Model.TotalBrands</strong> marques
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-wrap justify-center">
+                    <!-- Previous Button -->
+                    @if (Model.HasPreviousPage)
+                    {
+                        <a asp-controller="Products" asp-action="Marques" 
+                           asp-route-page="@(Model.CurrentPage - 1)" 
+                           asp-route-q="@Model.SearchQuery" 
+                           asp-route-sort="@Model.SortOrder"
+                           class="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs" title="Page précédente">
+                            <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            <span class="hidden sm:inline">Précédent</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl border border-slate-100 bg-slate-50 text-slate-300 text-xs font-bold cursor-not-allowed select-none">
+                            <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            <span class="hidden sm:inline">Précédent</span>
+                        </span>
+                    }
+
+                    <!-- Page Number Pills -->
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        var isCurrent = i == Model.CurrentPage;
+                        if (i == 1 || i == Model.TotalPages || (i >= Model.CurrentPage - 2 && i <= Model.CurrentPage + 2))
+                        {
+                            <a asp-controller="Products" asp-action="Marques" 
+                               asp-route-page="@i" 
+                               asp-route-q="@Model.SearchQuery" 
+                               asp-route-sort="@Model.SortOrder"
+                               class="w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold transition-all shadow-xs @(isCurrent ? "bg-[#15803D] text-white shadow-sm shadow-emerald-700/20" : "bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:text-[#15803D]")">
+                                @i
+                            </a>
+                        }
+                        else if (i == Model.CurrentPage - 3 || i == Model.CurrentPage + 3)
+                        {
+                            <span class="w-8 h-8 flex items-center justify-center text-slate-400 font-bold text-xs select-none">&hellip;</span>
+                        }
+                    }
+
+                    <!-- Next Button -->
+                    @if (Model.HasNextPage)
+                    {
+                        <a asp-controller="Products" asp-action="Marques" 
+                           asp-route-page="@(Model.CurrentPage + 1)" 
+                           asp-route-q="@Model.SearchQuery" 
+                           asp-route-sort="@Model.SortOrder"
+                           class="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs" title="Page suivante">
+                            <span class="hidden sm:inline">Suivant</span>
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl border border-slate-100 bg-slate-50 text-slate-300 text-xs font-bold cursor-not-allowed select-none">
+                            <span class="hidden sm:inline">Suivant</span>
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Empty State -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 p-12 text-center my-8 shadow-xs max-w-lg mx-auto">
+            <div class="w-16 h-16 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                <span class="material-symbols-outlined text-3xl">search_off</span>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 mb-1">Aucune marque trouvée</h3>
+            <p class="text-xs text-slate-500 font-light mb-6">
+                Aucun laboratoire ne correspond à votre recherche « @Model.SearchQuery ».
+            </p>
+            <a asp-controller="Products" asp-action="Marques" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold transition-all shadow-xs">
+                <span>Voir toutes les marques</span>
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </a>
+        </div>
+    }
+</main>

@@ -1,0 +1,655 @@
+@inject PharmaTrust.Services.IProductService ProductService
+@{
+    int cartCount = ViewData["CartCount"] is int count ? count : 0;
+    var navCategories = ProductService.GetCategories();
+}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Natalya Parapharmacie</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#15803D",
+                        "primary-hover": "#166534",
+                        "primary-light": "#F0FDF4",
+                        "secondary": "#334155",
+                        "platinum": "#94A3B8",
+                        "platinum-light": "#F8FAFC",
+                        "platinum-dark": "#475569",
+                        "platinum-border": "#E2E8F0",
+                        "obsidian": "#090D16",
+                        "surface": "#FFFFFF",
+                        "on-surface": "#0F172A",
+                        "background": "#F8FAFC",
+                    },
+                    fontFamily: {
+                        "editorial": ["Playfair Display", "Georgia", "serif"],
+                        "sans": ["Plus Jakarta Sans", "Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                    },
+                    boxShadow: {
+                        "luxe": "0 20px 40px -15px rgba(21, 128, 61, 0.08)",
+                        "luxe-hover": "0 25px 50px -12px rgba(21, 128, 61, 0.16)",
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; }
+        .font-editorial { font-family: 'Playfair Display', Georgia, serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .drawer-custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .drawer-custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .drawer-custom-scrollbar::-webkit-scrollbar-thumb { background-color: #E2E8F0; border-radius: 9999px; }
+        .drawer-custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #94A3B8; }
+        .platinum-gradient-text {
+            background: linear-gradient(135deg, #15803D 0%, #16A34A 50%, #047857 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-[#F8FAFC] text-slate-900 antialiased pt-[84px] sm:pt-[96px] lg:pt-[104px] pb-20 md:pb-0 min-h-screen flex flex-col justify-between selection:bg-emerald-800 selection:text-white">
+
+    <!-- Top VIP Announcement Bar (Clean Parapharmacie Green) -->
+    <div class="fixed top-0 w-full z-50 bg-[#15803D] text-white text-[8px] sm:text-[10px] font-medium tracking-[0.14em] sm:tracking-[0.18em] uppercase h-7 sm:h-8 px-3 sm:px-8 border-b border-emerald-700/50 flex items-center justify-between overflow-hidden">
+        <div class="flex items-center gap-1.5 sm:gap-2 text-emerald-100 tracking-[0.12em] sm:tracking-[0.18em] truncate">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-white animate-pulse flex-shrink-0"></span>
+            <span class="truncate">PRODUITS 100% AUTHENTIQUES <span class="hidden sm:inline">&bull; OFFICINE AGRÉÉE</span></span>
+        </div>
+        <div class="flex items-center gap-1.5 sm:gap-2 text-emerald-100 tracking-wider sm:tracking-widest font-semibold flex-shrink-0">
+            <span class="material-symbols-outlined text-xs">verified</span>
+            <span>CONSEILS PHARMACIENS <span class="hidden sm:inline">7J/7</span></span>
+        </div>
+    </div>
+
+    <!-- Main Navigation Header (Sleek Compact Luxury Header) -->
+    <header class="fixed top-7 sm:top-8 w-full z-40 bg-white/95 backdrop-blur-xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] border-b border-slate-200/80 transition-all duration-300">
+        <div class="flex justify-between items-center px-3 sm:px-6 lg:px-8 h-14 sm:h-16 lg:h-[72px] w-full max-w-[1360px] mx-auto">
+            
+            <!-- Left Header Area: Mega Menu Button & Brand Logo -->
+            <div class="flex items-center gap-2.5 sm:gap-4">
+                <!-- Mobile Menu (Rayons & Catégories) Toggle Button -->
+                <button id="mobileMenuBtn" class="text-[#15803D] hover:bg-emerald-50 w-9 h-9 sm:w-10 sm:h-10 rounded-xl lg:hidden flex items-center justify-center transition-colors border border-emerald-200/90 hover:border-emerald-300 bg-emerald-50/70 shadow-xs" aria-label="Rayons &amp; Catégories" title="Rayons &amp; Catégories">
+                    <span class="material-symbols-outlined text-xl sm:text-2xl">grid_view</span>
+                </button>
+
+                <!-- Rayons & Catégories Mega Menu (Icon-only Button Before Logo for Desktop) -->
+                <div id="megaMenuWrapper" class="relative group/megamenu hidden lg:block">
+                    <button id="megaMenuTriggerBtn" type="button" onclick="toggleMegaMenu(event)" class="w-10 h-10 rounded-xl bg-slate-50/90 hover:bg-emerald-50 text-[#15803D] hover:text-[#166534] border border-slate-200/90 hover:border-emerald-300 flex items-center justify-center transition-all shadow-xs group-hover/megamenu:bg-emerald-50 group-hover/megamenu:border-emerald-300" title="Rayons & Catégories" aria-label="Rayons & Catégories" aria-expanded="false">
+                        <span class="material-symbols-outlined text-xl">grid_view</span>
+                    </button>
+
+                    <!-- Seamless Hover Bridge & Dropdown Card -->
+                    <div id="megaMenuDropdown" class="absolute top-full left-0 pt-2 w-[860px] z-50 transition-all duration-200 opacity-0 pointer-events-none -translate-y-1 group-hover/megamenu:opacity-100 group-hover/megamenu:pointer-events-auto group-hover/megamenu:translate-y-0">
+                        <div class="bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden">
+                            <div class="grid grid-cols-12 min-h-[380px]">
+                                <!-- Categories List Column -->
+                                <div class="col-span-5 bg-slate-50/80 border-r border-slate-100 p-3 space-y-1">
+                                    <div class="px-3 py-1.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400">Rayons Principaux</div>
+                                    @for (int i = 0; i < navCategories.Count; i++)
+                                    {
+                                        var cat = navCategories[i];
+                                        <div onmouseenter="showMegaSubCategory('@cat.Slug')" class="mega-cat-item flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-white hover:text-[#15803D] hover:shadow-xs transition-all cursor-pointer @(i == 0 ? "active bg-white text-[#15803D] shadow-xs ring-1 ring-slate-100" : "")" data-slug="@cat.Slug" onclick="window.location.href='/Products?category=@cat.Slug'">
+                                            <div class="flex items-center gap-2.5 truncate">
+                                                <span class="material-symbols-outlined text-base text-[#15803D]">@cat.Icon</span>
+                                                <span class="truncate">@cat.Name</span>
+                                            </div>
+                                            <span class="material-symbols-outlined text-xs text-slate-400">chevron_right</span>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Subcategories Panel -->
+                                <div class="col-span-7 p-5 bg-white flex flex-col justify-between">
+                                    @for (int i = 0; i < navCategories.Count; i++)
+                                    {
+                                        var cat = navCategories[i];
+                                        <div id="mega-content-@cat.Slug" class="mega-subcontent space-y-3.5 @(i == 0 ? "" : "hidden")">
+                                            <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="w-8 h-8 rounded-xl bg-emerald-50 text-[#15803D] flex items-center justify-center shadow-xs">
+                                                        <span class="material-symbols-outlined text-base">@cat.Icon</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="font-bold text-slate-900 text-sm">@cat.Name</h4>
+                                                        <p class="text-[10px] text-slate-400">@(cat.SubCategories?.Count ?? 0) sous-catégories disponibles</p>
+                                                    </div>
+                                                </div>
+                                                <a asp-controller="Products" asp-action="Index" asp-route-category="@cat.Slug" class="inline-flex items-center gap-1 text-xs font-bold text-[#15803D] hover:text-[#166534] bg-emerald-50 hover:bg-emerald-100/80 px-3 py-1.5 rounded-xl transition-all">
+                                                    <span>Tout voir</span>
+                                                    <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                                                </a>
+                                            </div>
+
+                                            <div class="grid grid-cols-2 gap-2 max-h-[270px] overflow-y-auto pr-1">
+                                                @if (cat.SubCategories != null && cat.SubCategories.Any())
+                                                {
+                                                    @foreach (var sub in cat.SubCategories)
+                                                    {
+                                                        <a asp-controller="Products" asp-action="Index" asp-route-category="@cat.Slug" asp-route-subCategory="@sub" class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-emerald-50 hover:border-emerald-200 hover:text-[#15803D] text-[11.5px] font-medium text-slate-700 transition-all group/sub">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 group-hover/sub:scale-125 transition-transform"></span>
+                                                            <span class="truncate">@sub</span>
+                                                        </a>
+                                                    }
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Brand Logo (Green Leaf & NATALYA) -->
+                <a class="flex items-center gap-2 sm:gap-2.5 group py-1 select-none" asp-controller="Home" asp-action="Index">
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-[#15803D] flex items-center justify-center shadow-xs group-hover:scale-105 transition-all duration-300 flex-shrink-0">
+                        <span class="material-symbols-outlined text-lg sm:text-xl lg:text-2xl" style="font-variation-settings: 'FILL' 1;">eco</span>
+                    </div>
+                    <div class="text-left">
+                        <div class="text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-slate-900 block leading-none">
+                            <span class="text-[#15803D]">NATALYA</span>
+                        </div>
+                        <div class="text-[6.5px] sm:text-[7.5px] font-bold tracking-[0.2em] uppercase text-emerald-700 mt-0.5 whitespace-nowrap">
+                            Parapharmacie &bull; Sousse, Enfidha
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Desktop Center Navigation Links -->
+            <nav class="hidden lg:flex items-center gap-6 xl:gap-8">
+                <a class="relative py-2 text-sm font-semibold transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "text-[#15803D] border-b-2 border-[#15803D] pb-1 font-bold" : "text-slate-700 hover:text-[#15803D]")" asp-controller="Home" asp-action="Index">
+                    Accueil
+                </a>
+                <a class="relative py-2 text-sm font-semibold transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Products" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" && string.IsNullOrEmpty(Context.Request.Query["category"]) ? "text-[#15803D] border-b-2 border-[#15803D] pb-1 font-bold" : "text-slate-700 hover:text-[#15803D]")" asp-controller="Products" asp-action="Index">
+                    Catalogue
+                </a>
+                <a class="relative py-2 text-sm font-semibold transition-colors @(ViewContext.RouteData.Values["action"]?.ToString() == "Marques" ? "text-[#15803D] border-b-2 border-[#15803D] pb-1 font-bold" : "text-slate-700 hover:text-[#15803D]")" asp-controller="Products" asp-action="Marques">
+                    Marques
+                </a>
+                <a class="relative py-2 text-sm font-semibold transition-colors @(ViewContext.RouteData.Values["action"]?.ToString() == "TrackOrder" ? "text-[#15803D] border-b-2 border-[#15803D] pb-1 font-bold" : "text-slate-700 hover:text-[#15803D]")" asp-controller="Cart" asp-action="TrackOrder">
+                    Suivi Commande
+                </a>
+            </nav>
+
+            <!-- Right Header Actions: Search, Cart Button & Solid Green "Commander" Button -->
+            <div class="flex items-center gap-1.5 sm:gap-3">
+                <form asp-controller="Products" asp-action="Index" method="get" class="hidden sm:flex items-center relative group/search">
+                    <input type="text" name="q" placeholder="Essayez 'shampoing', 'sérum'..." class="py-2 pl-9 pr-4 rounded-xl text-xs border border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] focus:bg-white w-44 md:w-56 transition-all duration-200" />
+                    <span class="material-symbols-outlined text-sm text-slate-400 group-focus-within/search:text-[#15803D] absolute left-3 pointer-events-none transition-colors">search</span>
+                </form>
+
+
+                <!-- Cart Button -->
+                <button type="button" onclick="openCartDrawer()" class="text-slate-700 hover:bg-emerald-50 w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-slate-200/80 hover:border-emerald-200 bg-slate-50/80 flex items-center justify-center relative group transition-all" id="cartHeaderBtn" aria-label="Mon Panier">
+                    <span class="material-symbols-outlined text-slate-800 text-lg sm:text-xl">shopping_cart</span>
+                    <span id="cartBadge" class="absolute -top-1.5 -right-1.5 bg-[#15803D] text-white font-bold text-[9px] w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-md ring-2 ring-white @(cartCount > 0 ? "" : "hidden")">
+                        @cartCount
+                    </span>
+                </button>
+
+                <!-- Solid Green "Commander" CTA Button -->
+                <button type="button" onclick="openCartDrawer()" class="hidden md:flex bg-[#15803D] hover:bg-[#166534] text-white font-bold text-xs sm:text-sm px-4 lg:px-5 py-2 lg:py-2.5 rounded-xl shadow-sm transition-all items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">check_circle</span>
+                    <span>Commander</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Rayons & Catégories Drawer Navigation -->
+    <div id="mobileDrawer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden transition-opacity duration-300 lg:hidden">
+        <div class="bg-white w-84 max-w-[88vw] h-full p-4 sm:p-6 shadow-2xl flex flex-col justify-between border-r border-slate-200 overflow-y-auto">
+            <div>
+                <!-- Drawer Header: Rayons & Catégories -->
+                <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-3.5">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 text-[#15803D] flex items-center justify-center shadow-xs">
+                            <span class="material-symbols-outlined text-xl">grid_view</span>
+                        </div>
+                        <div>
+                            <span class="text-base font-extrabold text-slate-900 block leading-tight">Rayons &amp; Catégories</span>
+                            <span class="text-[9.5px] font-bold tracking-wider uppercase text-emerald-700 block">Catalogue Officinal &bull; 9 Rayons</span>
+                        </div>
+                    </div>
+                    <button id="closeDrawerBtn" class="text-slate-400 hover:text-black p-1.5 rounded-xl hover:bg-slate-100 transition-colors" aria-label="Fermer le menu">
+                        <span class="material-symbols-outlined text-xl">close</span>
+                    </button>
+                </div>
+
+                <!-- Instant Search Bar in Drawer -->
+                <div class="mb-3.5">
+                    <form asp-controller="Products" asp-action="Index" method="get" class="relative">
+                        <input type="text" name="q" placeholder="Rechercher un soin, rayon, marque..." class="w-full py-2.5 pl-9 pr-4 rounded-xl text-xs border border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] transition-all" />
+                        <span class="material-symbols-outlined text-sm text-slate-400 absolute left-3 top-3 pointer-events-none">search</span>
+                    </form>
+                </div>
+
+                <!-- List of Rayons & Subcategories -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between px-1 py-1">
+                        <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Rayons &amp; Sous-Catégories</span>
+                        <a asp-controller="Products" asp-action="Index" class="text-[10.5px] font-bold text-[#15803D] hover:underline">Tout le catalogue</a>
+                    </div>
+                    
+                    <div class="space-y-2 max-h-[58vh] overflow-y-auto pr-1">
+                        @foreach (var cat in navCategories)
+                        {
+                            var subCount = cat.SubCategories?.Count ?? 0;
+                            <div class="border border-slate-200/90 rounded-2xl overflow-hidden bg-slate-50/70 shadow-2xs transition-all">
+                                <button type="button" onclick="toggleMobileCategoryAccordion('@cat.Slug')" class="w-full flex items-center justify-between p-3 text-left hover:bg-emerald-50/60 transition-colors group">
+                                    <div class="flex items-center gap-2.5 min-w-0 pr-2">
+                                        <div class="w-8 h-8 rounded-xl bg-white border border-slate-200/80 text-[#15803D] flex items-center justify-center flex-shrink-0 shadow-2xs group-hover:bg-emerald-50 group-hover:border-emerald-200 transition-colors">
+                                            <span class="material-symbols-outlined text-base">@cat.Icon</span>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-[#15803D] transition-colors">@cat.Name</span>
+                                            <span class="text-[9.5px] text-slate-400 font-medium block">@subCount sous-catégories</span>
+                                        </div>
+                                    </div>
+                                    <span id="acc-arrow-@cat.Slug" class="material-symbols-outlined text-slate-400 text-base transition-transform duration-200 flex-shrink-0">expand_more</span>
+                                </button>
+                                <div id="acc-body-@cat.Slug" class="hidden px-3.5 pb-3 pt-1 space-y-1.5 border-t border-slate-100 bg-white">
+                                    <a asp-controller="Products" asp-action="Index" asp-route-category="@cat.Slug" class="flex items-center justify-between py-1.5 px-2.5 rounded-xl bg-emerald-50 text-[11px] font-bold text-[#15803D] hover:bg-emerald-100/80 transition-colors">
+                                        <span>Tout voir dans @cat.Name</span>
+                                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                                    </a>
+                                    @if (cat.SubCategories != null && cat.SubCategories.Any())
+                                    {
+                                        <div class="grid grid-cols-1 gap-1 pt-1">
+                                            @foreach (var sub in cat.SubCategories)
+                                            {
+                                                <a asp-controller="Products" asp-action="Index" asp-route-category="@cat.Slug" asp-route-subCategory="@sub" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg text-[11.5px] text-slate-700 hover:text-[#15803D] hover:bg-emerald-50/50 transition-colors">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                                                    <span class="truncate">@sub</span>
+                                                </a>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drawer Footer: Quick Brand Shortcut & Certification -->
+            <div class="pt-3 border-t border-slate-100 space-y-2">
+                <a asp-controller="Products" asp-action="Marques" class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 text-xs font-bold text-slate-800 transition-all shadow-2xs">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base text-[#15803D]">verified</span>
+                        <span>Explorer les Grandes Marques</span>
+                    </div>
+                    <span class="material-symbols-outlined text-xs text-slate-400">arrow_forward</span>
+                </a>
+                
+                <div class="text-center pt-1">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-[#15803D] border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">
+                        <span class="material-symbols-outlined text-xs">verified_user</span>
+                        <span>Officine Agréée Sousse, Enfidha</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating WhatsApp / Support Action Bubble (as seen in screenshot) -->
+    <a href="javascript:void(0)" onclick="openCartDrawer()" class="floating-whatsapp w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#15803D] hover:bg-[#166534] text-white shadow-lg flex items-center justify-center transition-all duration-300" title="Besoin d'aide ou commander ?">
+        <span class="material-symbols-outlined text-2xl sm:text-3xl">chat</span>
+    </a>
+
+    <!-- Main Content Container -->
+    <div class="mb-auto">
+        @RenderBody()
+    </div>
+
+    <!-- Footer for Desktop / Mobile in Deep Obsidian Noir & Platinum -->
+    <footer class="bg-[#090D16] text-slate-300 pt-12 pb-28 md:pt-16 md:pb-12 mt-12 md:mt-20 border-t border-slate-800 shadow-2xl relative overflow-hidden">
+        <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-10 md:space-y-12">
+            <!-- Trust Highlights Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6 pb-8 md:pb-12 border-b border-slate-800">
+                <div class="flex items-center gap-3.5 bg-slate-900/50 sm:bg-transparent p-3 sm:p-0 rounded-2xl sm:rounded-none border border-slate-800/80 sm:border-0">
+                    <div class="w-11 h-11 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center text-slate-200 shadow-sm shrink-0">
+                        <span class="material-symbols-outlined text-xl">local_shipping</span>
+                    </div>
+                    <div>
+                        <h5 class="text-xs font-bold text-white uppercase tracking-wider">Livraison 24/48h</h5>
+                        <p class="text-[11px] text-slate-400 font-light">Offerte dès 49 Dinar d'achat</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3.5 bg-slate-900/50 sm:bg-transparent p-3 sm:p-0 rounded-2xl sm:rounded-none border border-slate-800/80 sm:border-0">
+                    <div class="w-11 h-11 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center text-slate-200 shadow-sm shrink-0">
+                        <span class="material-symbols-outlined text-xl">verified</span>
+                    </div>
+                    <div>
+                        <h5 class="text-xs font-bold text-white uppercase tracking-wider">100% Authentique</h5>
+                        <p class="text-[11px] text-slate-400 font-light">Certifié officinal français</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3.5 bg-slate-900/50 sm:bg-transparent p-3 sm:p-0 rounded-2xl sm:rounded-none border border-slate-800/80 sm:border-0">
+                    <div class="w-11 h-11 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center text-slate-200 shadow-sm shrink-0">
+                        <span class="material-symbols-outlined text-xl">support_agent</span>
+                    </div>
+                    <div>
+                        <h5 class="text-xs font-bold text-white uppercase tracking-wider">Conseil Privé 7j/7</h5>
+                        <p class="text-[11px] text-slate-400 font-light">Pharmaciens experts</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3.5 bg-slate-900/50 sm:bg-transparent p-3 sm:p-0 rounded-2xl sm:rounded-none border border-slate-800/80 sm:border-0">
+                    <div class="w-11 h-11 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center text-slate-200 shadow-sm shrink-0">
+                        <span class="material-symbols-outlined text-xl">lock</span>
+                    </div>
+                    <div>
+                        <h5 class="text-xs font-bold text-white uppercase tracking-wider">Paiement Sécurisé</h5>
+                        <p class="text-[11px] text-slate-400 font-light">Cryptage SSL 256-bit</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Footer Links & Newsletter -->
+            <div class="grid grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
+                <!-- Column 1: Brand & Presentation (Mobile: 2 cols, Desktop: 5 cols) -->
+                <div class="col-span-2 lg:col-span-5 space-y-4">
+                    <a class="font-editorial text-xl font-bold text-white flex items-center gap-2.5 tracking-tight group inline-flex" asp-controller="Home" asp-action="Index">
+                        <div class="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">spa</span>
+                        </div>
+                        <span>Natalya <span class="text-[10px] font-sans font-bold tracking-widest uppercase block text-slate-400 -mt-0.5">Parapharmacie &bull; Sousse, Enfidha</span></span>
+                    </a>
+                    <p class="text-xs text-slate-400 font-light leading-relaxed max-w-sm">
+                        L'art du soin dermo-cosmétique et des compléments d'exception. Une sélection rigoureuse pour sublimer votre bien-être et votre santé au quotidien.
+                    </p>
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <span>Officine Agréée Sousse &bull; Enfidha</span>
+                    </div>
+                </div>
+
+                <!-- Column 2: Navigation Rapide (Mobile: 1 col, Desktop: 2 cols) -->
+                <div class="col-span-1 lg:col-span-2 space-y-3">
+                    <h4 class="text-xs font-bold text-white uppercase tracking-widest">Boutique</h4>
+                    <ul class="space-y-2 text-xs text-slate-400">
+                        <li><a asp-controller="Home" asp-action="Index" class="hover:text-white transition-colors">Accueil</a></li>
+                        <li><a asp-controller="Products" asp-action="Index" class="hover:text-white transition-colors">Boutique</a></li>
+                        <li><a asp-controller="Products" asp-action="Index" asp-route-category="vitamines" class="hover:text-white transition-colors">Vitamines</a></li>
+                        <li><a asp-controller="Products" asp-action="Index" asp-route-category="soins-visage" class="hover:text-white transition-colors">Soins Visage</a></li>
+                        <li><a asp-controller="Cart" asp-action="Index" class="hover:text-white transition-colors">Mon Panier</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 3: Customer Care (Mobile: 1 col, Desktop: 2 cols) -->
+                <div class="col-span-1 lg:col-span-2 space-y-3">
+                    <h4 class="text-xs font-bold text-white uppercase tracking-widest">Service Client</h4>
+                    <ul class="space-y-2 text-xs text-slate-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Conseil Pro</a></li>
+                        <li><a asp-controller="Cart" asp-action="TrackOrder" class="hover:text-white transition-colors">Suivi Commande</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Livraison</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Garanties</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">FAQ &amp; Contact</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 4: Newsletter Privilège (Mobile: 2 cols, Desktop: 3 cols) -->
+                <div class="col-span-2 lg:col-span-3 space-y-3">
+                    <h4 class="text-xs font-bold text-white uppercase tracking-widest">Privilège VIP</h4>
+                    <p class="text-xs text-slate-400 font-light">Recevez nos offres exclusives, nouveautés et conseils personnalisés.</p>
+                    <form onsubmit="event.preventDefault(); alert('Merci pour votre inscription !');" class="space-y-2">
+                        <input type="email" required placeholder="Votre adresse email..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-white transition-colors" />
+                        <button type="submit" class="w-full bg-white hover:bg-slate-200 text-black font-bold text-xs py-2.5 px-4 rounded-xl transition-all uppercase tracking-wider">
+                            S'inscrire
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Bottom Copyright & Legal -->
+            <div class="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left text-xs text-slate-500">
+                <div>&copy; @DateTime.Now.Year Natalya Parapharmacie. Tous droits réservés.</div>
+                <div class="flex flex-wrap justify-center md:justify-end gap-x-5 gap-y-2 text-slate-400 text-xs items-center">
+                    <a href="#" class="hover:text-white transition-colors">Mentions Légales</a>
+                    <a href="#" class="hover:text-white transition-colors">Confidentialité</a>
+                    <a href="#" class="hover:text-white transition-colors">CGV</a>
+                    <a asp-controller="Admin" asp-action="Index" class="text-white hover:underline flex items-center gap-1 font-semibold px-2.5 py-1 rounded bg-slate-800 border border-slate-700">
+                        <span class="material-symbols-outlined text-xs">admin_panel_settings</span>
+                        <span>Espace Admin</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BottomNavBar Mobile View -->
+    <nav class="fixed bottom-0 w-full z-40 md:hidden bg-white/95 backdrop-blur-md shadow-[0_-2px_12px_rgba(0,0,0,0.06)] border-t border-slate-200">
+        <ul class="grid grid-cols-5 items-center h-16 px-2 w-full text-center">
+            <li>
+                <a asp-controller="Home" asp-action="Index" class="flex flex-col items-center justify-center @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "text-[#15803D] font-bold" : "text-slate-500 hover:text-slate-900") py-1">
+                    <span class="material-symbols-outlined text-xl">home</span>
+                    <span class="text-[9.5px] mt-0.5">Accueil</span>
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Products" asp-action="Index" class="flex flex-col items-center justify-center @(ViewContext.RouteData.Values["controller"]?.ToString() == "Products" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "text-[#15803D] font-bold" : "text-slate-500 hover:text-slate-900") py-1">
+                    <span class="material-symbols-outlined text-xl">storefront</span>
+                    <span class="text-[9.5px] mt-0.5">Boutique</span>
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Products" asp-action="Marques" class="flex flex-col items-center justify-center @(ViewContext.RouteData.Values["action"]?.ToString() == "Marques" ? "text-[#15803D] font-bold" : "text-slate-500 hover:text-slate-900") py-1">
+                    <span class="material-symbols-outlined text-xl">verified</span>
+                    <span class="text-[9.5px] mt-0.5">Marques</span>
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Cart" asp-action="TrackOrder" class="flex flex-col items-center justify-center @(ViewContext.RouteData.Values["action"]?.ToString() == "TrackOrder" ? "text-[#15803D] font-bold" : "text-slate-500 hover:text-slate-900") py-1">
+                    <span class="material-symbols-outlined text-xl">local_shipping</span>
+                    <span class="text-[9.5px] mt-0.5">Suivi</span>
+                </a>
+            </li>
+            <li>
+                <button type="button" onclick="openCartDrawer()" class="flex flex-col items-center justify-center text-slate-500 hover:text-[#15803D] py-1 relative w-full">
+                    <span class="material-symbols-outlined text-xl">shopping_cart</span>
+                    <span class="text-[9.5px] mt-0.5">Panier</span>
+                    <span id="bottomCartBadge" class="absolute top-0.5 right-3 bg-[#15803D] text-white font-bold text-[8px] w-4 h-4 rounded-full flex items-center justify-center shadow-xs @(cartCount > 0 ? "" : "hidden")">@cartCount</span>
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Luxury Side Cart & Checkout Drawer (Slide-Over Panel) -->
+    <div id="cartDrawer" class="fixed inset-0 z-[100] pointer-events-none transition-all duration-300" aria-labelledby="cartDrawerTitle" role="dialog" aria-modal="true">
+        <!-- Backdrop Blur Overlay -->
+        <div id="cartDrawerBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity duration-300 ease-out cursor-pointer pointer-events-none" onclick="closeCartDrawer()"></div>
+
+        <!-- Offcanvas Drawer Panel -->
+        <div id="cartDrawerPanel" class="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-10 flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out border-l border-slate-200 pointer-events-auto">
+            
+            <!-- Drawer Header -->
+            <div class="px-5 py-4 border-b border-emerald-100 flex items-center justify-between bg-emerald-50/40">
+                <div class="flex items-center gap-2.5">
+                    <button type="button" id="drawerBackBtn" onclick="showDrawerCart()" class="hidden w-8 h-8 rounded-full bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors border border-slate-200 shadow-sm" title="Retour au panier">
+                        <span class="material-symbols-outlined text-base">arrow_back</span>
+                    </button>
+                    <div id="drawerHeaderIcon" class="w-8 h-8 rounded-xl bg-emerald-100 text-[#15803D] flex items-center justify-center shadow-xs border border-emerald-200 font-bold">
+                        <span class="material-symbols-outlined text-base">shopping_bag</span>
+                    </div>
+                    <div>
+                        <h2 id="cartDrawerTitle" class="text-base font-extrabold text-slate-900 leading-tight">Mon Panier Officinal</h2>
+                        <span id="drawerItemsCountText" class="text-[10px] font-bold tracking-widest uppercase text-emerald-800">0 soin</span>
+                    </div>
+                </div>
+                <button type="button" onclick="closeCartDrawer()" class="w-8 h-8 rounded-full bg-white hover:bg-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-colors shadow-sm border border-slate-200" aria-label="Fermer le panneau">
+                    <span class="material-symbols-outlined text-base">close</span>
+                </button>
+            </div>
+
+
+
+            <!-- Drawer Body / Scroll Area -->
+            <div class="flex-1 overflow-y-auto px-6 py-4 space-y-4 drawer-custom-scrollbar" id="drawerBody">
+                
+                <!-- STEP 1: Cart Items Review -->
+                <div id="drawerCartStep" class="space-y-4">
+                    <div id="cartDrawerItemsList" class="space-y-3.5 divide-y divide-slate-100">
+                        <!-- Dynamic Cart Items Rendered Here -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="cartDrawerEmpty" class="hidden py-14 text-center flex-col items-center justify-center">
+                        <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-[#15803D] flex items-center justify-center mx-auto mb-4 border border-emerald-200 shadow-xs">
+                            <span class="material-symbols-outlined text-3xl">shopping_bag</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-1">Votre panier est vide</h3>
+                        <p class="text-xs text-slate-500 mb-6 max-w-xs mx-auto font-light leading-relaxed">
+                            Explorez nos soins dermo-cosmétiques certifiés et vitamines de haute pureté.
+                        </p>
+                        <a asp-controller="Products" asp-action="Index" onclick="closeCartDrawer()" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#15803D] hover:bg-[#166534] text-white text-[11px] font-bold uppercase tracking-[0.16em] rounded-xl transition-all shadow-sm">
+                            <span>Explorer la Boutique</span>
+                            <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Checkout / Cash on Delivery Form -->
+                <div id="drawerCheckoutStep" class="hidden space-y-3 pb-2">
+                    
+                    <!-- COD Reassurance Strip -->
+                    <div class="bg-emerald-50 border border-emerald-200/90 rounded-xl px-3.5 py-2.5 flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-emerald-900">
+                            <span class="material-symbols-outlined text-base text-emerald-600">payments</span>
+                            <span class="text-xs font-bold">Paiement à la Livraison</span>
+                        </div>
+                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">Sans Carte Bancaire</span>
+                    </div>
+
+                    <form id="drawerCheckoutForm" onsubmit="submitDrawerCheckout(event)" class="space-y-3">
+                        
+                        <!-- Essential Shipping Info Container -->
+                        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 space-y-3">
+                            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 border-b border-slate-200/60 pb-1.5">
+                                <span class="material-symbols-outlined text-sm text-slate-700">local_shipping</span>
+                                <span>Coordonnées &amp; Adresse de Livraison</span>
+                            </div>
+
+                            <!-- Row 1: Nom & Téléphone -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label for="chkFullName" class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Nom &amp; Prénom <span class="text-red-500">*</span></label>
+                                    <input type="text" id="chkFullName" name="fullName" required minlength="2" placeholder="Votre prénom et nom" class="w-full px-3 py-2 border border-slate-200 bg-white rounded-xl text-xs text-slate-900 focus:ring-1 focus:ring-black focus:outline-none shadow-sm transition-colors" />
+                                </div>
+                                <div>
+                                    <label for="chkPhone" class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Téléphone <span class="text-red-500">*</span></label>
+                                    <input type="tel" id="chkPhone" name="phone" required minlength="8" placeholder="ex. 06 12 34 56 78 / 98 765 432" class="w-full px-3 py-2 border border-slate-200 bg-white rounded-xl text-xs text-slate-900 focus:ring-1 focus:ring-black focus:outline-none shadow-sm transition-colors" />
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Ville -->
+                            <div>
+                                <label for="chkCity" class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Ville / Région <span class="text-red-500">*</span></label>
+                                <input type="text" id="chkCity" name="city" required minlength="2" placeholder="ex. Sousse, Enfidha, Tunis, Monastir..." class="w-full px-3 py-2 border border-slate-200 bg-white rounded-xl text-xs text-slate-900 focus:ring-1 focus:ring-black focus:outline-none shadow-sm transition-colors" />
+                            </div>
+
+                            <!-- Row 3: Adresse Complète -->
+                            <div>
+                                <label for="chkAddress" class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Adresse de Livraison Complète <span class="text-red-500">*</span></label>
+                                <input type="text" id="chkAddress" name="address" required minlength="5" placeholder="Rue, numéro, quartier, résidence, appartement..." class="w-full px-3 py-2 border border-slate-200 bg-white rounded-xl text-xs text-slate-900 focus:ring-1 focus:ring-black focus:outline-none shadow-sm transition-colors" />
+                            </div>
+
+                            <!-- Optional Row: Email -->
+                            <div class="pt-0.5">
+                                <label for="chkEmail" class="block text-[10px] font-bold uppercase text-slate-500 mb-1">E-mail <span class="text-slate-400 font-normal lowercase">(optionnel)</span></label>
+                                <input type="email" id="chkEmail" name="email" placeholder="votre.email@exemple.com" class="w-full px-3 py-2 border border-slate-200 bg-white rounded-xl text-xs text-slate-900 focus:ring-1 focus:ring-black focus:outline-none transition-colors shadow-sm" />
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- Drawer Footer (Sticky Summary & Actions) -->
+            <div id="cartDrawerFooter" class="p-4 border-t border-slate-200 bg-white space-y-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
+                
+                <!-- Financial Breakdown (Step 1: Detailed / Step 2: Slim) -->
+                <div id="drawerSummaryDetailed" class="space-y-1.5 text-xs">
+                    <div class="flex justify-between text-slate-600">
+                        <span>Sous-total</span>
+                        <span id="drawerSubtotal" class="font-bold text-slate-900">0,00 Dinar</span>
+                    </div>
+                    <div class="flex justify-between text-slate-600">
+                        <span>Frais de port</span>
+                        <span id="drawerShipping" class="font-bold text-slate-900">GRATUITE</span>
+                    </div>
+                    <div class="border-t border-slate-100 pt-1.5 flex justify-between items-baseline">
+                        <span class="font-bold text-slate-900 text-xs">Total TTC</span>
+                        <span id="drawerGrandTotal" class="font-editorial text-xl font-bold text-slate-900">0,00 Dinar</span>
+                    </div>
+                </div>
+
+                <!-- Slim Single-Line Total for Step 2 (Checkout) -->
+                <div id="drawerSummarySlim" class="hidden flex items-center justify-between text-xs py-1 border-b border-slate-100">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-slate-900 text-xs">Total à payer à la livraison</span>
+                        <span class="text-[10px] text-slate-400" id="drawerShippingNote">Livraison incluse &bull; Espèces à la livraison</span>
+                    </div>
+                    <span id="drawerGrandTotalSlim" class="font-editorial text-2xl font-bold text-slate-900">0,00 Dinar</span>
+                </div>
+
+                <!-- Step 1 Actions (Cart View) -->
+                <div id="drawerCartActions" class="space-y-2">
+                    <button type="button" onclick="showDrawerCheckout()" class="w-full py-3.5 bg-[#15803D] hover:bg-[#166534] text-white text-xs uppercase tracking-[0.18em] font-bold rounded-xl flex items-center justify-center gap-2 shadow-md shadow-emerald-700/20 transition-all">
+                        <span>Passer la Commande</span>
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </button>
+                    <a asp-controller="Cart" asp-action="Index" onclick="closeCartDrawer()" class="w-full py-2 bg-emerald-50 hover:bg-emerald-100 text-[#15803D] text-[11px] uppercase tracking-wider font-semibold rounded-xl flex items-center justify-center border border-emerald-200 transition-colors">
+                        Voir le récapitulatif complet
+                    </a>
+                </div>
+
+                <!-- Step 2 Actions (Checkout View) -->
+                <div id="drawerCheckoutActions" class="hidden space-y-2">
+                    <button type="button" onclick="document.getElementById('drawerCheckoutForm').requestSubmit()" class="w-full py-3.5 bg-[#15803D] hover:bg-[#166534] text-white text-xs uppercase tracking-[0.16em] font-bold rounded-xl flex items-center justify-center gap-2 shadow-md shadow-emerald-700/20 transition-all">
+                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                        <span>Confirmer ma Commande</span>
+                    </button>
+                    <button type="button" onclick="showDrawerCart()" class="w-full py-1.5 text-slate-500 hover:text-[#15803D] text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors">
+                        <span class="material-symbols-outlined text-xs">arrow_back</span> Modifier les articles du panier
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Global Toast Notification Container -->
+    <div id="toast" class="fixed bottom-20 right-4 z-50 bg-[#090D16] text-white px-4 py-3 rounded-xl shadow-2xl hidden flex items-center gap-2 text-sm transition-opacity duration-300 border border-slate-700">
+        <span class="material-symbols-outlined text-white">check_circle</span>
+        <span id="toastMessage">Produit ajouté à votre panier !</span>
+    </div>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

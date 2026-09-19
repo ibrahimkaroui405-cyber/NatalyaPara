@@ -1,0 +1,95 @@
+@model PharmaTrust.Models.Order?
+@{
+    ViewData["Title"] = "Commande Confirmée - Natalya Parapharmacie";
+    string orderNum = Model?.OrderNumber ?? TempData["OrderNumber"] as string ?? $"CMD-{Random.Shared.Next(10000, 99999)}";
+    decimal total = Model?.TotalAmount ?? 0m;
+}
+
+<main class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 reveal-up">
+    <div class="bg-white max-w-2xl mx-auto p-8 sm:p-10 rounded-3xl border border-emerald-100 text-center shadow-xl shadow-emerald-950/5 my-6 relative overflow-hidden">
+        <!-- Top ribbon -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#15803D] to-teal-600"></div>
+
+        <div class="w-20 h-20 bg-emerald-50 border-2 border-emerald-200 text-[#15803D] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+        </div>
+
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold uppercase tracking-wider mb-3 border border-emerald-200">
+            <span class="material-symbols-outlined text-xs text-[#15803D]">verified</span>
+            <span>Commande Validée par l'Officine</span>
+        </div>
+
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
+            Merci pour votre <span class="text-[#15803D]">Commande !</span>
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-600 font-light mb-8 max-w-lg mx-auto leading-relaxed">
+            Vos soins sont en cours de préparation par notre équipe officinale. Le paiement de votre commande s'effectuera directement en espèces lors de la livraison à votre domicile.
+        </p>
+
+        <div class="bg-gradient-to-br from-slate-50 to-emerald-50/40 p-6 rounded-2xl text-left text-xs space-y-3.5 mb-8 border border-emerald-100">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                <span class="text-slate-500 font-medium">N° de Commande :</span>
+                <span class="font-mono font-bold text-[#15803D] text-base">@orderNum</span>
+            </div>
+
+            @if (Model != null)
+            {
+                <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                    <span class="text-slate-500 font-medium">Destinataire :</span>
+                    <span class="font-bold text-slate-900">@Model.CustomerName (@Model.Phone)</span>
+                </div>
+                <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                    <span class="text-slate-500 font-medium">Lieu de Livraison :</span>
+                    <span class="font-semibold text-slate-900">@Model.Address, @Model.City</span>
+                </div>
+                @if (Model.Items.Any())
+                {
+                    <div class="py-2 border-b border-slate-200/60 space-y-2">
+                        <span class="text-slate-500 font-medium block">Soins inclus :</span>
+                        <div class="space-y-1.5 pl-2">
+                            @foreach (var item in Model.Items)
+                            {
+                                <div class="flex justify-between items-center text-[11.5px]">
+                                    <span class="text-slate-700">x@(item.Quantity) @item.ProductName</span>
+                                    <span class="font-bold text-slate-900">@item.Subtotal.ToString("F2") DT</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+
+            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                <span class="text-slate-500 font-medium">Mode de Règlement :</span>
+                <span class="font-bold text-emerald-800">Espèces à la Livraison (Cash on Delivery)</span>
+            </div>
+
+            @if (total > 0)
+            {
+                <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                    <span class="text-slate-900 font-bold text-sm">Total à régler au livreur :</span>
+                    <span class="text-lg font-extrabold text-[#15803D]">@total.ToString("F2") DT</span>
+                </div>
+            }
+
+            <div class="flex justify-between items-center">
+                <span class="text-slate-500 font-medium">Statut Actuel :</span>
+                <span class="font-bold text-emerald-800 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-[#15803D] animate-pulse"></span>
+                    @(Model?.Status ?? "En attente de confirmation")
+                </span>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a asp-controller="Cart" asp-action="TrackOrder" asp-route-orderNumber="@orderNum" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md">
+                <span class="material-symbols-outlined text-sm">local_shipping</span>
+                <span>Suivre l'État de ma Commande</span>
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-[#15803D] border border-slate-200 text-xs font-bold uppercase tracking-wider rounded-xl transition-colors">
+                <span>Retour à l'Accueil</span>
+                <span class="material-symbols-outlined text-sm">home</span>
+            </a>
+        </div>
+    </div>
+</main>

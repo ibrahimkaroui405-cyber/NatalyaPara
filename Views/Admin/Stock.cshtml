@@ -1,0 +1,398 @@
+@model PharmaTrust.Models.StockManagementViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Gestion des Stocks & Inventaire";
+    string currentStatus = Model.FilterStatus ?? "all";
+    string currentCategory = Model.FilterCategory ?? "";
+    string currentQuery = Model.SearchQuery ?? "";
+}
+
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold uppercase tracking-wider mb-2 border border-emerald-200">
+                <span class="material-symbols-outlined text-xs text-[#15803D]">inventory</span>
+                <span>Contrôle Officinal des Disponibilités</span>
+            </div>
+            <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Gestion Dynamique des Stocks</h1>
+            <p class="text-xs text-slate-500 mt-1">Supervisez les niveaux d'inventaire, réapprovisionnez en 1 clic et suivez les flux de vente en temps réel.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a asp-controller="Admin" asp-action="Products" class="bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm">view_list</span>
+                <span>Catalogue Soins</span>
+            </a>
+            <a asp-controller="Admin" asp-action="Orders" class="bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-sm">local_shipping</span>
+                <span>Commandes Clients</span>
+            </a>
+        </div>
+    </div>
+
+
+
+    <!-- Quick Urgent Restock Panel (if any low or out of stock products) -->
+    @if (Model.OutOfStockProducts.Any() || Model.LowStockProducts.Any())
+    {
+        <div class="bg-gradient-to-r from-amber-500/10 via-red-500/5 to-white border border-amber-200 rounded-3xl p-6 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-sm">
+                        <span class="material-symbols-outlined text-xl">bolt</span>
+                    </div>
+                    <div>
+                        <h3 class="font-editorial text-lg font-bold text-slate-900">Alertes Réapprovisionnement Prioritaire</h3>
+                        <p class="text-xs text-slate-600">Cliquez sur « +15 » ou « +30 » pour réinjecter immédiatement des stocks et débloquer les ventes.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-amber-900 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full">
+                        @(Model.OutOfStockProducts.Count + Model.LowStockProducts.Count) produit(s) à réapprovisionner
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                @foreach (var p in Model.OutOfStockProducts.Concat(Model.LowStockProducts).Take(6))
+                {
+                    <div class="bg-white border @(p.StockQuantity == 0 ? "border-red-200" : "border-amber-200") p-4 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <img src="@p.ImageUrl" alt="@p.Name" class="w-12 h-12 rounded-xl object-cover bg-slate-50 border border-slate-200 shrink-0" />
+                            <div class="min-w-0">
+                                <div class="font-bold text-xs text-slate-900 truncate">@p.Name</div>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-[9px] uppercase font-bold text-slate-400">@p.Brand</span>
+                                    <span class="text-[9.5px] font-bold @(p.StockQuantity == 0 ? "text-red-600 bg-red-50 px-1.5 py-0.5 rounded" : "text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded")">
+                                        @(p.StockQuantity == 0 ? "0 en stock" : $"{p.StockQuantity} restant(s)")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <form asp-controller="Admin" asp-action="QuickRestock" method="post" class="inline">
+                                <input type="hidden" name="id" value="@p.Id" />
+                                <input type="hidden" name="amount" value="15" />
+                                <input type="hidden" name="returnUrl" value="@Url.Action("Stock", "Admin", new { q = currentQuery, category = currentCategory, status = currentStatus })" />
+                                <button type="submit" class="px-2.5 py-1.5 bg-[#15803D] hover:bg-[#166534] text-white text-[10px] font-bold uppercase rounded-lg shadow-xs transition-all" title="Ajouter 15 unités">
+                                    +15
+                                </button>
+                            </form>
+                            <form asp-controller="Admin" asp-action="QuickRestock" method="post" class="inline">
+                                <input type="hidden" name="id" value="@p.Id" />
+                                <input type="hidden" name="amount" value="30" />
+                                <input type="hidden" name="returnUrl" value="@Url.Action("Stock", "Admin", new { q = currentQuery, category = currentCategory, status = currentStatus })" />
+                                <button type="submit" class="px-2.5 py-1.5 bg-black hover:bg-slate-800 text-white text-[10px] font-bold uppercase rounded-lg shadow-xs transition-all" title="Ajouter 30 unités">
+                                    +30
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Main Content: Inventory Table -->
+    <div class="space-y-6">
+        <!-- Filter Bar -->
+        <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <form asp-controller="Admin" asp-action="Stock" method="get" class="flex flex-wrap items-center gap-3">
+                <div class="relative flex-1 min-w-[200px]">
+                    <input type="text" name="q" value="@currentQuery" placeholder="Rechercher par référence, soin, marque..." class="w-full py-2.5 pl-9 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-black" />
+                    <span class="material-symbols-outlined text-slate-400 text-sm absolute left-3 top-3">search</span>
+                </div>
+
+                <select name="category" onchange="this.form.submit()" class="py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs focus:outline-none focus:border-black cursor-pointer">
+                    <option value="">Toutes les catégories</option>
+                    @foreach (var cat in Model.Categories)
+                    {
+                        <option value="@cat.Slug" selected="@(currentCategory == cat.Slug)">@cat.Name</option>
+                    }
+                </select>
+
+                @if (!string.IsNullOrEmpty(currentStatus) && currentStatus != "all")
+                {
+                    <input type="hidden" name="status" value="@currentStatus" />
+                }
+
+                <button type="submit" class="px-5 py-2.5 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-all">
+                    Filtrer
+                </button>
+
+                @if (!string.IsNullOrEmpty(currentQuery) || !string.IsNullOrEmpty(currentCategory) || currentStatus != "all")
+                {
+                    <a asp-controller="Admin" asp-action="Stock" class="text-xs text-slate-500 hover:text-black flex items-center gap-1 font-semibold flex-shrink-0">
+                        <span class="material-symbols-outlined text-sm">close</span> Réinitialiser
+                    </a>
+                }
+            </form>
+
+            <!-- Status Pills -->
+            <div class="flex items-center gap-2 border-t border-slate-100 pt-3 overflow-x-auto hide-scrollbar text-xs">
+                <a asp-controller="Admin" asp-action="Stock" asp-route-category="@currentCategory" asp-route-q="@currentQuery" asp-route-status="all" class="px-3 py-1.5 rounded-xl font-bold transition-all @(currentStatus == "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")">
+                    Tous (@Model.TotalProducts)
+                </a>
+                <a asp-controller="Admin" asp-action="Stock" asp-route-category="@currentCategory" asp-route-q="@currentQuery" asp-route-status="low" class="px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 @(currentStatus == "low" ? "bg-amber-500 text-white" : "bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100")">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    Stock Faible (@Model.LowStockCount)
+                </a>
+                <a asp-controller="Admin" asp-action="Stock" asp-route-category="@currentCategory" asp-route-q="@currentQuery" asp-route-status="out" class="px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 @(currentStatus == "out" ? "bg-red-600 text-white" : "bg-red-50 text-red-800 border border-red-200 hover:bg-red-100")">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                    Ruptures (@Model.OutOfStockCount)
+                </a>
+                <a asp-controller="Admin" asp-action="Stock" asp-route-category="@currentCategory" asp-route-q="@currentQuery" asp-route-status="instock" class="px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 @(currentStatus == "instock" ? "bg-emerald-700 text-white" : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100")">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Confortable (@Model.InStockCount)
+                </a>
+            </div>
+        </div>
+
+        <!-- Products Inventory Table -->
+        <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="bg-slate-50/80 text-slate-400 uppercase tracking-wider border-b border-slate-200">
+                            <th class="py-3.5 px-5 font-semibold">Produit</th>
+                            <th class="py-3.5 px-4 font-semibold">Catégorie</th>
+                            <th class="py-3.5 px-4 font-semibold">Prix</th>
+                            <th class="py-3.5 px-4 font-semibold">Niveau Stock</th>
+                            <th class="py-3.5 px-5 font-semibold text-right">Réapprovisionnement Rapide</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @if (Model.Products.Any())
+                        {
+                            @foreach (var prod in Model.Products)
+                            {
+                                <tr class="hover:bg-slate-50/70 transition-colors">
+                                    <td class="py-4 px-5">
+                                        <div class="flex items-center gap-3">
+                                            <img src="@prod.ImageUrl" alt="@prod.Name" class="w-11 h-11 rounded-xl object-cover bg-slate-50 border border-slate-200 shrink-0" />
+                                            <div class="min-w-0">
+                                                <div class="font-bold text-slate-900 max-w-xs line-clamp-1">@prod.Name</div>
+                                                <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">@prod.Brand &bull; Ref #@prod.Id</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-slate-600 font-medium">@prod.CategoryName</td>
+                                    <td class="py-4 px-4 font-bold text-slate-900">@prod.Price.ToString("F2") DT</td>
+                                    <td class="py-4 px-4">
+                                        <div class="space-y-1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold @(prod.StockQuantity > 5 ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : prod.StockQuantity > 0 ? "bg-amber-50 text-amber-800 border border-amber-200" : "bg-red-50 text-red-800 border border-red-200")">
+                                                    <span class="w-1.5 h-1.5 rounded-full @(prod.StockQuantity > 5 ? "bg-emerald-500" : prod.StockQuantity > 0 ? "bg-amber-500" : "bg-red-500")"></span>
+                                                    <span>@prod.StockQuantity unité(s)</span>
+                                                </span>
+                                            </div>
+                                            <!-- Mini Visual Progress Bar -->
+                                            <div class="w-24 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                                <div class="h-full rounded-full @(prod.StockQuantity > 5 ? "bg-emerald-500" : prod.StockQuantity > 0 ? "bg-amber-500" : "bg-red-500")" style="width: @(Math.Min(100, prod.StockQuantity * 4))%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-5 text-right">
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <!-- +5 -->
+                                            <form asp-controller="Admin" asp-action="QuickRestock" method="post" class="inline">
+                                                <input type="hidden" name="id" value="@prod.Id" />
+                                                <input type="hidden" name="amount" value="5" />
+                                                <input type="hidden" name="returnUrl" value="@Url.Action("Stock", "Admin", new { q = currentQuery, category = currentCategory, status = currentStatus })" />
+                                                <button type="submit" class="px-2 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 border border-slate-200 rounded-lg text-[10px] font-bold transition-all" title="Ajouter 5 unités">+5</button>
+                                            </form>
+
+                                            <!-- +10 -->
+                                            <form asp-controller="Admin" asp-action="QuickRestock" method="post" class="inline">
+                                                <input type="hidden" name="id" value="@prod.Id" />
+                                                <input type="hidden" name="amount" value="10" />
+                                                <input type="hidden" name="returnUrl" value="@Url.Action("Stock", "Admin", new { q = currentQuery, category = currentCategory, status = currentStatus })" />
+                                                <button type="submit" class="px-2 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 border border-slate-200 rounded-lg text-[10px] font-bold transition-all" title="Ajouter 10 unités">+10</button>
+                                            </form>
+
+                                            <!-- +25 -->
+                                            <form asp-controller="Admin" asp-action="QuickRestock" method="post" class="inline">
+                                                <input type="hidden" name="id" value="@prod.Id" />
+                                                <input type="hidden" name="amount" value="25" />
+                                                <input type="hidden" name="returnUrl" value="@Url.Action("Stock", "Admin", new { q = currentQuery, category = currentCategory, status = currentStatus })" />
+                                                <button type="submit" class="px-2 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 border border-slate-200 rounded-lg text-[10px] font-bold transition-all" title="Ajouter 25 unités">+25</button>
+                                            </form>
+
+                                            <!-- Custom Modal Trigger -->
+                                            <button type="button" onclick="openAdjustModal(@prod.Id, '@prod.Name.Replace("'", "\\'")', @prod.StockQuantity)" class="p-1 text-slate-400 hover:text-black rounded-lg hover:bg-slate-100 transition-colors" title="Ajuster précisément avec motif">
+                                                <span class="material-symbols-outlined text-base">tune</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="py-12 text-center text-slate-400">
+                                    Aucun produit ne correspond aux filtres de stock actuels.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <!-- Stock Table Pagination Bar -->
+                <div class="p-4 sm:p-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+                    <div class="text-xs text-slate-500 font-medium text-center sm:text-left">
+                        Affichage de <strong class="text-slate-900 font-bold">@((Model.CurrentPage - 1) * Model.PageSize + 1)</strong> à 
+                        <strong class="text-slate-900 font-bold">@(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalFilteredCount))</strong> sur 
+                        <strong class="text-slate-900 font-bold">@Model.TotalFilteredCount</strong> références
+                    </div>
+
+                    <div class="flex items-center gap-1.5 flex-wrap justify-center">
+                        <!-- Prev -->
+                        @if (Model.HasPreviousPage)
+                        {
+                            <a asp-controller="Admin" asp-action="Stock" 
+                               asp-route-page="@(Model.CurrentPage - 1)" 
+                               asp-route-q="@currentQuery" 
+                               asp-route-category="@currentCategory" 
+                               asp-route-status="@currentStatus"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs">
+                                <span class="material-symbols-outlined text-sm">chevron_left</span>
+                                <span class="hidden sm:inline">Précédent</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-100 bg-slate-100/60 text-slate-300 text-xs font-bold cursor-not-allowed select-none">
+                                <span class="material-symbols-outlined text-sm">chevron_left</span>
+                                <span class="hidden sm:inline">Précédent</span>
+                            </span>
+                        }
+
+                        <!-- Page Numbers -->
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            var isCur = i == Model.CurrentPage;
+                            if (i == 1 || i == Model.TotalPages || (i >= Model.CurrentPage - 2 && i <= Model.CurrentPage + 2))
+                            {
+                                <a asp-controller="Admin" asp-action="Stock" 
+                                   asp-route-page="@i" 
+                                   asp-route-q="@currentQuery" 
+                                   asp-route-category="@currentCategory" 
+                                   asp-route-status="@currentStatus"
+                                   class="w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all shadow-2xs @(isCur ? "bg-black text-white shadow-sm" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100")">
+                                    @i
+                                </a>
+                            }
+                            else if (i == Model.CurrentPage - 3 || i == Model.CurrentPage + 3)
+                            {
+                                <span class="w-7 h-7 flex items-center justify-center text-slate-400 font-bold text-xs select-none">&hellip;</span>
+                            }
+                        }
+
+                        <!-- Next -->
+                        @if (Model.HasNextPage)
+                        {
+                            <a asp-controller="Admin" asp-action="Stock" 
+                               asp-route-page="@(Model.CurrentPage + 1)" 
+                               asp-route-q="@currentQuery" 
+                               asp-route-category="@currentCategory" 
+                               asp-route-status="@currentStatus"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs">
+                                <span class="hidden sm:inline">Suivant</span>
+                                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-100 bg-slate-100/60 text-slate-300 text-xs font-bold cursor-not-allowed select-none">
+                                <span class="hidden sm:inline">Suivant</span>
+                                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Custom Stock Adjustment with Reason -->
+<div id="adjustStockModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 animate-fadeIn">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center">
+                    <span class="material-symbols-outlined text-base">tune</span>
+                </div>
+                <div>
+                    <h3 class="font-editorial text-lg font-bold text-slate-900">Ajuster l'Inventaire</h3>
+                    <p class="text-[10px] text-slate-400" id="modalProductName">Produit</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeAdjustModal()" class="text-slate-400 hover:text-slate-800 p-1 rounded-lg">
+                <span class="material-symbols-outlined text-base">close</span>
+            </button>
+        </div>
+
+        <form asp-controller="Admin" asp-action="AdjustStock" method="post" class="space-y-4">
+            <input type="hidden" id="modalProductId" name="id" />
+            <input type="hidden" name="returnUrl" value="@Url.Action("Stock", "Admin", new { q = currentQuery, category = currentCategory, status = currentStatus })" />
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-800 mb-1.5">Nouveau Stock Physique Réel <span class="text-red-500">*</span></label>
+                <div class="flex items-center border border-slate-200 rounded-xl bg-slate-50 p-1">
+                    <button type="button" onclick="decrementModalQty()" class="w-10 h-10 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center font-bold text-base shadow-xs">-</button>
+                    <input type="number" id="modalQuantity" name="quantity" min="0" required class="flex-1 text-center font-bold text-lg bg-transparent border-0 focus:outline-none text-slate-900" />
+                    <button type="button" onclick="incrementModalQty()" class="w-10 h-10 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center font-bold text-base shadow-xs">+</button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-800 mb-1.5">Motif de l'ajustement</label>
+                <select name="reason" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-800 focus:outline-none focus:border-black cursor-pointer">
+                    <option value="Comptage & Régularisation d'Inventaire">Comptage &amp; Régularisation d'Inventaire</option>
+                    <option value="Réception Livraison Fournisseur">Réception Livraison Fournisseur</option>
+                    <option value="Retour Client / Réintégration">Retour Client / Réintégration</option>
+                    <option value="Perte, Casse ou Produit Périmé">Perte, Casse ou Produit Périmé</option>
+                    <option value="Échantillonnage ou Démonstration">Échantillonnage ou Démonstration</option>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+                <button type="button" onclick="closeAdjustModal()" class="flex-1 py-3 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 uppercase tracking-wider">
+                    Annuler
+                </button>
+                <button type="submit" class="flex-1 py-3 bg-[#15803D] hover:bg-[#166534] text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm">
+                    Valider le Stock
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAdjustModal(id, name, currentQty) {
+        document.getElementById('modalProductId').value = id;
+        document.getElementById('modalProductName').textContent = name;
+        document.getElementById('modalQuantity').value = currentQty;
+        document.getElementById('adjustStockModal').classList.remove('hidden');
+    }
+
+    function closeAdjustModal() {
+        document.getElementById('adjustStockModal').classList.add('hidden');
+    }
+
+    function incrementModalQty() {
+        const input = document.getElementById('modalQuantity');
+        input.value = (parseInt(input.value) || 0) + 1;
+    }
+
+    function decrementModalQty() {
+        const input = document.getElementById('modalQuantity');
+        const val = parseInt(input.value) || 0;
+        if (val > 0) input.value = val - 1;
+    }
+</script>

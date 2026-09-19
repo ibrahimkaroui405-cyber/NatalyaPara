@@ -1,0 +1,254 @@
+@model PharmaTrust.Models.Product
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Ajouter un Nouveau Soin";
+    var categories = ViewBag.Categories as List<PharmaTrust.Models.Category> ?? new List<PharmaTrust.Models.Category>();
+    var brands = ViewBag.Brands as List<string> ?? new List<string>();
+}
+
+<div class="max-w-4xl space-y-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div>
+            <nav class="flex items-center gap-2 text-xs text-slate-400 mb-1">
+                <a asp-controller="Admin" asp-action="Products" class="hover:text-black">Produits</a>
+                <span class="material-symbols-outlined text-xs">chevron_right</span>
+                <span class="text-slate-900 font-semibold">Création</span>
+            </nav>
+            <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Ajouter un Soin au Catalogue</h1>
+        </div>
+        <a asp-controller="Admin" asp-action="Products" class="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-black flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Retour
+        </a>
+    </div>
+
+    <!-- Creation Form -->
+    <form asp-controller="Admin" asp-action="CreateProduct" method="post" enctype="multipart/form-data" class="space-y-8">
+        @Html.AntiForgeryToken()
+        
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+            <h3 class="font-editorial text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">Informations Principales</h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- Name -->
+                <div class="sm:col-span-2 space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Nom du Soin / Produit *</label>
+                    <input type="text" asp-for="Name" required placeholder="Ex: Sérum Hyaluronique Pur 50ml" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+
+                <!-- Brand Dropdown & Add New Brand -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Laboratoire / Marque *</label>
+                        <div class="flex items-center gap-3">
+                            <a asp-controller="Admin" asp-action="Brands" class="text-[11px] font-semibold text-slate-500 hover:text-black flex items-center gap-1" title="Ouvrir l'onglet complet de gestion des marques">
+                                <span class="material-symbols-outlined text-xs">tune</span> Onglet Marques
+                            </a>
+                            <button type="button" id="toggleNewBrandBtn" onclick="toggleNewBrandMode(true)" class="text-[11px] font-bold text-[#15803D] hover:underline flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">add_circle</span> Nouvelle marque
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Select Existing Brand -->
+                    <div id="brandSelectContainer" class="relative">
+                        <select id="brandSelect" onchange="handleBrandSelectChange(this)" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black appearance-none cursor-pointer">
+                            <option value="">-- Sélectionner une marque existante --</option>
+                            @foreach (var brand in brands)
+                            {
+                                <option value="@brand" selected="@(Model.Brand == brand)">@brand</option>
+                            }
+                            <option value="__new__" class="font-bold text-[#15803D] bg-emerald-50">➕ + Ajouter une nouvelle marque...</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-3 text-slate-400 pointer-events-none text-sm">expand_more</span>
+                    </div>
+
+                    <!-- Input for New Brand (Hidden by default) -->
+                    <div id="newBrandContainer" class="hidden space-y-1.5 pt-1">
+                        <div class="relative flex items-center">
+                            <input type="text" id="customBrandInput" placeholder="Saisir le nom de la nouvelle marque (ex: La Roche-Posay)" class="w-full py-2.5 pl-4 pr-10 rounded-xl border-2 border-emerald-500 bg-white text-slate-900 text-xs focus:outline-none shadow-sm" oninput="syncCustomBrand(this.value)" />
+                            <button type="button" onclick="toggleNewBrandMode(false)" class="absolute right-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors" title="Choisir parmi les marques existantes">
+                                <span class="material-symbols-outlined text-base">close</span>
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-emerald-700 font-medium flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">info</span> Cette marque sera automatiquement ajoutée à la base de données et à la page Marques.
+                        </p>
+                    </div>
+
+                    <!-- Actual Submitted Hidden / Bound Field -->
+                    <input type="hidden" asp-for="Brand" id="actualBrandInput" required />
+                </div>
+
+                <!-- Category -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Catégorie *</label>
+                    <select asp-for="CategorySlug" required class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black">
+                        @foreach (var cat in categories)
+                        {
+                            <option value="@cat.Slug">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Price -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Prix TTC (Dinar) *</label>
+                    <input type="number" step="0.01" min="0.01" asp-for="Price" required placeholder="24.99" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+
+                <!-- Original Price -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Prix Barré / Promo (Dinar)</label>
+                    <input type="number" step="0.01" min="0.00" asp-for="OriginalPrice" placeholder="32.00 (optionnel)" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+
+                <!-- Stock Quantity -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Quantité en Stock (Unités) *</label>
+                    <input type="number" min="0" asp-for="StockQuantity" required placeholder="Ex: 25 (0 = Rupture)" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black font-bold" />
+                    <p class="text-[10px] text-slate-400">Si 0, le produit s'affichera automatiquement comme "Rupture de Stock".</p>
+                </div>
+
+                <!-- Badge -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Badge Spécial (Optionnel)</label>
+                    <input type="text" asp-for="BadgeText" placeholder="Ex: Nouveauté, Bio, Sélection..." class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+            </div>
+
+            <!-- Image Upload & Live Preview -->
+            <div class="space-y-3 pt-4 border-t border-slate-100">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider block">Photo du Soin / Produit</label>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <label class="cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 hover:border-black rounded-2xl bg-slate-50 hover:bg-slate-100 transition-all text-center">
+                        <span class="material-symbols-outlined text-2xl text-slate-500 mb-1">add_photo_alternate</span>
+                        <span class="text-xs font-bold text-slate-700">Importer depuis votre PC</span>
+                        <span class="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WebP</span>
+                        <input type="file" name="imageFile" accept="image/*" class="hidden" onchange="previewProductUpload(this)" />
+                    </label>
+
+                    <div class="flex items-center gap-3">
+                        <div class="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+                            <img id="previewImg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZ2e8wA5GHLGeqd2-GRkEpnXg3tA-cwf4FKgZqpSmcT3wEIXTLV2lZ2L7GWzkAHpOAd_yxJChfy12O_f3J-tdCkJ1hMrp-hb0viwy-3cPCEc1nH2NNJ9BnpB88WFxl-OFICe7ge5L7kVIP3WTueJK9ZKOyWK8IrRHiDFof39zraR-hgfvzehfm5NhC0bPCQNJFsbiitlvUbTG_8ARaC45Aead4CTSD9sZyvUqIq-ekpxxO5jM9_tRGAw" class="w-full h-full object-cover rounded-xl" alt="Aperçu" onerror="this.src='https://placehold.co/100x100?text=Soin'" />
+                        </div>
+                        <div class="flex-1 space-y-1">
+                            <label class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ou coller une URL Web :</label>
+                            <input type="url" id="imgUrlInput" asp-for="ImageUrl" oninput="document.getElementById('previewImg').src = this.value" placeholder="https://..." class="w-full py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toggles: RxRequired -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" asp-for="RxRequired" id="rxCheck" class="w-4 h-4 rounded text-black focus:ring-black" />
+                    <label for="rxCheck" class="text-xs font-bold text-slate-800 cursor-pointer">Soumis à Prescription / Ordonnance (Rx)</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Descriptions & Formulation -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+            <h3 class="font-editorial text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">Détails &amp; Rituels d'Apothicaire</h3>
+
+            <div class="space-y-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Description Courte</label>
+                    <textarea asp-for="ShortDescription" rows="2" placeholder="Résumé pour la carte produit et le catalogue..." class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black"></textarea>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Description Complète</label>
+                    <textarea asp-for="FullDescription" rows="4" placeholder="Description détaillée des bienfaits, de l'origine et des résultats cliniques..." class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Ingrédients (1 par ligne)</label>
+                        <textarea name="ingredientsText" rows="4" placeholder="Acide Hyaluronique 5%&#10;Eau thermale pure&#10;Vitamine B5" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black"></textarea>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Posologie &amp; Rituels (1 par ligne)</label>
+                        <textarea name="dosageText" rows="4" placeholder="Appliquer 2 gouttes matin et soir&#10;Masser délicatement sur peau propre" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="flex items-center justify-end gap-4">
+            <a asp-controller="Admin" asp-action="Products" class="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-bold uppercase tracking-wider transition-all">
+                Annuler
+            </a>
+            <button type="submit" class="px-8 py-3.5 bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-[0.18em] rounded-xl transition-all shadow-md">
+                Enregistrer le Soin
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function previewProductUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.getElementById('previewImg');
+                    img.src = e.target.result;
+                    document.getElementById('imgUrlInput').value = '';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function handleBrandSelectChange(select) {
+            const actualInput = document.getElementById('actualBrandInput');
+            if (select.value === '__new__') {
+                toggleNewBrandMode(true);
+            } else {
+                actualInput.value = select.value;
+            }
+        }
+
+        function toggleNewBrandMode(isNew) {
+            const selectContainer = document.getElementById('brandSelectContainer');
+            const newBrandContainer = document.getElementById('newBrandContainer');
+            const toggleBtn = document.getElementById('toggleNewBrandBtn');
+            const customInput = document.getElementById('customBrandInput');
+            const brandSelect = document.getElementById('brandSelect');
+            const actualInput = document.getElementById('actualBrandInput');
+
+            if (isNew) {
+                selectContainer.classList.add('hidden');
+                newBrandContainer.classList.remove('hidden');
+                toggleBtn.classList.add('hidden');
+                customInput.focus();
+                actualInput.value = customInput.value.trim();
+            } else {
+                selectContainer.classList.remove('hidden');
+                newBrandContainer.classList.add('hidden');
+                toggleBtn.classList.remove('hidden');
+                brandSelect.value = brandSelect.options[1] ? brandSelect.options[1].value : '';
+                actualInput.value = brandSelect.value;
+                customInput.value = '';
+            }
+        }
+
+        function syncCustomBrand(val) {
+            document.getElementById('actualBrandInput').value = val.trim();
+        }
+
+        // Initialize actual input with select value if not empty
+        document.addEventListener('DOMContentLoaded', function() {
+            const brandSelect = document.getElementById('brandSelect');
+            const actualInput = document.getElementById('actualBrandInput');
+            if (brandSelect && brandSelect.value && brandSelect.value !== '__new__') {
+                actualInput.value = brandSelect.value;
+            }
+        });
+    </script>
+}

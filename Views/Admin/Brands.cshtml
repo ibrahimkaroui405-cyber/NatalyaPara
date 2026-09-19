@@ -1,0 +1,579 @@
+@model List<PharmaTrust.Models.BrandItem>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Gestion des Marques & Laboratoires";
+}
+
+<div class="space-y-8 max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Marques &amp; Laboratoires</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-900 text-white">@Model.Count</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Gérez l'ensemble des laboratoires partenaires officinaux : ajoutez, modifiez leurs visuels et informations ou supprimez-les.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a asp-controller="Products" asp-action="Marques" target="_blank" class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-xs">
+                <span class="material-symbols-outlined text-base text-slate-400">visibility</span>
+                <span>Page Publique</span>
+            </a>
+            <button type="button" onclick="openAddBrandModal()" class="px-5 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-md hover:shadow-lg">
+                <span class="material-symbols-outlined text-base">add_circle</span>
+                <span>Nouvelle Marque</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Brands List Table -->
+    @if (!Model.Any())
+    {
+        <div class="bg-white border border-slate-200 rounded-3xl p-12 text-center max-w-xl mx-auto space-y-4 shadow-sm">
+            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+                <span class="material-symbols-outlined text-3xl">domain_disabled</span>
+            </div>
+            <div>
+                <h3 class="font-editorial text-xl font-bold text-slate-900">Aucun laboratoire</h3>
+                <p class="text-xs text-slate-500 mt-1">Aucune marque ou laboratoire n'est actuellement enregistré.</p>
+            </div>
+            <div class="flex items-center justify-center pt-2">
+                <button type="button" onclick="openAddBrandModal()" class="px-5 py-2.5 text-xs font-bold text-white bg-black hover:bg-slate-800 rounded-xl transition-all shadow-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base">add_circle</span>
+                    <span>Ajouter une marque</span>
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="bg-slate-50/80 text-slate-400 uppercase tracking-wider border-b border-slate-200">
+                            <th class="py-3.5 px-6 font-semibold">Laboratoire / Marque</th>
+                            <th class="py-3.5 px-6 font-semibold">Catégorie & Origine</th>
+                            <th class="py-3.5 px-6 font-semibold">Soin Signature & Badge</th>
+                            <th class="py-3.5 px-6 font-semibold text-center">Catalogue</th>
+                            <th class="py-3.5 px-6 font-semibold text-center">Mise en avant</th>
+                            <th class="py-3.5 px-6 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach (var brand in Model)
+                        {
+                            <tr class="hover:bg-slate-50/70 transition-colors group">
+                                <!-- Brand & Logo -->
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-editorial text-sm font-bold shadow-sm border border-slate-200 shrink-0 overflow-hidden relative">
+                                            @if (!string.IsNullOrWhiteSpace(brand.LogoUrl))
+                                            {
+                                                <img src="@brand.LogoUrl" alt="@brand.Name" class="w-full h-full object-contain p-1.5 bg-white" onerror="this.style.display='none'" />
+                                            }
+                                            else if (!string.IsNullOrWhiteSpace(brand.ImageUrl))
+                                            {
+                                                <img src="@brand.ImageUrl" alt="@brand.Name" class="w-full h-full object-cover" onerror="this.style.display='none'" />
+                                            }
+                                            else
+                                            {
+                                                <span>@brand.LogoInitials</span>
+                                            }
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="font-editorial text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-black">
+                                                @brand.Name
+                                            </div>
+                                            <div class="text-[10px] text-slate-400 font-mono">/@brand.Slug</div>
+                                            @if (!string.IsNullOrWhiteSpace(brand.Tagline))
+                                            {
+                                                <div class="text-[11px] text-slate-500 italic truncate max-w-xs mt-0.5">
+                                                    « @brand.Tagline »
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Catégorie & Origine -->
+                                <td class="py-4 px-6">
+                                    <div class="space-y-1">
+                                        <span class="inline-block px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 text-[11px] font-semibold">
+                                            @brand.Category
+                                        </span>
+                                        <div class="flex items-center gap-1 text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                                            <span class="material-symbols-outlined text-[13px]">location_on</span>
+                                            <span>@brand.Origin</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Soin Signature & Badge -->
+                                <td class="py-4 px-6">
+                                    <div class="space-y-1 max-w-xs">
+                                        @if (!string.IsNullOrWhiteSpace(brand.SignatureProduct))
+                                        {
+                                            <div class="text-[11px] font-bold text-slate-800 line-clamp-1">
+                                                @brand.SignatureProduct
+                                            </div>
+                                        }
+                                        <span class="inline-block px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-100 text-[10px] font-semibold">
+                                            @brand.BadgeText
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <!-- Catalogue Count -->
+                                <td class="py-4 px-6 text-center">
+                                    <a asp-controller="Admin" asp-action="Products" asp-route-brand="@brand.Name" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-black hover:text-white text-slate-700 text-xs font-bold transition-all" title="Voir les soins de ce laboratoire">
+                                        <span class="material-symbols-outlined text-sm">inventory_2</span>
+                                        <span>@brand.ProductCount soins</span>
+                                    </a>
+                                </td>
+
+                                <!-- Mise en avant (Vedette) -->
+                                <td class="py-4 px-6 text-center">
+                                    @if (brand.IsFeatured)
+                                    {
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold">
+                                            <span class="material-symbols-outlined text-xs text-amber-600">star</span> Vedette
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-block px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 text-[11px] font-medium">
+                                            Standard
+                                        </span>
+                                    }
+                                </td>
+
+                                <!-- Actions -->
+                                <td class="py-4 px-6 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a asp-controller="Products" asp-action="Marques" asp-route-category="@brand.Slug" target="_blank" class="p-2 text-slate-400 hover:text-black hover:bg-slate-100 rounded-xl transition-all" title="Voir la page publique">
+                                            <span class="material-symbols-outlined text-base">visibility</span>
+                                        </a>
+                                        <button type="button" onclick='openEditBrandModal(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(brand)))' class="p-2 text-slate-600 hover:text-black hover:bg-slate-100 rounded-xl transition-all" title="Modifier le laboratoire">
+                                            <span class="material-symbols-outlined text-base">edit</span>
+                                        </button>
+                                        <form asp-controller="Admin" asp-action="DeleteBrand" asp-route-slug="@brand.Slug" method="post" onsubmit="return confirm('Confirmer la suppression de la marque « @brand.Name » ?');" class="inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Supprimer la marque">
+                                                <span class="material-symbols-outlined text-base">delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Footer -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <div class="px-6 py-4 bg-slate-50/70 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+                    <div class="font-medium">
+                        Affichage de <span class="font-bold text-slate-800">@(((ViewBag.CurrentPage - 1) * ViewBag.PageSize) + 1)</span> à <span class="font-bold text-slate-800">@Math.Min((int)ViewBag.CurrentPage * (int)ViewBag.PageSize, (int)ViewBag.TotalCount)</span> sur <span class="font-bold text-slate-800">@ViewBag.TotalCount</span> marques
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        @if (ViewBag.HasPreviousPage)
+                        {
+                            <a asp-action="Brands"
+                               asp-route-page="@(ViewBag.CurrentPage - 1)"
+                               asp-route-q="@ViewBag.SearchQuery"
+                               asp-route-category="@ViewBag.SelectedCategory"
+                               class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition-colors flex items-center gap-1 font-bold">
+                                <span class="material-symbols-outlined text-sm">chevron_left</span>
+                                <span>Précédent</span>
+                            </a>
+                        }
+
+                        @for (int p = 1; p <= ViewBag.TotalPages; p++)
+                        {
+                            if (p == 1 || p == ViewBag.TotalPages || (p >= ViewBag.CurrentPage - 2 && p <= ViewBag.CurrentPage + 2))
+                            {
+                                if (p == ViewBag.CurrentPage)
+                                {
+                                    <span class="w-8 h-8 rounded-xl bg-black text-white font-bold flex items-center justify-center shadow-xs">@p</span>
+                                }
+                                else
+                                {
+                                    <a asp-action="Brands"
+                                       asp-route-page="@p"
+                                       asp-route-q="@ViewBag.SearchQuery"
+                                       asp-route-category="@ViewBag.SelectedCategory"
+                                       class="w-8 h-8 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 font-bold flex items-center justify-center transition-colors">@p</a>
+                                }
+                            }
+                            else if (p == ViewBag.CurrentPage - 3 || p == ViewBag.CurrentPage + 3)
+                            {
+                                <span class="w-8 h-8 flex items-center justify-center text-slate-400 font-bold">...</span>
+                            }
+                        }
+
+                        @if (ViewBag.HasNextPage)
+                        {
+                            <a asp-action="Brands"
+                               asp-route-page="@(ViewBag.CurrentPage + 1)"
+                               asp-route-q="@ViewBag.SearchQuery"
+                               asp-route-category="@ViewBag.SelectedCategory"
+                               class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition-colors flex items-center gap-1 font-bold">
+                                <span>Suivant</span>
+                                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- ================= MODAL / DRAWER: AJOUTER UNE MARQUE ================= -->
+<div id="addBrandModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-black text-white flex items-center justify-center shadow-md">
+                    <span class="material-symbols-outlined text-xl">add_circle</span>
+                </div>
+                <div>
+                    <h2 class="font-editorial text-xl font-bold text-slate-900">Nouvelle Marque / Laboratoire</h2>
+                    <p class="text-xs text-slate-500">Ajoutez un laboratoire avec ses visuels et caractéristiques.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeAddBrandModal()" class="p-2 rounded-xl text-slate-400 hover:text-black hover:bg-slate-100 transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form asp-controller="Admin" asp-action="AddBrand" method="post" enctype="multipart/form-data" class="space-y-5">
+            @Html.AntiForgeryToken()
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Nom du Laboratoire / Marque *</label>
+                    <input type="text" name="Name" required placeholder="Ex: La Roche-Posay" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Origine Géographique</label>
+                    <input type="text" name="Origin" placeholder="Ex: France • La Roche-Posay" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Univers / Catégorie</label>
+                    <input type="text" name="Category" placeholder="Ex: Dermo-Cosmétique, Capillaire..." class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Badge Officinal</label>
+                    <input type="text" name="BadgeText" placeholder="Ex: Officine Agréée, Innovation Clinique" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Slogan / Tagline</label>
+                <input type="text" name="Tagline" placeholder="Ex: La science cutanée au service de la peau sensible" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Description Détaillée</label>
+                <textarea name="Description" rows="3" placeholder="Présentation du laboratoire, expertise scientifique, engagements..." class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Soin Signature / Gamme Phare</label>
+                    <input type="text" name="SignatureProduct" placeholder="Ex: Cicaplast Baume B5+ &amp; Effaclar" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Bénéfice Clé</label>
+                    <input type="text" name="BenefitDescription" placeholder="Ex: Réparation épidermique et apaisement immédiat." class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Points Forts / Caractéristiques Clés (séparés par des virgules)</label>
+                <input type="text" name="keyFeaturesText" placeholder="Ex: Eau Thermale Pure, Tolérance Maximale, Testé Dermatologique" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+            </div>
+
+            <!-- Uploads Section -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                <div class="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base text-emerald-600">add_photo_alternate</span>
+                    Visuel &amp; Logo de la Marque
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Banner Upload -->
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1.5">📸 Bannière / Photo du Labo</label>
+                        <label class="cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 hover:border-black rounded-2xl bg-white hover:bg-slate-100 transition-all text-center">
+                            <span class="material-symbols-outlined text-2xl text-slate-400 mb-1">upload_file</span>
+                            <span class="text-[11px] font-bold text-slate-700">Choisir sur PC</span>
+                            <input type="file" name="imageFile" accept="image/*" class="hidden" onchange="previewUpload(this, 'addBrandImgPreview', 'addBrandImgBox')" />
+                        </label>
+                        <div id="addBrandImgBox" class="mt-2 h-20 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden hidden">
+                            <img id="addBrandImgPreview" src="" class="w-full h-full object-cover" />
+                        </div>
+                    </div>
+
+                    <!-- Logo Upload -->
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1.5">🏷️ Logo (Optionnel)</label>
+                        <label class="cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 hover:border-black rounded-2xl bg-white hover:bg-slate-100 transition-all text-center">
+                            <span class="material-symbols-outlined text-2xl text-slate-400 mb-1">domain</span>
+                            <span class="text-[11px] font-bold text-slate-700">Choisir Logo PC</span>
+                            <input type="file" name="logoFile" accept="image/*" class="hidden" onchange="previewUpload(this, 'addBrandLogoPreview', 'addBrandLogoBox')" />
+                        </label>
+                        <div id="addBrandLogoBox" class="mt-2 h-20 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden hidden flex items-center justify-center p-2">
+                            <img id="addBrandLogoPreview" src="" class="max-h-full max-w-full object-contain" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Toggle -->
+            <label class="flex items-center gap-3 p-3 rounded-2xl bg-amber-50/60 border border-amber-200 cursor-pointer">
+                <input type="checkbox" name="IsFeatured" value="true" class="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-slate-300 cursor-pointer" />
+                <div>
+                    <span class="text-xs font-bold text-slate-900 block">🌟 Marque Vedette (Mise en avant)</span>
+                    <span class="text-[10px] text-slate-500">Afficher cette marque en tête de liste et dans les sélections recommandées.</span>
+                </div>
+            </label>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button type="button" onclick="closeAddBrandModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider hover:bg-slate-100 transition-all">
+                    Annuler
+                </button>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base">save</span>
+                    <span>Enregistrer la Marque</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= MODAL / DRAWER: MODIFIER UNE MARQUE ================= -->
+<div id="editBrandModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-black text-white flex items-center justify-center shadow-md">
+                    <span class="material-symbols-outlined text-xl">edit</span>
+                </div>
+                <div>
+                    <h2 class="font-editorial text-xl font-bold text-slate-900">Modifier la Marque</h2>
+                    <p class="text-xs text-slate-500" id="editModalSubtitle">Mettez à jour les coordonnées et les visuels.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeEditBrandModal()" class="p-2 rounded-xl text-slate-400 hover:text-black hover:bg-slate-100 transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form asp-controller="Admin" asp-action="EditBrand" method="post" enctype="multipart/form-data" class="space-y-5">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="originalSlug" id="editOriginalSlug" />
+            <input type="hidden" name="Slug" id="editSlug" />
+            <input type="hidden" name="ImageUrl" id="editExistingImageUrl" />
+            <input type="hidden" name="LogoUrl" id="editExistingLogoUrl" />
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Nom du Laboratoire / Marque *</label>
+                    <input type="text" name="Name" id="editName" required class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Origine Géographique</label>
+                    <input type="text" name="Origin" id="editOrigin" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Univers / Catégorie</label>
+                    <input type="text" name="Category" id="editCategory" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Badge Officinal</label>
+                    <input type="text" name="BadgeText" id="editBadgeText" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Slogan / Tagline</label>
+                <input type="text" name="Tagline" id="editTagline" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Description Détaillée</label>
+                <textarea name="Description" id="editDescription" rows="3" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Soin Signature / Gamme Phare</label>
+                    <input type="text" name="SignatureProduct" id="editSignatureProduct" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Bénéfice Clé</label>
+                    <input type="text" name="BenefitDescription" id="editBenefitDescription" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Points Forts / Caractéristiques (séparés par des virgules)</label>
+                <input type="text" name="keyFeaturesText" id="editKeyFeatures" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:border-black" />
+            </div>
+
+            <!-- Uploads Section -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                <div class="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base text-emerald-600">add_photo_alternate</span>
+                    Mettre à jour le Visuel ou Logo (Optionnel)
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Banner Upload -->
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1.5">📸 Remplacer la Bannière PC</label>
+                        <label class="cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 hover:border-black rounded-2xl bg-white hover:bg-slate-100 transition-all text-center">
+                            <span class="material-symbols-outlined text-2xl text-slate-400 mb-1">upload_file</span>
+                            <span class="text-[11px] font-bold text-slate-700">Choisir nouvelle image</span>
+                            <input type="file" name="imageFile" accept="image/*" class="hidden" onchange="previewUpload(this, 'editBrandImgPreview', 'editBrandImgBox')" />
+                        </label>
+                        <div id="editBrandImgBox" class="mt-2 h-20 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden">
+                            <img id="editBrandImgPreview" src="" class="w-full h-full object-cover" />
+                        </div>
+                    </div>
+
+                    <!-- Logo Upload -->
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1.5">🏷️ Remplacer le Logo PC</label>
+                        <label class="cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 hover:border-black rounded-2xl bg-white hover:bg-slate-100 transition-all text-center">
+                            <span class="material-symbols-outlined text-2xl text-slate-400 mb-1">domain</span>
+                            <span class="text-[11px] font-bold text-slate-700">Choisir nouveau logo</span>
+                            <input type="file" name="logoFile" accept="image/*" class="hidden" onchange="previewUpload(this, 'editBrandLogoPreview', 'editBrandLogoBox')" />
+                        </label>
+                        <div id="editBrandLogoBox" class="mt-2 h-20 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center p-2">
+                            <img id="editBrandLogoPreview" src="" class="max-h-full max-w-full object-contain" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Toggle -->
+            <label class="flex items-center gap-3 p-3 rounded-2xl bg-amber-50/60 border border-amber-200 cursor-pointer">
+                <input type="checkbox" name="IsFeatured" id="editIsFeatured" value="true" class="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-slate-300 cursor-pointer" />
+                <div>
+                    <span class="text-xs font-bold text-slate-900 block">🌟 Marque Vedette (Mise en avant)</span>
+                    <span class="text-[10px] text-slate-500">Afficher cette marque en tête de liste et dans les sélections recommandées.</span>
+                </div>
+            </label>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button type="button" onclick="closeEditBrandModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider hover:bg-slate-100 transition-all">
+                    Annuler
+                </button>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base">check</span>
+                    <span>Enregistrer les Modifications</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openAddBrandModal() {
+            document.getElementById('addBrandModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddBrandModal() {
+            document.getElementById('addBrandModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openEditBrandModal(brand) {
+            if (!brand) return;
+
+            document.getElementById('editOriginalSlug').value = brand.Slug || '';
+            document.getElementById('editSlug').value = brand.Slug || '';
+            document.getElementById('editName').value = brand.Name || '';
+            document.getElementById('editOrigin').value = brand.Origin || '';
+            document.getElementById('editCategory').value = brand.Category || '';
+            document.getElementById('editBadgeText').value = brand.BadgeText || '';
+            document.getElementById('editTagline').value = brand.Tagline || '';
+            document.getElementById('editDescription').value = brand.Description || '';
+            document.getElementById('editSignatureProduct').value = brand.SignatureProduct || '';
+            document.getElementById('editBenefitDescription').value = brand.BenefitDescription || '';
+            document.getElementById('editExistingImageUrl').value = brand.ImageUrl || '';
+            document.getElementById('editExistingLogoUrl').value = brand.LogoUrl || '';
+            
+            if (brand.KeyFeatures && Array.isArray(brand.KeyFeatures)) {
+                document.getElementById('editKeyFeatures').value = brand.KeyFeatures.join(', ');
+            } else {
+                document.getElementById('editKeyFeatures').value = '';
+            }
+
+            document.getElementById('editIsFeatured').checked = !!brand.IsFeatured;
+
+            // Image Preview
+            const imgBox = document.getElementById('editBrandImgBox');
+            const imgPreview = document.getElementById('editBrandImgPreview');
+            if (brand.ImageUrl) {
+                imgPreview.src = brand.ImageUrl;
+                imgBox.classList.remove('hidden');
+            } else {
+                imgBox.classList.add('hidden');
+            }
+
+            // Logo Preview
+            const logoBox = document.getElementById('editBrandLogoBox');
+            const logoPreview = document.getElementById('editBrandLogoPreview');
+            if (brand.LogoUrl) {
+                logoPreview.src = brand.LogoUrl;
+                logoBox.classList.remove('hidden');
+            } else {
+                logoBox.classList.add('hidden');
+            }
+
+            document.getElementById('editModalSubtitle').innerText = 'Modification de ' + brand.Name;
+            document.getElementById('editBrandModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditBrandModal() {
+            document.getElementById('editBrandModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function previewUpload(input, imgId, boxId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.getElementById(imgId);
+                    img.src = e.target.result;
+                    document.getElementById(boxId).classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAddBrandModal();
+                closeEditBrandModal();
+            }
+        });
+    </script>
+}
