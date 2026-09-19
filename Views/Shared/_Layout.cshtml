@@ -171,14 +171,20 @@
                     </div>
                 </div>
 
-                <!-- Brand Logo (Official Emblem & NATALYA) -->
+                <!-- Brand Logo (Custom Lotus Emblem & NATALYA) -->
                 <a class="flex items-center gap-2.5 sm:gap-3 group py-1 select-none" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/natalya-logo.jpg" alt="Natalya Parapharmacie" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover shadow-sm ring-1 ring-emerald-600/30 group-hover:scale-105 transition-all duration-300 flex-shrink-0" />
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/70 border border-emerald-200/90 text-[#15803D] flex items-center justify-center shadow-2xs group-hover:scale-105 group-hover:border-emerald-300 group-hover:bg-emerald-100/90 transition-all duration-300 flex-shrink-0">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#15803D]" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 34C14.5 29 8 23.5 8 16C8 11.5 11 8.5 15.5 10C17.5 10.7 19 12.5 20 14.5C21 12.5 22.5 10.7 24.5 10C29 8.5 32 11.5 32 16C32 23.5 25.5 29 20 34Z" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M20 6C20 6 25 13 25 19C25 22.5 22.8 25.5 20 27C17.2 25.5 15 22.5 15 19C15 13 20 6 20 6Z" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M20 10V24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </div>
                     <div class="text-left">
                         <div class="text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-slate-900 block leading-none">
-                            <span class="text-[#15803D]">NATALYA</span>
+                            <span class="text-[#15803D] font-editorial tracking-tight font-bold">NATALYA</span>
                         </div>
-                        <div class="text-[6.5px] sm:text-[7.5px] font-bold tracking-[0.2em] uppercase text-emerald-700 mt-0.5 whitespace-nowrap">
+                        <div class="text-[6.5px] sm:text-[7.5px] font-bold tracking-[0.22em] uppercase text-emerald-700 mt-0.5 whitespace-nowrap">
                             Parapharmacie &bull; Sousse, Enfidha
                         </div>
                     </div>
@@ -382,9 +388,15 @@
             <div class="grid grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
                 <!-- Column 1: Brand & Presentation (Mobile: 2 cols, Desktop: 5 cols) -->
                 <div class="col-span-2 lg:col-span-5 space-y-4">
-                    <a class="font-editorial text-xl font-bold text-white flex items-center gap-3 tracking-tight group inline-flex" asp-controller="Home" asp-action="Index">
-                        <img src="~/images/natalya-logo.jpg" alt="Natalya Parapharmacie" class="w-10 h-10 rounded-full object-cover ring-2 ring-emerald-500/40 shadow-md group-hover:scale-105 transition-transform shrink-0" />
-                        <span>Natalya <span class="text-[10px] font-sans font-bold tracking-widest uppercase block text-slate-400 -mt-0.5">Parapharmacie &bull; Sousse, Enfidha</span></span>
+                    <a class="text-xl font-bold text-white flex items-center gap-3 tracking-tight group inline-flex" asp-controller="Home" asp-action="Index">
+                        <div class="w-10 h-10 rounded-2xl bg-slate-900 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:border-emerald-400 transition-all shrink-0">
+                            <svg class="w-5 h-5 text-emerald-400" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 34C14.5 29 8 23.5 8 16C8 11.5 11 8.5 15.5 10C17.5 10.7 19 12.5 20 14.5C21 12.5 22.5 10.7 24.5 10C29 8.5 32 11.5 32 16C32 23.5 25.5 29 20 34Z" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M20 6C20 6 25 13 25 19C25 22.5 22.8 25.5 20 27C17.2 25.5 15 22.5 15 19C15 13 20 6 20 6Z" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M20 10V24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <span><span class="font-editorial text-2xl font-bold">Natalya</span> <span class="text-[10px] font-sans font-bold tracking-widest uppercase block text-emerald-400/90 -mt-0.5">Parapharmacie &bull; Sousse, Enfidha</span></span>
                     </a>
                     <p class="text-xs text-slate-400 font-light leading-relaxed max-w-sm">
                         L'art du soin dermo-cosmétique et des compléments d'exception. Une sélection rigoureuse pour sublimer votre bien-être et votre santé au quotidien.
