@@ -10,10 +10,6 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-8 border-b border-emerald-100 pb-4">
         <div>
-            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[9.5px] font-bold uppercase tracking-wider mb-1.5 border border-emerald-200">
-                <span class="material-symbols-outlined text-xs text-[#15803D]">shopping_basket</span>
-                <span>Votre Panier Officinal</span>
-            </div>
             <h1 class="text-3xl sm:text-4xl text-slate-900 font-extrabold tracking-tight">
                 Panier &amp; <span class="text-[#15803D]">Commande</span>
             </h1>
@@ -126,17 +122,17 @@
                     <!-- Promo Code Input -->
                     <div class="flex gap-2 pt-1">
                         <input type="text" placeholder="Code privilège..." class="flex-1 px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#15803D]" />
-                        <button class="px-4 py-2.5 bg-emerald-50 hover:bg-[#15803D] hover:text-white border border-emerald-200 text-[#15803D] font-bold text-xs uppercase tracking-wider rounded-xl transition-all">Appliquer</button>
+                        <button class="px-4 py-2.5 bg-emerald-50 hover:bg-[#15803D] hover:text-white border border-emerald-200 text-[#15803D] font-semibold text-xs rounded-xl transition-all">Appliquer</button>
                     </div>
 
-                    <a asp-controller="Cart" asp-action="Checkout" class="w-full py-4 bg-[#15803D] hover:bg-[#166534] text-white text-xs uppercase tracking-[0.18em] font-bold rounded-xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all">
-                        <span>Valider ma Commande</span>
-                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                    <a asp-controller="Cart" asp-action="Checkout" class="w-full py-4 bg-[#15803D] hover:bg-[#166534] text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all">
+                        <span>Valider ma commande</span>
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
                     </a>
 
-                    <div class="pt-2 text-center text-[10px] text-slate-400 flex items-center justify-center gap-2">
+                    <div class="pt-2 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
                         <span class="material-symbols-outlined text-sm text-[#15803D]">verified_user</span>
-                        <span>Officine Sousse, Enfidha &bull; Paiement Sécurisé &bull; Traçabilité 100%</span>
+                        <span>Officine Sousse, Enfidha — Paiement Sécurisé — Traçabilité 100%</span>
                     </div>
                 </div>
             </div>
@@ -152,8 +148,8 @@
             <p class="text-xs text-slate-500 mb-6 font-light leading-relaxed">
                 Explorez notre catalogue certifié de vitamines pures et soins dermo-cosmétiques.
             </p>
-            <a asp-controller="Products" asp-action="Index" class="inline-flex items-center gap-2 px-8 py-3.5 bg-[#15803D] text-white text-xs font-bold uppercase tracking-[0.18em] rounded-xl hover:bg-[#166534] transition-all shadow-md">
-                Découvrir la Boutique <span class="material-symbols-outlined text-xs">arrow_forward</span>
+            <a asp-controller="Products" asp-action="Index" class="inline-flex items-center gap-2 px-8 py-3.5 bg-[#15803D] text-white text-xs font-semibold rounded-xl hover:bg-[#166534] transition-all shadow-md">
+                Découvrir la Boutique <span class="material-symbols-outlined text-sm">arrow_forward</span>
             </a>
         </div>
     }

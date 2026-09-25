@@ -31,31 +31,31 @@
         <div class="relative w-full aspect-square mb-4 bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner">
             @if (!Model.InStock)
             {
-                <span class="absolute top-3 left-3 z-10 px-2.5 py-1 bg-slate-900 text-white font-bold text-[9px] rounded-full uppercase tracking-wider shadow-md">
+                <span class="absolute top-3 left-3 z-10 px-2.5 py-1 bg-slate-900 text-white font-semibold text-xs rounded-lg shadow-md">
                     Rupture de Stock
                 </span>
             }
             else if (Model.StockQuantity <= 3)
             {
-                <span class="absolute top-3 left-3 z-10 px-2.5 py-1 bg-amber-400 text-slate-950 font-bold text-[9px] rounded-full uppercase tracking-wider shadow-sm animate-pulse">
+                <span class="absolute top-3 left-3 z-10 px-2.5 py-1 bg-amber-400 text-slate-950 font-semibold text-xs rounded-lg shadow-sm">
                     Plus que @Model.StockQuantity en stock !
                 </span>
             }
             else if (Model.RxRequired)
             {
-                <span class="absolute top-3 left-3 z-10 px-2.5 py-1 bg-indigo-900 text-indigo-100 border border-indigo-700 font-bold text-[9px] rounded-full uppercase tracking-wider shadow-sm">
+                <span class="absolute top-3 left-3 z-10 px-2.5 py-1 bg-indigo-900 text-indigo-100 border border-indigo-700 font-semibold text-xs rounded-lg shadow-sm">
                     Sur Ordonnance
                 </span>
             }
             else if (!string.IsNullOrEmpty(Model.BadgeText))
             {
-                <span class="absolute top-3 left-3 z-10 px-2.5 py-1 @theme.BadgeBg font-bold text-[9px] rounded-full uppercase tracking-wider shadow-sm">
+                <span class="absolute top-3 left-3 z-10 px-2.5 py-1 @theme.BadgeBg font-semibold text-xs rounded-lg shadow-sm">
                     @Model.BadgeText
                 </span>
             }
             else
             {
-                <span class="absolute top-3 left-3 z-10 px-2.5 py-1 @theme.BadgeBg font-bold text-[9px] rounded-full uppercase tracking-wider shadow-sm">
+                <span class="absolute top-3 left-3 z-10 px-2.5 py-1 @theme.BadgeBg font-semibold text-xs rounded-lg shadow-sm">
                     En Stock
                 </span>
             }
@@ -67,7 +67,7 @@
 
         <!-- Brand Row -->
         <div class="flex items-center justify-between gap-2 mb-1.5">
-            <a asp-controller="Products" asp-action="Index" asp-route-brand="@Model.Brand" class="text-[9.5px] @theme.BrandColor hover:opacity-80 font-bold uppercase tracking-[0.16em] transition-opacity">
+            <a asp-controller="Products" asp-action="Index" asp-route-brand="@Model.Brand" class="text-xs @theme.BrandColor hover:opacity-80 font-bold uppercase transition-opacity">
                 @Model.Brand
             </a>
         </div>
@@ -93,11 +93,11 @@
             
             @if (Model.InStock && Model.StockQuantity <= 5)
             {
-                <span class="text-[10px] text-amber-700 font-semibold">@Model.StockQuantity restant(s)</span>
+                <span class="text-xs text-amber-700 font-semibold">@Model.StockQuantity restant(s)</span>
             }
             else if (Model.InStock)
             {
-                <span class="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                <span class="text-xs text-emerald-700 font-semibold flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     En stock
                 </span>
@@ -106,21 +106,21 @@
 
         @if (!Model.InStock)
         {
-            <button disabled class="w-full py-2.5 bg-slate-100 text-slate-400 text-[10px] uppercase font-bold tracking-[0.16em] rounded-xl flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200">
+            <button disabled class="w-full py-2.5 bg-slate-100 text-slate-400 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200">
                 <span class="material-symbols-outlined text-[15px]">block</span>
                 Épuisé / Rupture
             </button>
         }
         else if (Model.RxRequired)
         {
-            <a asp-controller="Products" asp-action="Details" asp-route-id="@Model.Id" class="w-full py-2.5 border border-indigo-800 bg-indigo-50/50 text-indigo-900 text-[10px] uppercase font-bold tracking-widest rounded-xl hover:bg-indigo-900 hover:text-white transition-all flex items-center justify-center gap-2">
+            <a asp-controller="Products" asp-action="Details" asp-route-id="@Model.Id" class="w-full py-2.5 border border-indigo-800 bg-indigo-50/50 text-indigo-900 text-xs font-semibold rounded-xl hover:bg-indigo-900 hover:text-white transition-all flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-xs">prescriptions</span>
                 Consulter Fiche
             </a>
         }
         else
         {
-            <button onclick="addToCart(@Model.Id, 1)" class="w-full py-2.5 bg-slate-900 text-white hover:bg-[#15803D] text-[10px] uppercase font-bold tracking-[0.16em] rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md active:scale-95">
+            <button onclick="addToCart(@Model.Id, 1)" class="w-full py-2.5 bg-slate-900 text-white hover:bg-[#15803D] text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md active:scale-95">
                 <span class="material-symbols-outlined text-[15px]">shopping_bag</span>
                 Ajouter au Panier
             </button>

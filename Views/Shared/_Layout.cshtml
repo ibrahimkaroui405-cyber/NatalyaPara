@@ -86,15 +86,15 @@
 </head>
 <body class="bg-[#F8FAFC] text-slate-900 antialiased pt-[84px] sm:pt-[96px] lg:pt-[104px] pb-20 md:pb-0 min-h-screen flex flex-col justify-between selection:bg-emerald-800 selection:text-white">
 
-    <!-- Top VIP Announcement Bar (Clean Parapharmacie Green) -->
-    <div class="fixed top-0 w-full z-50 bg-[#15803D] text-white text-[8px] sm:text-[10px] font-medium tracking-[0.14em] sm:tracking-[0.18em] uppercase h-7 sm:h-8 px-3 sm:px-8 border-b border-emerald-700/50 flex items-center justify-between overflow-hidden">
-        <div class="flex items-center gap-1.5 sm:gap-2 text-emerald-100 tracking-[0.12em] sm:tracking-[0.18em] truncate">
-            <span class="inline-block w-1.5 h-1.5 rounded-full bg-white animate-pulse flex-shrink-0"></span>
-            <span class="truncate">PRODUITS 100% AUTHENTIQUES <span class="hidden sm:inline">&bull; OFFICINE AGRÉÉE</span></span>
+    <!-- Top VIP Announcement Bar -->
+    <div class="fixed top-0 w-full z-50 bg-[#15803D] text-white text-xs font-medium h-7 sm:h-8 px-3 sm:px-8 border-b border-emerald-700/50 flex items-center justify-between overflow-hidden">
+        <div class="flex items-center gap-2 text-emerald-50 truncate">
+            <span class="material-symbols-outlined text-sm text-emerald-200">verified</span>
+            <span class="truncate">Produits 100% Authentiques — Officine Agréée</span>
         </div>
-        <div class="flex items-center gap-1.5 sm:gap-2 text-emerald-100 tracking-wider sm:tracking-widest font-semibold flex-shrink-0">
-            <span class="material-symbols-outlined text-xs">verified</span>
-            <span>CONSEILS PHARMACIENS <span class="hidden sm:inline">7J/7</span></span>
+        <div class="flex items-center gap-1.5 text-emerald-50 font-medium flex-shrink-0">
+            <span class="material-symbols-outlined text-sm text-emerald-200">support_agent</span>
+            <span>Conseils Pharmaciens 7j/7</span>
         </div>
     </div>
 
@@ -190,8 +190,8 @@
                         <div class="text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-slate-900 block leading-none">
                             <span class="text-[#15803D] font-editorial tracking-tight font-bold">NATALYA</span>
                         </div>
-                        <div class="text-[6.5px] sm:text-[7.5px] font-bold tracking-[0.22em] uppercase text-emerald-700 mt-0.5 whitespace-nowrap">
-                            Parapharmacie &bull; Sousse, Enfidha
+                        <div class="text-[10px] sm:text-xs font-medium text-emerald-800 mt-0.5 whitespace-nowrap">
+                            Parapharmacie Sousse — Enfidha
                         </div>
                     </div>
                 </a>
@@ -250,7 +250,7 @@
                         </div>
                         <div>
                             <span class="text-base font-extrabold text-slate-900 block leading-tight">Rayons &amp; Catégories</span>
-                            <span class="text-[9.5px] font-bold tracking-wider uppercase text-emerald-700 block">Catalogue Officinal &bull; 9 Rayons</span>
+                            <span class="text-xs text-slate-500 font-medium block">Catalogue Officinal (9 rayons)</span>
                         </div>
                     </div>
                     <button id="closeDrawerBtn" class="text-slate-400 hover:text-black p-1.5 rounded-xl hover:bg-slate-100 transition-colors" aria-label="Fermer le menu">
@@ -325,10 +325,10 @@
                 </a>
                 
                 <div class="text-center pt-1">
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-[#15803D] border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">
-                        <span class="material-symbols-outlined text-xs">verified_user</span>
-                        <span>Officine Agréée Sousse, Enfidha</span>
-                    </div>
+                    <p class="text-xs text-slate-500 font-medium flex items-center justify-center gap-1.5">
+                        <span class="material-symbols-outlined text-sm text-[#15803D]">verified_user</span>
+                        <span>Officine Agréée Sousse — Enfidha</span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -350,17 +350,7 @@
     <footer class="bg-[#090D16] text-slate-300 pt-12 pb-28 md:pt-16 md:pb-12 mt-12 md:mt-20 border-t border-slate-800 shadow-2xl relative overflow-hidden">
         <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-10 md:space-y-12">
             <!-- Trust Highlights Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6 pb-8 md:pb-12 border-b border-slate-800">
-                <div class="flex items-center gap-3.5 bg-slate-900/50 sm:bg-transparent p-3 sm:p-0 rounded-2xl sm:rounded-none border border-slate-800/80 sm:border-0">
-                    <div class="w-11 h-11 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center text-slate-200 shadow-sm shrink-0">
-                        <span class="material-symbols-outlined text-xl">local_shipping</span>
-                    </div>
-                    <div>
-                        <h5 class="text-xs font-bold text-white uppercase tracking-wider">Livraison 24/48h</h5>
-                        <p class="text-[11px] text-slate-400 font-light">Offerte dès 49 Dinar d'achat</p>
-                    </div>
-                </div>
-
+            <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-3.5 sm:gap-6 pb-8 md:pb-12 border-b border-slate-800">
                 <div class="flex items-center gap-3.5 bg-slate-900/50 sm:bg-transparent p-3 sm:p-0 rounded-2xl sm:rounded-none border border-slate-800/80 sm:border-0">
                     <div class="w-11 h-11 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center text-slate-200 shadow-sm shrink-0">
                         <span class="material-symbols-outlined text-xl">verified</span>
@@ -404,15 +394,15 @@
                                 <path d="M27 20C21.5 17.5 17.5 19 17 24C21 25.5 25.5 24 27 20Z"/>
                             </svg>
                         </div>
-                        <span><span class="font-editorial text-2xl font-bold">Natalya</span> <span class="text-[10px] font-sans font-bold tracking-widest uppercase block text-emerald-400/90 -mt-0.5">Parapharmacie &bull; Sousse, Enfidha</span></span>
+                        <span><span class="font-editorial text-2xl font-bold">Natalya</span> <span class="text-xs font-medium block text-emerald-400/90 mt-0.5">Parapharmacie Sousse — Enfidha</span></span>
                     </a>
                     <p class="text-xs text-slate-400 font-light leading-relaxed max-w-md">
                         L'art du soin dermo-cosmétique et des compléments d'exception. Une sélection rigoureuse pour sublimer votre bien-être et votre santé au quotidien.
                     </p>
-                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                        <span>Officine Agréée Sousse &bull; Enfidha</span>
-                    </div>
+                    <p class="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-sm text-emerald-400">verified</span>
+                        <span>Officine Agréée Sousse — Enfidha</span>
+                    </p>
                 </div>
 
                 <!-- Column 2: Navigation Rapide (Mobile: 1 col, Desktop: 3 cols) -->

@@ -58,9 +58,9 @@
 
         <!-- Product Info & Purchase -->
         <div class="md:col-span-6 lg:col-span-7 flex flex-col justify-center">
-            <div class="flex items-center gap-3 mb-3">
-                <a asp-controller="Products" asp-action="Index" asp-route-brand="@Model.Brand" class="bg-emerald-50 border border-emerald-200 text-[#15803D] hover:bg-emerald-100 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1 rounded-full transition-colors">
-                    @Model.Brand
+            <div class="mb-2">
+                <a asp-controller="Products" asp-action="Index" asp-route-brand="@Model.Brand" class="text-xs font-bold uppercase tracking-wider text-[#15803D] hover:underline">
+                    Laboratoire @Model.Brand
                 </a>
             </div>
 
@@ -78,7 +78,7 @@
                 {
                     <span class="text-base text-slate-400 line-through font-light">@Model.OriginalPrice.Value.ToString("F2") Dinar</span>
                 }
-                <span class="text-xs text-slate-400 font-normal ml-2">TVA incluse &bull; Officine Sousse, Enfidha</span>
+                <span class="text-xs text-slate-400 font-normal ml-2">TVA incluse — Officine Sousse, Enfidha</span>
             </div>
 
             <!-- Purchase Box -->
