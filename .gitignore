@@ -12,8 +12,12 @@ publish.zip
 __pycache__/
 *.pyc
 
-# Keep SQLite database in App_Data so all 5000+ products are deployed
-!App_Data/
-!App_Data/natalyapara.db
+# SQLite database files - DO NOT TRACK so production data is never overwritten by local changes
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+App_Data/*.db
 App_Data/*.db-shm
 App_Data/*.db-wal
+!App_Data/.gitkeep
