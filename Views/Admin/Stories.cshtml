@@ -6,7 +6,7 @@
     var brands = ViewBag.Brands as List<string> ?? new List<string>();
 }
 
-<div class="space-y-8 max-w-6xl">
+<div class="space-y-6 sm:space-y-8 max-w-6xl">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
@@ -14,17 +14,17 @@
             <p class="text-xs text-slate-500 mt-1">Ajoutez, modifiez ou supprimez vos vidéos de démonstration de soins (format vertical Reels / Stories).</p>
         </div>
 
-        <button type="button" onclick="openCreateStoryModal()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-sm">
+        <button type="button" onclick="openCreateStoryModal()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-sm">
             <span class="material-symbols-outlined text-sm">video_call</span>
             <span>Nouvelle Story Vidéo</span>
         </button>
     </div>
 
     <!-- Live Cards Grid (Interactive Video Previews) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         @foreach (var story in Model)
         {
-            <div class="reel-card group relative rounded-[28px] overflow-hidden bg-slate-950 text-white min-h-[460px] shadow-[0_20px_45px_rgba(0,0,0,0.14)] border @(story.IsActive ? "border-slate-800" : "border-red-900/40 opacity-60") flex flex-col justify-between p-5 transition-all duration-300">
+            <div class="reel-card group relative rounded-[24px] sm:rounded-[28px] overflow-hidden bg-slate-950 text-white min-h-[420px] sm:min-h-[460px] shadow-[0_20px_45px_rgba(0,0,0,0.14)] border @(story.IsActive ? "border-slate-800" : "border-red-900/40 opacity-60") flex flex-col justify-between p-4 sm:p-5 transition-all duration-300">
                 
                 <!-- Autoplay Video Background -->
                 <video autoplay muted loop playsinline preload="auto" poster="@story.PosterUrl" class="reel-video absolute inset-0 w-full h-full object-cover">
@@ -34,24 +34,24 @@
 
                 <!-- Top: Brand Badges & Admin Actions -->
                 <div class="relative z-10 flex items-center justify-between gap-2">
-                    <span class="px-3 py-1 rounded-full text-white text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 shadow-md backdrop-blur-md @(story.BadgeColor == "emerald" ? "bg-emerald-600/90" : story.BadgeColor == "teal" ? "bg-teal-600/90" : story.BadgeColor == "amber" ? "bg-amber-600/90" : story.BadgeColor == "indigo" ? "bg-indigo-600/90" : "bg-red-600/90")">
+                    <span class="px-2.5 py-1 rounded-full text-white text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 shadow-md backdrop-blur-md @(story.BadgeColor == "emerald" ? "bg-emerald-600/90" : story.BadgeColor == "teal" ? "bg-teal-600/90" : story.BadgeColor == "amber" ? "bg-amber-600/90" : story.BadgeColor == "indigo" ? "bg-indigo-600/90" : "bg-red-600/90")">
                         <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                         <span>@story.BadgeText</span>
                     </span>
 
                     <div class="flex items-center gap-1 bg-black/70 backdrop-blur-md p-1 rounded-xl border border-white/20">
                         <form asp-controller="Admin" asp-action="ToggleStory" asp-route-id="@story.Id" method="post" class="inline">
-                            <button type="submit" class="p-1 rounded-lg text-xs transition-colors @(story.IsActive ? "text-emerald-400 hover:bg-emerald-950/60" : "text-slate-400 hover:bg-slate-800")" title="@(story.IsActive ? "Actif (cliquez pour désactiver)" : "Inactif (cliquez pour activer)")">
-                                <span class="material-symbols-outlined text-sm">@(story.IsActive ? "visibility" : "visibility_off")</span>
+                            <button type="submit" class="p-1.5 sm:p-1 rounded-lg text-xs transition-colors @(story.IsActive ? "text-emerald-400 hover:bg-emerald-950/60" : "text-slate-400 hover:bg-slate-800")" title="@(story.IsActive ? "Actif (cliquez pour désactiver)" : "Inactif (cliquez pour activer)")">
+                                <span class="material-symbols-outlined text-sm sm:text-base">@(story.IsActive ? "visibility" : "visibility_off")</span>
                             </button>
                         </form>
-                        <button type="button" onclick="openEditStoryModal(@story.Id, '@Html.Raw(Html.Encode(story.BrandName))', '@Html.Raw(Html.Encode(story.BadgeText))', '@story.BadgeColor', '@Html.Raw(Html.Encode(story.Title))', '@Html.Raw(Html.Encode(story.Description))', '@story.VideoUrl', '@story.PosterUrl', @(story.AssociatedProductId?.ToString() ?? "null"), @story.DisplayOrder, @(story.IsActive ? "true" : "false"))" class="p-1 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 transition-colors" title="Modifier">
-                            <span class="material-symbols-outlined text-sm">edit</span>
+                        <button type="button" onclick="openEditStoryModal(@story.Id, '@Html.Raw(Html.Encode(story.BrandName))', '@Html.Raw(Html.Encode(story.BadgeText))', '@story.BadgeColor', '@Html.Raw(Html.Encode(story.Title))', '@Html.Raw(Html.Encode(story.Description))', '@story.VideoUrl', '@story.PosterUrl', @(story.AssociatedProductId?.ToString() ?? "null"), @story.DisplayOrder, @(story.IsActive ? "true" : "false"))" class="p-1.5 sm:p-1 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 transition-colors" title="Modifier">
+                            <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
                         </button>
                         <form asp-controller="Admin" asp-action="DeleteStory" asp-route-id="@story.Id" method="post" onsubmit="return confirm('Supprimer définitivement cette story vidéo ?');" class="inline">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="p-1 text-red-400 hover:text-red-200 rounded-lg hover:bg-red-900/40 transition-colors" title="Supprimer">
-                                <span class="material-symbols-outlined text-sm">delete</span>
+                            <button type="submit" class="p-1.5 sm:p-1 text-red-400 hover:text-red-200 rounded-lg hover:bg-red-900/40 transition-colors" title="Supprimer">
+                                <span class="material-symbols-outlined text-sm sm:text-base">delete</span>
                             </button>
                         </form>
                     </div>
@@ -65,16 +65,16 @@
                 </div>
 
                 <!-- Bottom Information -->
-                <div class="relative z-10 space-y-1 bg-black/50 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                <div class="relative z-10 space-y-1 bg-black/50 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-white/10">
                     <div class="flex items-center justify-between">
-                        <span class="text-[9.5px] text-amber-400 font-bold uppercase tracking-widest">Laboratoire @story.BrandName</span>
-                        <span class="text-[9px] text-slate-400 font-mono">Ordre: #@story.DisplayOrder</span>
+                        <span class="text-[9.5px] text-amber-400 font-bold uppercase tracking-widest truncate">@story.BrandName</span>
+                        <span class="text-[9px] text-slate-400 font-mono shrink-0">#@story.DisplayOrder</span>
                     </div>
                     <div class="text-xs font-semibold text-white">
                         Démonstration Soin
                     </div>
-                    <div class="text-[9px] text-slate-400 font-mono pt-1 truncate">
-                        Fichier: @story.VideoUrl
+                    <div class="text-[9px] text-slate-400 font-mono pt-0.5 truncate">
+                        @story.VideoUrl
                     </div>
                 </div>
             </div>
@@ -83,10 +83,10 @@
 </div>
 
 <!-- Modal: Create / Edit Story Reel -->
-<div id="storyModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-slate-200">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
-            <h3 id="storyModalTitle" class="font-editorial text-xl font-bold text-slate-900">Nouvelle Story Vidéo</h3>
+<div id="storyModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-8 shadow-2xl border border-slate-200 my-auto">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 sm:pb-4 mb-4 sm:mb-6">
+            <h3 id="storyModalTitle" class="font-editorial text-lg sm:text-xl font-bold text-slate-900">Nouvelle Story Vidéo</h3>
             <button type="button" onclick="closeStoryModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
                 <span class="material-symbols-outlined text-sm">close</span>
             </button>
@@ -153,11 +153,11 @@
                 <label for="storyIsActive" class="text-xs font-bold text-slate-800">Afficher immédiatement sur l'accueil</label>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                <button type="button" onclick="closeStoryModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider">
+            <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-4 border-t border-slate-100">
+                <button type="button" onclick="closeStoryModal()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider text-center">
                     Annuler
                 </button>
-                <button type="submit" class="px-6 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
+                <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider shadow-sm text-center">
                     Enregistrer la Story
                 </button>
             </div>
