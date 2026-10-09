@@ -84,7 +84,7 @@
     <div class="pt-2 border-t border-slate-100 mt-auto">
         <div class="text-base font-bold text-slate-900 mb-3 flex items-baseline justify-between">
             <div class="flex items-baseline gap-2">
-                <span class="font-editorial text-lg text-slate-900">@Model.Price.ToString("F2") Dinar</span>
+                <span class="font-editorial text-lg sm:text-xl font-bold text-[#15803D]">@Model.Price.ToString("F2") Dinar</span>
                 @if (Model.OriginalPrice.HasValue && Model.OriginalPrice.Value > Model.Price)
                 {
                     <span class="text-xs text-slate-400 line-through font-light">@Model.OriginalPrice.Value.ToString("F2") Dinar</span>

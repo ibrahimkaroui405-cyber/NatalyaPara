@@ -63,6 +63,18 @@ namespace PharmaTrust.Data
                 CREATE UNIQUE INDEX IF NOT EXISTS ""IX_AdminUsers_Email"" ON ""AdminUsers"" (""Email"");
             ");
 
+            context.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS ""DeliveryRegions"" (
+                    ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_DeliveryRegions"" PRIMARY KEY AUTOINCREMENT,
+                    ""Name"" TEXT NOT NULL,
+                    ""DeliveryFee"" TEXT NOT NULL DEFAULT '7.00',
+                    ""EstimatedDeliveryTime"" TEXT NOT NULL DEFAULT '24h - 48h',
+                    ""IsActive"" INTEGER NOT NULL DEFAULT 1,
+                    ""DisplayOrder"" INTEGER NOT NULL DEFAULT 0
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS ""IX_DeliveryRegions_Name"" ON ""DeliveryRegions"" (""Name"");
+            ");
+
             // Ensure new columns exist in SQLite database
             try { context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Products"" ADD COLUMN ""SubCategory"" TEXT NULL;"); } catch { }
             try { context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Products"" ADD COLUMN ""SubCategorySlug"" TEXT NULL;"); } catch { }
@@ -435,22 +447,22 @@ namespace PharmaTrust.Data
                     new Product
                     {
                         Id = 4,
-                        Name = "Thermomètre Digital Médical Instantané",
+                        Name = "Hydrain3 Hialuro Sérum Réhydratant Visage 4D, 30ml",
                         Brand = "Dermedic",
-                        ShortDescription = "Précision médicale en 8 secondes avec écran LCD rétroéclairé et alarme de fièvre.",
-                        FullDescription = "Thermomètre numérique infrarouge ultra-rapide et précis adapté aux adultes, enfants et nourrissons. Mémorise les 20 dernières mesures.",
-                        Price = 12.99m,
-                        OriginalPrice = 16.99m,
-                        Rating = 4.6,
-                        ReviewCount = 67,
-                        ImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDQPE8radJxnGRhhkdD7Yw0WNChnLQZeAZ81qkztYNv_yOZh8TLS1sUApb6QP7ds8G-6vb4T4zMEGWEIMaU13PGV41hEAPEeyHsJRsVxb6fzAT29flj6bYrMbNI0QE95wSiD9ZUxWyCglHkPqLqVrQz9NdDIoTQkqg5EUBUKLaY0uy9YKcAZozz2N9tBOWSdemp927O42cznBAlOiMxmt8vijclwFP9z6bj8HZAZROp1Xhp69bf8-SCsQ",
-                        CategorySlug = "materiel-medical",
-                        CategoryName = "Matériel Médical",
-                        StockQuantity = 0,
+                        ShortDescription = "Quadruple complexe hyaluronique pour un boost d'hydratation intense et immédiat du visage.",
+                        FullDescription = "Soin concentré pour peaux déshydratées formulé à base d'eau thermale artésienne et d'acide hyaluronique à 15% pour restaurer l'élasticité cutanée.",
+                        Price = 22.50m,
+                        OriginalPrice = 28.00m,
+                        Rating = 4.9,
+                        ReviewCount = 89,
+                        ImageUrl = "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
+                        CategorySlug = "visage",
+                        CategoryName = "Soins du Visage",
+                        StockQuantity = 15,
                         RxRequired = false,
-                        BadgeText = "Rupture",
-                        Ingredients = new List<string> { "Plastique ABS médical", "Sonde en acier inoxydable" },
-                        DosageInstructions = new List<string> { "Placer sous la langue ou sous l'aisselle. Attendre le signal sonore." }
+                        BadgeText = "Best-Seller",
+                        Ingredients = new List<string> { "Eau Thermale Artésienne", "Acide Hyaluronique 4D 15%", "Vitamine E" },
+                        DosageInstructions = new List<string> { "Appliquer matin et soir quelques gouttes sur le visage et le cou parfaitement nettoyés." }
                     },
                     new Product
                     {
@@ -777,6 +789,41 @@ namespace PharmaTrust.Data
                 defaultAdmin.PasswordHash = strongPasswordHash;
                 defaultAdmin.FullName = "Dr. Natalya (Pharmacien Gérant)";
                 defaultAdmin.IsActive = true;
+                context.SaveChanges();
+            }
+
+            // Seed the 24 Governorates of Tunisia for Delivery
+            if (!context.DeliveryRegions.Any())
+            {
+                var regions = new List<DeliveryRegion>
+                {
+                    new DeliveryRegion { Name = "Tunis", DeliveryFee = 7.00m, EstimatedDeliveryTime = "24h - 48h", DisplayOrder = 1, IsActive = true },
+                    new DeliveryRegion { Name = "Ariana", DeliveryFee = 7.00m, EstimatedDeliveryTime = "24h - 48h", DisplayOrder = 2, IsActive = true },
+                    new DeliveryRegion { Name = "Ben Arous", DeliveryFee = 7.00m, EstimatedDeliveryTime = "24h - 48h", DisplayOrder = 3, IsActive = true },
+                    new DeliveryRegion { Name = "Manouba", DeliveryFee = 7.00m, EstimatedDeliveryTime = "24h - 48h", DisplayOrder = 4, IsActive = true },
+                    new DeliveryRegion { Name = "Nabeul", DeliveryFee = 7.00m, EstimatedDeliveryTime = "24h - 48h", DisplayOrder = 5, IsActive = true },
+                    new DeliveryRegion { Name = "Zaghouan", DeliveryFee = 7.00m, EstimatedDeliveryTime = "24h - 48h", DisplayOrder = 6, IsActive = true },
+                    new DeliveryRegion { Name = "Bizerte", DeliveryFee = 7.00m, EstimatedDeliveryTime = "24h - 48h", DisplayOrder = 7, IsActive = true },
+                    new DeliveryRegion { Name = "Béja", DeliveryFee = 8.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 8, IsActive = true },
+                    new DeliveryRegion { Name = "Jendouba", DeliveryFee = 8.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 9, IsActive = true },
+                    new DeliveryRegion { Name = "Le Kef", DeliveryFee = 8.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 10, IsActive = true },
+                    new DeliveryRegion { Name = "Siliana", DeliveryFee = 8.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 11, IsActive = true },
+                    new DeliveryRegion { Name = "Sousse", DeliveryFee = 6.00m, EstimatedDeliveryTime = "24h", DisplayOrder = 12, IsActive = true },
+                    new DeliveryRegion { Name = "Monastir", DeliveryFee = 6.50m, EstimatedDeliveryTime = "24h - 48h", DisplayOrder = 13, IsActive = true },
+                    new DeliveryRegion { Name = "Mahdia", DeliveryFee = 7.00m, EstimatedDeliveryTime = "24h - 48h", DisplayOrder = 14, IsActive = true },
+                    new DeliveryRegion { Name = "Sfax", DeliveryFee = 7.00m, EstimatedDeliveryTime = "24h - 48h", DisplayOrder = 15, IsActive = true },
+                    new DeliveryRegion { Name = "Kairouan", DeliveryFee = 7.00m, EstimatedDeliveryTime = "24h - 48h", DisplayOrder = 16, IsActive = true },
+                    new DeliveryRegion { Name = "Kasserine", DeliveryFee = 8.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 17, IsActive = true },
+                    new DeliveryRegion { Name = "Sidi Bouzid", DeliveryFee = 8.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 18, IsActive = true },
+                    new DeliveryRegion { Name = "Gabès", DeliveryFee = 8.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 19, IsActive = true },
+                    new DeliveryRegion { Name = "Médenine", DeliveryFee = 9.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 20, IsActive = true },
+                    new DeliveryRegion { Name = "Tataouine", DeliveryFee = 9.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 21, IsActive = true },
+                    new DeliveryRegion { Name = "Gafsa", DeliveryFee = 8.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 22, IsActive = true },
+                    new DeliveryRegion { Name = "Tozeur", DeliveryFee = 9.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 23, IsActive = true },
+                    new DeliveryRegion { Name = "Kébili", DeliveryFee = 9.00m, EstimatedDeliveryTime = "48h - 72h", DisplayOrder = 24, IsActive = true }
+                };
+
+                context.DeliveryRegions.AddRange(regions);
                 context.SaveChanges();
             }
         }

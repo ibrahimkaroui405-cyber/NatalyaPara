@@ -590,6 +590,81 @@ function showDrawerCart() {
     if (headerIcon) headerIcon.innerHTML = '<span class="material-symbols-outlined text-base">shopping_bag</span>';
 }
 
+// Dynamic Region-Based Delivery Fee Calculation in Drawer
+function onDrawerRegionChange(select) {
+    if (!select) return;
+    const option = select.options[select.selectedIndex];
+    if (!option || !option.value) return;
+
+    const fee = parseFloat(option.getAttribute('data-fee')) || 7.00;
+    const subtotal = window.currentCartSubtotal !== undefined ? window.currentCartSubtotal : 0;
+    const grandTotal = subtotal + fee;
+
+    // 1. Badge on the field
+    const badge = document.getElementById('chkRegionFeeBadge');
+    if (badge) {
+        badge.textContent = `Livraison : ${fee.toFixed(2).replace('.', ',')} DT`;
+        badge.classList.remove('hidden');
+    }
+
+    // 2. Shipping line in detailed summary
+    const shippingEl = document.getElementById('drawerShipping');
+    if (shippingEl) {
+        shippingEl.textContent = `${fee.toFixed(2).replace('.', ',')} Dinar`;
+    }
+
+    // 3. Grand total lines
+    const grandTotalEl = document.getElementById('drawerGrandTotal');
+    if (grandTotalEl) {
+        grandTotalEl.textContent = `${grandTotal.toFixed(2).replace('.', ',')} Dinar`;
+    }
+
+    const grandTotalSlimEl = document.getElementById('drawerGrandTotalSlim');
+    if (grandTotalSlimEl) {
+        grandTotalSlimEl.textContent = `${grandTotal.toFixed(2).replace('.', ',')} Dinar`;
+    }
+
+    // 4. Shipping Note under Total à payer à la livraison
+    const shippingNoteEl = document.getElementById('drawerShippingNote');
+    if (shippingNoteEl) {
+        shippingNoteEl.textContent = `Frais de livraison (${fee.toFixed(2).replace('.', ',')} DT • ${option.value}) inclus • Espèces à la livraison`;
+    }
+}
+
+// Fetch custom region rates dynamically from server
+function syncDeliveryRegions() {
+    fetch('/Cart/GetDeliveryRegions')
+        .then(res => res.json())
+        .then(regions => {
+            if (!regions || !Array.isArray(regions) || regions.length === 0) return;
+            const select = document.getElementById('chkCity');
+            if (!select) return;
+
+            const selectedVal = select.value;
+            const placeholder = select.options[0];
+            select.innerHTML = '';
+            if (placeholder) select.appendChild(placeholder);
+
+            regions.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.name;
+                opt.setAttribute('data-fee', r.fee.toFixed(2));
+                opt.textContent = `${r.name} (${r.fee.toFixed(2).replace('.', ',')} DT)`;
+                if (r.name === selectedVal) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            if (selectedVal) {
+                onDrawerRegionChange(select);
+            }
+        })
+        .catch(err => console.debug('Régions chargées par défaut.'));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    syncDeliveryRegions();
+});
+
 // Cash on Delivery Checkout Submission with Full Field Validation
 function submitDrawerCheckout(event) {
     if (event) event.preventDefault();
@@ -768,7 +843,7 @@ function renderCartDrawer(data) {
                     <a href="/Products/Details/${item.id}" class="text-xs font-semibold text-slate-900 hover:text-black line-clamp-1 block leading-snug">
                         ${item.name}
                     </a>
-                    <div class="text-xs font-bold text-slate-900 mt-1">${item.price.toFixed(2).replace('.', ',')} Dinar</div>
+                    <div class="text-xs font-bold text-[#15803D] mt-1">${item.price.toFixed(2).replace('.', ',')} Dinar</div>
                     
                     <div class="flex items-center justify-between mt-2">
                         <div class="flex items-center border border-slate-200 rounded-lg bg-slate-50 h-7 px-1">
@@ -795,12 +870,18 @@ function renderCartDrawer(data) {
     const grandTotalSlimEl = document.getElementById('drawerGrandTotalSlim');
     const shippingNoteEl = document.getElementById('drawerShippingNote');
 
-    if (subtotalEl) subtotalEl.textContent = `${(data.subtotal || 0).toFixed(2).replace('.', ',')} Dinar`;
-    if (shippingEl) shippingEl.textContent = data.shippingFee === 0 ? 'GRATUITE' : `${data.shippingFee.toFixed(2).replace('.', ',')} Dinar`;
-    if (grandTotalEl) grandTotalEl.textContent = `${(data.grandTotal || 0).toFixed(2).replace('.', ',')} Dinar`;
-    if (grandTotalSlimEl) grandTotalSlimEl.textContent = `${(data.grandTotal || 0).toFixed(2).replace('.', ',')} Dinar`;
-    if (shippingNoteEl) {
-        shippingNoteEl.textContent = data.shippingFee === 0 ? 'Livraison Gratuite offerte • Espèces à la livraison' : 'Frais de livraison (4,99 Dinar) inclus • Espèces à la livraison';
+    window.currentCartSubtotal = data.subtotal || 0;
+    const chkCity = document.getElementById('chkCity');
+    if (chkCity && chkCity.value) {
+        onDrawerRegionChange(chkCity);
+    } else {
+        if (subtotalEl) subtotalEl.textContent = `${(data.subtotal || 0).toFixed(2).replace('.', ',')} Dinar`;
+        if (shippingEl) shippingEl.textContent = data.shippingFee === 0 ? 'GRATUITE' : `${data.shippingFee.toFixed(2).replace('.', ',')} Dinar`;
+        if (grandTotalEl) grandTotalEl.textContent = `${(data.grandTotal || 0).toFixed(2).replace('.', ',')} Dinar`;
+        if (grandTotalSlimEl) grandTotalSlimEl.textContent = `${(data.grandTotal || 0).toFixed(2).replace('.', ',')} Dinar`;
+        if (shippingNoteEl) {
+            shippingNoteEl.textContent = 'Sélectionnez votre région pour calculer la livraison • Espèces à la livraison';
+        }
     }
 }
 

@@ -20,6 +20,7 @@ namespace PharmaTrust.Data
         public DbSet<SpecialOffer> SpecialOffers { get; set; }
         public DbSet<StoryReel> StoryReels { get; set; }
         public DbSet<AdminUser> AdminUsers { get; set; }
+        public DbSet<DeliveryRegion> DeliveryRegions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -122,6 +123,14 @@ namespace PharmaTrust.Data
                 entity.HasKey(u => u.Id);
                 entity.HasIndex(u => u.Username).IsUnique();
                 entity.HasIndex(u => u.Email).IsUnique();
+            });
+
+            // Configure DeliveryRegion
+            modelBuilder.Entity<DeliveryRegion>(entity =>
+            {
+                entity.HasKey(d => d.Id);
+                entity.Property(d => d.DeliveryFee).HasPrecision(18, 2);
+                entity.HasIndex(d => d.Name).IsUnique();
             });
         }
     }

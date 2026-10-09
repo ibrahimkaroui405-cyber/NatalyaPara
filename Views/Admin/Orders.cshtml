@@ -22,12 +22,118 @@
                 <span>Flux de Commandes Officinales</span>
             </div>
             <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Suivi des Commandes (@totalCount)</h1>
-            <p class="text-xs text-slate-500 mt-1">Consultez les commandes en direct, mettez à jour les statuts et gérez les réintégrations automatiques de stock.</p>
+            <p class="text-xs text-slate-500 mt-1">Consultez les commandes en direct, mettez à jour les statuts et gérez les alertes Telegram & WhatsApp.</p>
         </div>
-        <a asp-controller="Admin" asp-action="Stock" class="bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider px-4 sm:px-5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm self-start sm:self-auto w-full sm:w-auto">
-            <span class="material-symbols-outlined text-sm">shelves</span>
-            <span>Gestion des Stocks</span>
-        </a>
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="document.getElementById('notifSettingsModal').classList.toggle('hidden')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-sm">notifications_active</span>
+                <span>Alertes Telegram (@(ViewBag.TelegramSettings?.IsEnabled == true && !string.IsNullOrEmpty(ViewBag.TelegramSettings?.BotToken) ? "Actif" : "Config"))</span>
+            </button>
+            <a asp-controller="Admin" asp-action="Stock" class="bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider px-4 sm:px-5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm self-start sm:self-auto w-full sm:w-auto">
+                <span class="material-symbols-outlined text-sm">shelves</span>
+                <span>Gestion des Stocks</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Telegram & WhatsApp Settings Card -->
+    @{
+        var teleSettings = ViewBag.TelegramSettings as PharmaTrust.Models.TelegramSettings ?? new PharmaTrust.Models.TelegramSettings();
+        bool isConfigured = !string.IsNullOrWhiteSpace(teleSettings.BotToken) && !string.IsNullOrWhiteSpace(teleSettings.ChatId);
+    }
+    <div id="notifSettingsModal" class="@(isConfigured ? "hidden" : "") bg-gradient-to-br from-slate-900 to-slate-950 text-white p-5 sm:p-6 rounded-3xl shadow-xl border border-slate-800 transition-all">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-[#0088cc] flex items-center justify-center text-white shadow-lg">
+                    <span class="material-symbols-outlined text-xl">send</span>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Alertes Instantanées Telegram &amp; WhatsApp</span>
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full @(isConfigured ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800" : "bg-amber-950/80 text-amber-300 border border-amber-800")">
+                            <span class="w-1.5 h-1.5 rounded-full @(isConfigured ? "bg-emerald-400" : "bg-amber-400") animate-pulse"></span>
+                            @(isConfigured ? "Actif & Connecté" : "En attente de configuration")
+                        </span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400">Recevez un PING sonore immédiat sur votre smartphone avec tous les détails de chaque commande passée sur Natalya Para.</p>
+                </div>
+            </div>
+            <button type="button" onclick="document.getElementById('notifSettingsModal').classList.add('hidden')" class="text-slate-400 hover:text-white text-xs px-2.5 py-1 rounded-lg hover:bg-slate-800 self-end sm:self-auto">
+                Masquer
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- How-To Guide in 2 steps -->
+            <div class="lg:col-span-5 bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 text-xs space-y-2.5">
+                <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">tips_and_updates</span>
+                    <span>Comment activer en 1 minute (Gratuit) :</span>
+                </div>
+                <ol class="list-decimal list-inside space-y-2 text-slate-300 text-[11px] leading-relaxed">
+                    <li>Ouvrez <b>Telegram</b> sur votre téléphone et cherchez <b>@@BotFather</b>. Envoyez <code>/newbot</code>, choisissez un nom, et copiez le <b>Bot Token</b>.</li>
+                    <li>Cherchez <b>@@userinfobot</b> sur Telegram et envoyez un message pour obtenir votre <b>Chat ID</b> numérique (ex: <i>123456789</i>).</li>
+                    <li>Envoyez <code>/start</code> à votre nouveau bot, collez vos identifiants ci-contre et cliquez sur <b>Tester</b> !</li>
+                </ol>
+                <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-700/50">
+                    💡 WhatsApp est déjà lié à votre numéro : <b class="text-white">+216 21 040 266</b>.
+                </div>
+            </div>
+
+            <!-- Configuration Form -->
+            <div class="lg:col-span-7 space-y-3">
+                <form asp-controller="Admin" asp-action="SaveNotificationSettings" method="post" class="space-y-3">
+                    @Html.AntiForgeryToken()
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Telegram Bot Token</label>
+                            <input type="text" name="botToken" value="@teleSettings.BotToken" placeholder="ex: 7891234567:AAHxyz..." class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Votre Telegram Chat ID</label>
+                            <input type="text" name="chatId" value="@teleSettings.ChatId" placeholder="ex: 123456789" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono" />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-300 mb-1">WhatsApp Pharmacie</label>
+                            <input type="text" name="ownerWhatsApp" value="@teleSettings.OwnerWhatsApp" placeholder="21621040266" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono" />
+                        </div>
+                        <div class="pt-5 flex items-center gap-2">
+                            <label class="inline-flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                                <input type="checkbox" name="isEnabled" value="true" checked="@teleSettings.IsEnabled" class="w-4 h-4 rounded text-emerald-600 focus:ring-0 bg-slate-800 border-slate-700" />
+                                <span>Activer les notifications automatiques</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-2">
+                        <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md">
+                            Sauvegarder
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Test button -->
+                <form asp-controller="Admin" asp-action="TestTelegram" method="post" class="inline-block pt-1">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="botToken" value="@teleSettings.BotToken" />
+                    <input type="hidden" name="chatId" value="@teleSettings.ChatId" />
+                    <button type="submit" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 text-[11px] font-semibold rounded-xl border border-slate-700 transition-colors flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-xs">send</span>
+                        <span>Envoyer un message test sur mon téléphone</span>
+                    </button>
+                </form>
+
+                @if (!string.IsNullOrEmpty(teleSettings.LastNotificationStatus))
+                {
+                    <div class="text-[10px] text-slate-400 mt-1">
+                        Dernier statut : <span class="text-slate-300 font-mono">@teleSettings.LastNotificationStatus</span>
+                    </div>
+                }
+            </div>
+        </div>
     </div>
 
     <!-- Orders Filter & Search Bar -->
@@ -117,9 +223,13 @@
                     <!-- Customer details -->
                     <div class="space-y-1 text-xs">
                         <div class="font-bold text-slate-900">@order.CustomerName</div>
-                        <div class="flex items-center gap-3 text-slate-600">
+                        <div class="flex items-center gap-2 text-slate-600">
                             <a href="tel:@order.Phone" class="inline-flex items-center gap-1 text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 hover:bg-emerald-100">
                                 <span class="material-symbols-outlined text-xs">call</span> @order.Phone
+                            </a>
+                            <a href="https://wa.me/216@(order.Phone.Replace(" ", "").Replace("+216", "").Trim())" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[#25D366] font-bold bg-green-50 px-2 py-0.5 rounded-lg border border-green-200 hover:bg-green-100" title="Contacter le client sur WhatsApp">
+                                <svg class="w-3 h-3 fill-[#25D366]" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.42a8.182 8.182 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.42 0-2.82-.37-4.06-1.08l-.29-.17-3.12.82.83-3.04-.19-.3a8.216 8.216 0 0 1-1.26-4.46c0-4.54 3.7-8.24 8.24-8.24zm4.8 11.53c-.26-.13-1.54-.76-1.78-.85-.24-.09-.41-.13-.58.13-.17.26-.68.85-.83 1.02-.15.17-.31.19-.57.06-.26-.13-1.1-.41-2.09-1.3-.77-.69-1.29-1.54-1.44-1.8-.15-.26-.02-.4.11-.53.12-.11.26-.31.39-.46.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.07-.13-.58-1.4-.79-1.92-.21-.51-.42-.44-.58-.45l-.49-.01c-.17 0-.45.06-.69.32-.24.26-.91.89-.91 2.17 0 1.28.93 2.52 1.06 2.69.13.17 1.84 2.81 4.46 3.94.62.27 1.11.43 1.49.55.63.2 1.2.17 1.65.1.5-.07 1.54-.63 1.76-1.24.22-.61.22-1.13.15-1.24-.07-.11-.24-.17-.5-.3z"/></svg>
+                                <span>WA</span>
                             </a>
                             <span class="text-[11px] text-slate-500 truncate">@order.City</span>
                         </div>
@@ -254,16 +364,21 @@
                                     }
                                 </td>
                                 <td class="py-4 px-6 text-right whitespace-nowrap">
-                                    <form asp-controller="Admin" asp-action="UpdateOrderStatus" method="post" class="inline-flex items-center gap-1">
-                                        <input type="hidden" name="orderNumber" value="@order.OrderNumber" />
-                                        <select name="status" onchange="this.form.submit()" class="py-1 px-2.5 rounded-xl border border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-800 focus:outline-none focus:border-black cursor-pointer">
-                                            <option value="En attente" selected="@(order.Status == "En attente")">En attente</option>
-                                            <option value="En préparation" selected="@(order.Status == "En préparation")">En préparation</option>
-                                            <option value="Expédiée" selected="@(order.Status == "Expédiée")">Expédiée</option>
-                                            <option value="Livrée" selected="@(order.Status == "Livrée")">Livrée</option>
-                                            <option value="Annulée" selected="@(order.Status == "Annulée")">Annulée (Restituer stock)</option>
-                                        </select>
-                                    </form>
+                                    <div class="inline-flex items-center gap-2">
+                                        <a href="https://wa.me/216@(order.Phone.Replace(" ", "").Replace("+216", "").Trim())" target="_blank" rel="noopener noreferrer" class="p-1.5 rounded-xl bg-green-50 text-[#25D366] hover:bg-green-100 border border-green-200 transition-colors inline-flex items-center justify-center shadow-2xs" title="Contacter le client sur WhatsApp (@order.Phone)">
+                                            <svg class="w-3.5 h-3.5 fill-[#25D366]" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.42a8.182 8.182 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.42 0-2.82-.37-4.06-1.08l-.29-.17-3.12.82.83-3.04-.19-.3a8.216 8.216 0 0 1-1.26-4.46c0-4.54 3.7-8.24 8.24-8.24zm4.8 11.53c-.26-.13-1.54-.76-1.78-.85-.24-.09-.41-.13-.58.13-.17.26-.68.85-.83 1.02-.15.17-.31.19-.57.06-.26-.13-1.1-.41-2.09-1.3-.77-.69-1.29-1.54-1.44-1.8-.15-.26-.02-.4.11-.53.12-.11.26-.31.39-.46.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.07-.13-.58-1.4-.79-1.92-.21-.51-.42-.44-.58-.45l-.49-.01c-.17 0-.45.06-.69.32-.24.26-.91.89-.91 2.17 0 1.28.93 2.52 1.06 2.69.13.17 1.84 2.81 4.46 3.94.62.27 1.11.43 1.49.55.63.2 1.2.17 1.65.1.5-.07 1.54-.63 1.76-1.24.22-.61.22-1.13.15-1.24-.07-.11-.24-.17-.5-.3z"/></svg>
+                                        </a>
+                                        <form asp-controller="Admin" asp-action="UpdateOrderStatus" method="post" class="inline-flex items-center gap-1">
+                                            <input type="hidden" name="orderNumber" value="@order.OrderNumber" />
+                                            <select name="status" onchange="this.form.submit()" class="py-1 px-2.5 rounded-xl border border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-800 focus:outline-none focus:border-black cursor-pointer">
+                                                <option value="En attente" selected="@(order.Status == "En attente")">En attente</option>
+                                                <option value="En préparation" selected="@(order.Status == "En préparation")">En préparation</option>
+                                                <option value="Expédiée" selected="@(order.Status == "Expédiée")">Expédiée</option>
+                                                <option value="Livrée" selected="@(order.Status == "Livrée")">Livrée</option>
+                                                <option value="Annulée" selected="@(order.Status == "Annulée")">Annulée (Restituer stock)</option>
+                                            </select>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }

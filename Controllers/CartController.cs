@@ -8,11 +8,16 @@ namespace PharmaTrust.Controllers
     {
         private readonly ICartService _cartService;
         private readonly IProductService _productService;
+        private readonly ITelegramService _telegramService;
 
-        public CartController(ICartService cartService, IProductService productService)
+        public CartController(
+            ICartService cartService, 
+            IProductService productService,
+            ITelegramService telegramService)
         {
             _cartService = cartService;
             _productService = productService;
+            _telegramService = telegramService;
         }
 
         // GET: /Cart
@@ -181,7 +186,23 @@ namespace PharmaTrust.Controllers
                 return RedirectToAction("Index", "Products");
             }
             ViewData["CartCount"] = cart.TotalItems;
+            ViewBag.DeliveryRegions = _productService.GetAllDeliveryRegions(onlyActive: true);
             return View(cart);
+        }
+
+        // GET: /Cart/GetDeliveryRegions
+        [HttpGet]
+        public IActionResult GetDeliveryRegions()
+        {
+            var regions = _productService.GetAllDeliveryRegions(onlyActive: true)
+                .Select(r => new
+                {
+                    id = r.Id,
+                    name = r.Name,
+                    fee = r.DeliveryFee,
+                    deliveryTime = r.EstimatedDeliveryTime
+                });
+            return Json(regions);
         }
 
         // POST: /Cart/ProcessCheckout
@@ -278,6 +299,16 @@ namespace PharmaTrust.Controllers
             // Clear session cart
             _cartService.ClearCart();
 
+            // Automatic push notification to Telegram
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _telegramService.SendOrderNotificationAsync(order);
+                }
+                catch { }
+            });
+
             TempData["SuccessMessage"] = $"Merci pour votre commande {order.OrderNumber} ! Vos soins sont en cours de préparation à l'officine.";
             TempData["OrderNumber"] = order.OrderNumber;
 
@@ -306,6 +337,9 @@ namespace PharmaTrust.Controllers
             {
                 order = _productService.GetOrderByNumber(tempNum);
             }
+
+            ViewBag.WhatsAppUrl = order != null ? _telegramService.BuildWhatsAppUrl(order) : "";
+            ViewBag.OwnerPhone = "21040266";
 
             return View(order);
         }

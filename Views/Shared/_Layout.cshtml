@@ -335,7 +335,7 @@
     </div>
 
     <!-- Floating WhatsApp Action Bubble -->
-    <a href="https://wa.me/21627273770?text=Bonjour%20Natalya%20Parapharmacie,%20je%20souhaite%20des%20informations." target="_blank" rel="noopener noreferrer" class="floating-whatsapp w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-xl shadow-emerald-950/20 flex items-center justify-center transition-all duration-300 hover:scale-110 group" title="Contactez-nous sur WhatsApp (+216 27 273 770)" aria-label="WhatsApp (+216 27 273 770)">
+    <a href="https://wa.me/21621040266?text=Bonjour%20Natalya%20Parapharmacie,%20je%20souhaite%20des%20informations." target="_blank" rel="noopener noreferrer" class="floating-whatsapp w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-xl shadow-emerald-950/20 flex items-center justify-center transition-all duration-300 hover:scale-110 group" title="Contactez-nous sur WhatsApp (+216 21 040 266)" aria-label="WhatsApp (+216 21 040 266)">
         <svg class="w-6 h-6 sm:w-7 sm:h-7 fill-white transition-transform duration-300 group-hover:scale-105" viewBox="0 0 24 24">
             <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.42a8.182 8.182 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.42 0-2.82-.37-4.06-1.08l-.29-.17-3.12.82.83-3.04-.19-.3a8.216 8.216 0 0 1-1.26-4.46c0-4.54 3.7-8.24 8.24-8.24zm4.8 11.53c-.26-.13-1.54-.76-1.78-.85-.24-.09-.41-.13-.58.13-.17.26-.68.85-.83 1.02-.15.17-.31.19-.57.06-.26-.13-1.1-.41-2.09-1.3-.77-.69-1.29-1.54-1.44-1.8-.15-.26-.02-.4.11-.53.12-.11.26-.31.39-.46.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.07-.13-.58-1.4-.79-1.92-.21-.51-.42-.44-.58-.45l-.49-.01c-.17 0-.45.06-.69.32-.24.26-.91.89-.91 2.17 0 1.28.93 2.52 1.06 2.69.13.17 1.84 2.81 4.46 3.94.62.27 1.11.43 1.49.55.63.2 1.2.17 1.65.1.5-.07 1.54-.63 1.76-1.24.22-.61.22-1.13.15-1.24-.07-.11-.24-.17-.5-.3z"/>
         </svg>
@@ -570,10 +570,42 @@
                                 </div>
                             </div>
 
-                            <!-- Row 2: Ville -->
+                            <!-- Row 2: Ville / Région (24 Régions de Tunisie) -->
                             <div>
-                                <label for="chkCity" class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Ville / Région <span class="text-red-500">*</span></label>
-                                <input type="text" id="chkCity" name="city" required minlength="2" placeholder="ex. Sousse, Enfidha, Tunis, Monastir..." class="w-full px-3 py-2 border border-slate-200 bg-white rounded-xl text-xs text-slate-900 focus:ring-1 focus:ring-black focus:outline-none shadow-sm transition-colors" />
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="chkCity" class="block text-[10px] font-bold uppercase text-slate-600">Ville / Région (Gouvernorat) <span class="text-red-500">*</span></label>
+                                    <span id="chkRegionFeeBadge" class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 hidden">Livraison : 7,00 DT</span>
+                                </div>
+                                <div class="relative">
+                                    <select id="chkCity" name="city" required onchange="onDrawerRegionChange(this)" class="w-full px-3 py-2 border border-slate-200 bg-white rounded-xl text-xs text-slate-900 focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 focus:outline-none shadow-sm transition-colors appearance-none cursor-pointer pr-8 font-medium">
+                                        <option value="" disabled selected>-- Choisissez votre gouvernorat (24 régions) --</option>
+                                        <option value="Tunis" data-fee="7.00">Tunis</option>
+                                        <option value="Ariana" data-fee="7.00">Ariana</option>
+                                        <option value="Ben Arous" data-fee="7.00">Ben Arous</option>
+                                        <option value="Manouba" data-fee="7.00">La Manouba</option>
+                                        <option value="Nabeul" data-fee="7.00">Nabeul</option>
+                                        <option value="Zaghouan" data-fee="7.00">Zaghouan</option>
+                                        <option value="Bizerte" data-fee="7.00">Bizerte</option>
+                                        <option value="Béja" data-fee="8.00">Béja</option>
+                                        <option value="Jendouba" data-fee="8.00">Jendouba</option>
+                                        <option value="Le Kef" data-fee="8.00">Le Kef</option>
+                                        <option value="Siliana" data-fee="8.00">Siliana</option>
+                                        <option value="Sousse" data-fee="6.00">Sousse</option>
+                                        <option value="Monastir" data-fee="6.50">Monastir</option>
+                                        <option value="Mahdia" data-fee="7.00">Mahdia</option>
+                                        <option value="Sfax" data-fee="7.00">Sfax</option>
+                                        <option value="Kairouan" data-fee="7.00">Kairouan</option>
+                                        <option value="Kasserine" data-fee="8.00">Kasserine</option>
+                                        <option value="Sidi Bouzid" data-fee="8.00">Sidi Bouzid</option>
+                                        <option value="Gabès" data-fee="8.00">Gabès</option>
+                                        <option value="Médenine" data-fee="9.00">Médenine</option>
+                                        <option value="Tataouine" data-fee="9.00">Tataouine</option>
+                                        <option value="Gafsa" data-fee="8.00">Gafsa</option>
+                                        <option value="Tozeur" data-fee="9.00">Tozeur</option>
+                                        <option value="Kébili" data-fee="9.00">Kébili</option>
+                                    </select>
+                                    <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-base">expand_more</span>
+                                </div>
                             </div>
 
                             <!-- Row 3: Adresse Complète -->

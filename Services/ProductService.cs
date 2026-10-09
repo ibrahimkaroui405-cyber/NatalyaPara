@@ -331,7 +331,12 @@ namespace PharmaTrust.Services
 
         public List<Category> GetCategories()
         {
-            return _context.Categories.AsNoTracking().ToList();
+            return _context.Categories
+                .AsNoTracking()
+                .OrderByDescending(c => c.Slug == "solaire" || c.Slug == "protection-solaire")
+                .ThenBy(c => c.Slug == "visage" ? 0 : 1)
+                .ThenBy(c => c.Id)
+                .ToList();
         }
 
         public Category? GetCategoryBySlug(string slug)
@@ -398,7 +403,9 @@ namespace PharmaTrust.Services
                 "price-low" => query.OrderBy(p => p.Price),
                 "price-high" => query.OrderByDescending(p => p.Price),
                 "rating" => query.OrderByDescending(p => p.Rating),
-                _ => query.OrderByDescending(p => p.Id)
+                _ => query.OrderByDescending(p => p.CategorySlug == "solaire" || p.CategorySlug == "protection-solaire")
+                          .ThenByDescending(p => p.CategorySlug == "visage" || p.CategorySlug == "soins-visage")
+                          .ThenByDescending(p => p.Id)
             };
 
             return query.ToList();
@@ -648,20 +655,25 @@ namespace PharmaTrust.Services
         {
             var orderNum = $"CMD-{new Random().Next(10000, 99999)}";
 
+            // Resolve shipping fee from selected Tunisian delivery region
+            var region = GetDeliveryRegionByName(city);
+            decimal resolvedShippingFee = region != null ? region.DeliveryFee : cart.ShippingFee;
+            decimal grandTotal = cart.Subtotal + resolvedShippingFee;
+
             var order = new Order
             {
                 OrderNumber = orderNum,
                 CustomerName = string.IsNullOrWhiteSpace(fullName) ? "Client Natalya" : fullName.Trim(),
                 Phone = phone?.Trim() ?? string.Empty,
                 Email = email?.Trim(),
-                City = string.IsNullOrWhiteSpace(city) ? "Sousse" : city.Trim(),
-                PostalCode = string.IsNullOrWhiteSpace(postalCode) ? "4000" : postalCode.Trim(),
+                City = string.IsNullOrWhiteSpace(city) ? (region?.Name ?? "Tunis") : city.Trim(),
+                PostalCode = string.IsNullOrWhiteSpace(postalCode) ? "1000" : postalCode.Trim(),
                 Address = string.IsNullOrWhiteSpace(address) ? "Adresse de livraison" : address.Trim(),
                 DeliveryNotes = notes?.Trim(),
                 OrderDate = DateTime.Now,
                 Subtotal = cart.Subtotal,
-                ShippingFee = cart.ShippingFee,
-                TotalAmount = cart.GrandTotal,
+                ShippingFee = resolvedShippingFee,
+                TotalAmount = grandTotal,
                 Status = "En attente",
                 PaymentMethod = "Paiement à la livraison (Espèces)",
                 StockDeducted = true,
@@ -916,6 +928,48 @@ namespace PharmaTrust.Services
             if (existing == null) return false;
 
             existing.IsActive = !existing.IsActive;
+            _context.SaveChanges();
+            return true;
+        }
+
+        #endregion
+
+        #region Delivery Regions Operations
+
+        public List<DeliveryRegion> GetAllDeliveryRegions(bool onlyActive = false)
+        {
+            var query = _context.DeliveryRegions.AsNoTracking();
+            if (onlyActive)
+            {
+                query = query.Where(r => r.IsActive);
+            }
+            return query.OrderBy(r => r.DisplayOrder).ThenBy(r => r.Name).ToList();
+        }
+
+        public DeliveryRegion? GetDeliveryRegionById(int id)
+        {
+            return _context.DeliveryRegions.FirstOrDefault(r => r.Id == id);
+        }
+
+        public DeliveryRegion? GetDeliveryRegionByName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            var cleanName = name.Trim().ToLowerInvariant();
+            return _context.DeliveryRegions.FirstOrDefault(r => r.Name.ToLower() == cleanName);
+        }
+
+        public bool UpdateDeliveryRegion(int id, decimal deliveryFee, string estimatedDeliveryTime, bool isActive)
+        {
+            var region = _context.DeliveryRegions.FirstOrDefault(r => r.Id == id);
+            if (region == null) return false;
+
+            region.DeliveryFee = Math.Max(0, deliveryFee);
+            if (!string.IsNullOrWhiteSpace(estimatedDeliveryTime))
+            {
+                region.EstimatedDeliveryTime = estimatedDeliveryTime.Trim();
+            }
+            region.IsActive = isActive;
+
             _context.SaveChanges();
             return true;
         }

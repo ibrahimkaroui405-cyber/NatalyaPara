@@ -111,6 +111,11 @@
                     <span class="material-symbols-outlined text-lg">local_shipping</span>
                     <span>Commandes</span>
                 </a>
+
+                <a asp-controller="Admin" asp-action="Shipping" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all @(ViewContext.RouteData.Values["action"]?.ToString() == "Shipping" ? "bg-white text-black font-bold shadow-sm" : "text-slate-400 hover:text-white hover:bg-slate-900")">
+                    <span class="material-symbols-outlined text-lg">map</span>
+                    <span>Frais de Livraison</span>
+                </a>
             </nav>
         </div>
 
@@ -331,6 +336,11 @@
                     <a asp-controller="Admin" asp-action="Orders" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all @(ViewContext.RouteData.Values["action"]?.ToString() == "Orders" ? "bg-white text-black font-bold shadow-sm" : "text-slate-400 hover:text-white hover:bg-slate-900")">
                         <span class="material-symbols-outlined text-base">local_shipping</span>
                         <span>Commandes</span>
+                    </a>
+
+                    <a asp-controller="Admin" asp-action="Shipping" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all @(ViewContext.RouteData.Values["action"]?.ToString() == "Shipping" ? "bg-white text-black font-bold shadow-sm" : "text-slate-400 hover:text-white hover:bg-slate-900")">
+                        <span class="material-symbols-outlined text-base">map</span>
+                        <span>Frais de Livraison</span>
                     </a>
                 </nav>
             </div>

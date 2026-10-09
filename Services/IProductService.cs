@@ -58,5 +58,11 @@ namespace PharmaTrust.Services
         bool UpdateStoryReel(StoryReel story);
         bool DeleteStoryReel(int id);
         bool ToggleStoryReel(int id);
+
+        // Delivery Regions Management
+        List<DeliveryRegion> GetAllDeliveryRegions(bool onlyActive = false);
+        DeliveryRegion? GetDeliveryRegionById(int id);
+        DeliveryRegion? GetDeliveryRegionByName(string name);
+        bool UpdateDeliveryRegion(int id, decimal deliveryFee, string estimatedDeliveryTime, bool isActive);
     }
 }

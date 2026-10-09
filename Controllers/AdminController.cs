@@ -15,17 +15,20 @@ namespace PharmaTrust.Controllers
         private readonly ICartService _cartService;
         private readonly IAuthService _authService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ITelegramService _telegramService;
 
         public AdminController(
             IProductService productService, 
             ICartService cartService, 
             IAuthService authService,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            ITelegramService telegramService)
         {
             _productService = productService;
             _cartService = cartService;
             _authService = authService;
             _webHostEnvironment = webHostEnvironment;
+            _telegramService = telegramService;
         }
 
         #region Authentication Actions
@@ -775,6 +778,8 @@ namespace PharmaTrust.Controllers
             ViewBag.CancelledOrders = allOrders.Count(o => o.Status == "Annulée");
             ViewBag.TotalRevenue = allOrders.Where(o => o.Status != "Annulée").Sum(o => o.TotalAmount);
 
+            ViewBag.TelegramSettings = _telegramService.GetSettings();
+
             return View(pagedOrders);
         }
 
@@ -800,6 +805,49 @@ namespace PharmaTrust.Controllers
             else
             {
                 TempData["ErrorMessage"] = "Commande introuvable.";
+            }
+
+            return RedirectToAction(nameof(Orders));
+        }
+
+        // POST: /Admin/SaveNotificationSettings
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SaveNotificationSettings(bool isEnabled, string? botToken, string? chatId, string? ownerWhatsApp)
+        {
+            var settings = _telegramService.GetSettings();
+            settings.IsEnabled = isEnabled;
+            settings.BotToken = botToken?.Trim() ?? string.Empty;
+            settings.ChatId = chatId?.Trim() ?? string.Empty;
+            settings.OwnerWhatsApp = string.IsNullOrWhiteSpace(ownerWhatsApp) ? "21621040266" : ownerWhatsApp.Trim();
+            _telegramService.SaveSettings(settings);
+
+            TempData["SuccessMessage"] = "Paramètres des notifications Telegram & WhatsApp sauvegardés avec succès !";
+            return RedirectToAction(nameof(Orders));
+        }
+
+        // POST: /Admin/TestTelegram
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TestTelegram(string? botToken, string? chatId)
+        {
+            var settings = _telegramService.GetSettings();
+            var token = !string.IsNullOrWhiteSpace(botToken) ? botToken.Trim() : settings.BotToken;
+            var chat = !string.IsNullOrWhiteSpace(chatId) ? chatId.Trim() : settings.ChatId;
+
+            var (success, message) = await _telegramService.SendTestMessageAsync(token, chat);
+            if (success)
+            {
+                // Save if test succeeded
+                settings.BotToken = token;
+                settings.ChatId = chat;
+                settings.IsEnabled = true;
+                _telegramService.SaveSettings(settings);
+                TempData["SuccessMessage"] = "✅ " + message;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "❌ " + message;
             }
 
             return RedirectToAction(nameof(Orders));
@@ -1022,6 +1070,65 @@ namespace PharmaTrust.Controllers
             _productService.ToggleStoryReel(id);
             TempData["SuccessMessage"] = "Statut de la story mis à jour.";
             return RedirectToAction(nameof(Stories));
+        }
+
+        #endregion
+
+        #region Delivery Regions Actions
+
+        // GET: /Admin/Shipping
+        [HttpGet]
+        public IActionResult Shipping()
+        {
+            var regions = _productService.GetAllDeliveryRegions();
+            return View(regions);
+        }
+
+        // POST: /Admin/UpdateShippingRegion
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateShippingRegion(int id, string deliveryFee, string? estimatedDeliveryTime, bool isActive)
+        {
+            decimal parsedFee = 7.00m;
+            if (!string.IsNullOrWhiteSpace(deliveryFee))
+            {
+                var cleanFee = deliveryFee.Trim().Replace(',', '.');
+                if (decimal.TryParse(cleanFee, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var feeVal))
+                {
+                    parsedFee = feeVal;
+                }
+            }
+
+            var success = _productService.UpdateDeliveryRegion(id, parsedFee, estimatedDeliveryTime ?? "24h - 48h", isActive);
+            
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success, fee = parsedFee, message = success ? "Tarif de livraison mis à jour avec succès !" : "Erreur lors de la mise à jour." });
+            }
+
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Tarif de livraison mis à jour avec succès !";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Région introuvable.";
+            }
+
+            return RedirectToAction(nameof(Shipping));
+        }
+
+        // POST: /Admin/ToggleShippingRegion
+        [HttpPost]
+        public IActionResult ToggleShippingRegion(int id)
+        {
+            var region = _productService.GetDeliveryRegionById(id);
+            if (region != null)
+            {
+                _productService.UpdateDeliveryRegion(id, region.DeliveryFee, region.EstimatedDeliveryTime, !region.IsActive);
+                return Json(new { success = true, isActive = !region.IsActive });
+            }
+            return Json(new { success = false });
         }
 
         #endregion

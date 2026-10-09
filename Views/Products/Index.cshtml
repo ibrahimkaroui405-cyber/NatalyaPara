@@ -77,6 +77,25 @@
         </div>
     </div>
 
+    <!-- Quick Category Switcher (Protection Solaire first, then other categories) -->
+    <div class="mb-6 flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <a asp-controller="Products" asp-action="Index" asp-route-category="all"
+           class="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all @(Model.SelectedCategory == "all" ? "bg-slate-900 text-white shadow-sm" : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200")">
+            <span class="material-symbols-outlined text-sm">grid_view</span>
+            <span>Tous les soins</span>
+        </a>
+        @foreach (var c in Model.Categories.Where(cat => cat.ItemCount > 0))
+        {
+            var isSelected = string.Equals(c.Slug, Model.SelectedCategory, StringComparison.OrdinalIgnoreCase);
+            <a asp-controller="Products" asp-action="Index" asp-route-category="@c.Slug"
+               class="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all @(isSelected ? "bg-[#15803D] text-white shadow-md shadow-emerald-700/20" : "bg-white text-slate-700 hover:bg-emerald-50 hover:text-[#15803D] border border-slate-200")">
+                <span class="material-symbols-outlined text-sm">@c.Icon</span>
+                <span>@c.Name</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded-full @(isSelected ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500") font-mono">@c.ItemCount</span>
+            </a>
+        }
+    </div>
+
     <!-- Active Filters Strip (If filtered by Category, SubCategory, or Brand) -->
     @if ((!string.IsNullOrEmpty(Model.SelectedCategory) && Model.SelectedCategory.ToLower() != "all") || !string.IsNullOrEmpty(Model.SelectedSubCategory) || !string.IsNullOrEmpty(Model.SelectedBrand))
     {
@@ -110,9 +129,9 @@
                 }
             </div>
 
-            <a asp-controller="Products" asp-action="Index" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-red-50 text-slate-600 hover:text-red-600 text-xs font-bold transition-colors border border-slate-200 hover:border-red-200">
-                <span class="material-symbols-outlined text-xs">close</span>
-                <span>Réinitialiser les filtres</span>
+            <a asp-controller="Products" asp-action="Index" asp-route-category="all" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors border border-slate-200">
+                <span class="material-symbols-outlined text-xs">grid_view</span>
+                <span>Voir tout le catalogue</span>
             </a>
         </div>
     }

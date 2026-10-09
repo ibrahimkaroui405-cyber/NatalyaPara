@@ -55,12 +55,54 @@
                 </div>
                 <div class="space-y-4 pt-1">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-800 mb-1.5">Ville / Région <span class="text-red-500">*</span></label>
-                        <input type="text" name="city" required minlength="2" placeholder="ex. Sousse, Enfidha, Tunis, Monastir, Sfax..." class="w-full px-4 py-2.5 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] focus:bg-white focus:outline-none transition-all" />
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-semibold text-slate-800">Gouvernorat / Région <span class="text-red-500">*</span></label>
+                            <span id="checkoutRegionFeeBadge" class="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 hidden">Livraison : -- DT</span>
+                        </div>
+                        <div class="relative">
+                            <select id="checkoutCitySelect" name="city" required onchange="onCheckoutPageRegionChange(this)" class="w-full px-4 py-2.5 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] focus:bg-white focus:outline-none transition-all appearance-none cursor-pointer pr-10 font-medium">
+                                <option value="" disabled selected>-- Choisissez votre gouvernorat (24 régions de Tunisie) --</option>
+                                @if (ViewBag.DeliveryRegions is List<PharmaTrust.Models.DeliveryRegion> regions && regions.Any())
+                                {
+                                    foreach (var r in regions)
+                                    {
+                                        <option value="@r.Name" data-fee="@r.DeliveryFee.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)">@r.Name (@r.DeliveryFee.ToString("F2") DT &bull; @r.EstimatedDeliveryTime)</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="Tunis" data-fee="7.00">Tunis (7,00 DT)</option>
+                                    <option value="Ariana" data-fee="7.00">Ariana (7,00 DT)</option>
+                                    <option value="Ben Arous" data-fee="7.00">Ben Arous (7,00 DT)</option>
+                                    <option value="Manouba" data-fee="7.00">La Manouba (7,00 DT)</option>
+                                    <option value="Nabeul" data-fee="7.00">Nabeul (7,00 DT)</option>
+                                    <option value="Zaghouan" data-fee="7.00">Zaghouan (7,00 DT)</option>
+                                    <option value="Bizerte" data-fee="7.00">Bizerte (7,00 DT)</option>
+                                    <option value="Béja" data-fee="8.00">Béja (8,00 DT)</option>
+                                    <option value="Jendouba" data-fee="8.00">Jendouba (8,00 DT)</option>
+                                    <option value="Le Kef" data-fee="8.00">Le Kef (8,00 DT)</option>
+                                    <option value="Siliana" data-fee="8.00">Siliana (8,00 DT)</option>
+                                    <option value="Sousse" data-fee="6.00">Sousse (6,00 DT)</option>
+                                    <option value="Monastir" data-fee="6.50">Monastir (6,50 DT)</option>
+                                    <option value="Mahdia" data-fee="7.00">Mahdia (7,00 DT)</option>
+                                    <option value="Sfax" data-fee="7.00">Sfax (7,00 DT)</option>
+                                    <option value="Kairouan" data-fee="7.00">Kairouan (7,00 DT)</option>
+                                    <option value="Kasserine" data-fee="8.00">Kasserine (8,00 DT)</option>
+                                    <option value="Sidi Bouzid" data-fee="8.00">Sidi Bouzid (8,00 DT)</option>
+                                    <option value="Gabès" data-fee="8.00">Gabès (8,00 DT)</option>
+                                    <option value="Médenine" data-fee="9.00">Médenine (9,00 DT)</option>
+                                    <option value="Tataouine" data-fee="9.00">Tataouine (9,00 DT)</option>
+                                    <option value="Gafsa" data-fee="8.00">Gafsa (8,00 DT)</option>
+                                    <option value="Tozeur" data-fee="9.00">Tozeur (9,00 DT)</option>
+                                    <option value="Kébili" data-fee="9.00">Kébili (9,00 DT)</option>
+                                }
+                            </select>
+                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-base">expand_more</span>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-800 mb-1.5">Adresse de Livraison Complète <span class="text-red-500">*</span></label>
-                        <input type="text" name="address" required minlength="5" placeholder="Numéro, rue, quartier, résidence, appartement..." class="w-full px-4 py-2.5 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] focus:bg-white focus:outline-none transition-all" />
+                        <input type="text" name="address" required minlength="5" placeholder="Numéro, rue, quartier, délégation, résidence..." class="w-full px-4 py-2.5 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-[#15803D]/20 focus:border-[#15803D] focus:bg-white focus:outline-none transition-all" />
                     </div>
                 </div>
             </div>
@@ -129,7 +171,7 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span>Livraison à domicile</span>
-                        <span class="font-bold text-emerald-700">
+                        <span id="checkoutShippingFeeDisplay" class="font-bold text-emerald-700">
                             @(Model.ShippingFee == 0 ? "GRATUITE" : $"{Model.ShippingFee:F2} Dinar")
                         </span>
                     </div>
@@ -139,7 +181,7 @@
                     </div>
                     <div class="flex justify-between text-base font-bold text-slate-900 pt-3 border-t border-slate-100 items-baseline">
                         <span>Total TTC à Régler</span>
-                        <span class="text-2xl text-[#15803D] font-extrabold">@Model.GrandTotal.ToString("F2") Dinar</span>
+                        <span id="checkoutGrandTotalDisplay" class="text-2xl text-[#15803D] font-extrabold">@Model.GrandTotal.ToString("F2") Dinar</span>
                     </div>
                 </div>
 
@@ -156,4 +198,35 @@
         </div>
     </form>
 </main>
+
+<script>
+    const baseSubtotal = @Model.Subtotal.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    function onCheckoutPageRegionChange(select) {
+        const option = select.options[select.selectedIndex];
+        if (!option) return;
+
+        const fee = parseFloat(option.getAttribute('data-fee')) || 7.00;
+        const total = baseSubtotal + fee;
+
+        // Update shipping badge
+        const badge = document.getElementById('checkoutRegionFeeBadge');
+        if (badge) {
+            badge.textContent = `Livraison : ${fee.toFixed(2).replace('.', ',')} DT`;
+            badge.classList.remove('hidden');
+        }
+
+        // Update shipping line
+        const shippingEl = document.getElementById('checkoutShippingFeeDisplay');
+        if (shippingEl) {
+            shippingEl.textContent = `${fee.toFixed(2).replace('.', ',')} Dinar`;
+        }
+
+        // Update Grand Total line
+        const totalEl = document.getElementById('checkoutGrandTotalDisplay');
+        if (totalEl) {
+            totalEl.textContent = `${total.toFixed(2).replace('.', ',')} Dinar`;
+        }
+    }
+</script>
 

@@ -23,6 +23,12 @@ namespace PharmaTrust.Controllers
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 12;
 
+            // Default to "solaire" (Protection Solaire) when entering catalog without filters
+            if (string.IsNullOrWhiteSpace(category) && string.IsNullOrWhiteSpace(q) && string.IsNullOrWhiteSpace(brand))
+            {
+                category = "solaire";
+            }
+
             var filteredProducts = _productService.FilterProducts(category, q, sort, brand, subCategory);
             var categories = _productService.GetCategories();
 
