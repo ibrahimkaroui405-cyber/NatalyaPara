@@ -10,8 +10,46 @@ namespace PharmaTrust.Data
             using var scope = serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            // Apply official Entity Framework Core migrations cleanly
-            context.Database.Migrate();
+            // Safe Migration application: check for existing tables first
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
+                        ""MigrationId"" TEXT NOT NULL CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY,
+                        ""ProductVersion"" TEXT NOT NULL
+                    );
+                ");
+
+                // If Products table already exists in production database, mark InitialCreate as applied
+                // so EF Core doesn't throw 'table Products already exists'
+                var conn = context.Database.GetDbConnection();
+                var wasOpen = conn.State == System.Data.ConnectionState.Open;
+                if (!wasOpen) conn.Open();
+
+                bool productsTableExists = false;
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Products';";
+                    var count = Convert.ToInt64(cmd.ExecuteScalar());
+                    productsTableExists = (count > 0);
+                }
+                if (!wasOpen) conn.Close();
+
+                if (productsTableExists)
+                {
+                    context.Database.ExecuteSqlRaw(@"
+                        INSERT OR IGNORE INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+                        VALUES ('20261112180559_InitialCreate', '9.0.0');
+                    ");
+                }
+
+                context.Database.Migrate();
+            }
+            catch (Exception ex)
+            {
+                // Fallback: never let migration errors crash the application
+                Console.WriteLine($"[DbInitializer Warning] Database migration handled: {ex.Message}");
+            }
 
             // Ensure newly added tables exist in existing SQLite database file
             context.Database.ExecuteSqlRaw(@"

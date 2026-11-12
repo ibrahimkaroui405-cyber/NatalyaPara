@@ -35,28 +35,37 @@ if (!string.IsNullOrEmpty(dbDir) && !Directory.Exists(dbDir))
 // ----------------------------------------------------
 // Structured Logging (Serilog) with Rolling Daily File
 // ----------------------------------------------------
-var logsDirectory = Path.Combine(contentRoot, "App_Data", "logs");
-if (!Directory.Exists(logsDirectory))
-{
-    Directory.CreateDirectory(logsDirectory);
-}
-
-Log.Logger = new LoggerConfiguration()
+var loggerConfig = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .WriteTo.Console(
-        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-    .WriteTo.File(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+
+try
+{
+    var logsDirectory = Path.Combine(contentRoot, "App_Data", "logs");
+    if (!Directory.Exists(logsDirectory))
+    {
+        Directory.CreateDirectory(logsDirectory);
+    }
+
+    loggerConfig.WriteTo.File(
         path: Path.Combine(logsDirectory, "natalya-.log"),
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 30,
         fileSizeLimitBytes: 10 * 1024 * 1024,
         rollOnFileSizeLimit: true,
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{SourceContext}] {Message:lj} {Properties:j}{NewLine}{Exception}")
-    .CreateLogger();
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{SourceContext}] {Message:lj} {Properties:j}{NewLine}{Exception}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[Serilog Warning] Logs fichiers désactivés ou dossier inaccessible: {ex.Message}");
+}
+
+Log.Logger = loggerConfig.CreateLogger();
 
 builder.Host.UseSerilog();
 
@@ -189,7 +198,14 @@ builder.Services.AddScoped<ITelegramService, TelegramService>();
 var app = builder.Build();
 
 // Initialize and Seed Database
-DbInitializer.Initialize(app.Services);
+try
+{
+    DbInitializer.Initialize(app.Services);
+}
+catch (Exception ex)
+{
+    Log.Error(ex, "Attention: Initialisation automatique de la base de données contournée pour garantir le démarrage");
+}
 
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler("/Home/Error");
