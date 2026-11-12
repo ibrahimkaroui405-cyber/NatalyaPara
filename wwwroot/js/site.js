@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Mobile Promo Carousel Dots
     initPromoCarousel();
 
-    // Initialize Category Scroll Bar (Swipe, Drag, Wheel)
-    initCategoryScroll();
+    // Initialize Mobile Story Reels Dots
+    initStoryReelsDots();
 });
 
 // Category Scroll Bar Engine (Touch Swipe, Mouse Drag, Wheel Translation, Arrows)
@@ -144,6 +144,32 @@ function initPromoCarousel() {
     track.addEventListener('scroll', () => {
         const scrollLeft = track.scrollLeft;
         const cardWidth = track.firstElementChild ? track.firstElementChild.offsetWidth + 16 : 300;
+        const activeIndex = Math.round(scrollLeft / cardWidth);
+
+        dots.forEach((dot, index) => {
+            if (index === activeIndex) {
+                dot.classList.remove('w-2', 'bg-slate-300');
+                dot.classList.add('w-6', 'bg-[#15803D]');
+            } else {
+                dot.classList.remove('w-6', 'bg-[#15803D]');
+                dot.classList.add('w-2', 'bg-slate-300');
+            }
+        });
+    }, { passive: true });
+}
+
+// Mobile Story Reels Dots Sync (1 full reel per view on mobile)
+function initStoryReelsDots() {
+    const track = document.getElementById('storyReelsTrack');
+    const dotsContainer = document.getElementById('storyReelsDots');
+    if (!track || !dotsContainer) return;
+
+    const dots = dotsContainer.querySelectorAll('.story-dot');
+    if (!dots.length) return;
+
+    track.addEventListener('scroll', () => {
+        const scrollLeft = track.scrollLeft;
+        const cardWidth = track.firstElementChild ? track.firstElementChild.offsetWidth : 300;
         const activeIndex = Math.round(scrollLeft / cardWidth);
 
         dots.forEach((dot, index) => {
@@ -360,15 +386,14 @@ function initHeroSlider() {
             }
         });
 
-        // Update Minimalist Dots with Theme Colors
-        const themeDotColors = ['bg-amber-600', 'bg-blue-600', 'bg-rose-600'];
+        // Update Minimalist Dots with Signature Emerald Brand DNA
         dots.forEach((dot, i) => {
             if (i === currentIndex) {
-                dot.classList.remove('w-2', 'w-2.5', 'bg-slate-300', 'bg-slate-200', 'bg-amber-600', 'bg-blue-600', 'bg-rose-600', 'bg-[#15803D]');
-                dot.classList.add('w-7', themeDotColors[i] || 'bg-slate-900');
+                dot.classList.remove('w-2', 'w-2.5', 'bg-slate-300', 'bg-slate-200', 'bg-amber-600', 'bg-blue-600', 'bg-rose-600', 'bg-emerald-200');
+                dot.classList.add('w-7', 'bg-[#15803D]');
             } else {
                 dot.classList.remove('w-7', 'w-8', 'bg-amber-600', 'bg-blue-600', 'bg-rose-600', 'bg-[#15803D]', 'bg-slate-900');
-                dot.classList.add('w-2.5', 'bg-slate-300');
+                dot.classList.add('w-2.5', 'bg-emerald-200');
             }
         });
 
@@ -439,21 +464,30 @@ function initHeroSlider() {
     slider.addEventListener('mouseenter', stopAutoplay);
     slider.addEventListener('mouseleave', startAutoplay);
 
-    // Touch Swipe Support
+    // Enhanced Touch Swipe Support with Vertical Scroll Guard
     let touchStartX = 0;
     let touchEndX = 0;
+    let touchStartY = 0;
+    let touchEndY = 0;
 
     slider.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].screenX;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
         stopAutoplay();
     }, { passive: true });
 
     slider.addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches[0].screenX;
-        if (touchStartX - touchEndX > 50) {
-            goToSlide(currentIndex + 1);
-        } else if (touchEndX - touchStartX > 50) {
-            goToSlide(currentIndex - 1);
+        touchEndX = e.changedTouches[0].clientX;
+        touchEndY = e.changedTouches[0].clientY;
+        const diffX = touchStartX - touchEndX;
+        const diffY = touchStartY - touchEndY;
+        // Only trigger horizontal slide change if the swipe is clearly horizontal and > 35px
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 35) {
+            if (diffX > 0) {
+                goToSlide(currentIndex + 1);
+            } else {
+                goToSlide(currentIndex - 1);
+            }
         }
         startAutoplay();
     }, { passive: true });

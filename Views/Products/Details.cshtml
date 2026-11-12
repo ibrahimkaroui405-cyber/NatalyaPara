@@ -1,201 +1,412 @@
 @model PharmaTrust.Models.Product
 @{
-    ViewData["Title"] = $"{Model.Name} - Soin d'Exception Natalya Paris";
+    ViewData["Title"] = $"{Model.Name} - Natalya Parapharmacie";
     var relatedProducts = ViewData["RelatedProducts"] as List<PharmaTrust.Models.Product> ?? new List<PharmaTrust.Models.Product>();
+    int discountPct = (Model.OriginalPrice.HasValue && Model.OriginalPrice.Value > Model.Price)
+        ? (int)Math.Round((1 - (Model.Price / Model.OriginalPrice.Value)) * 100)
+        : 0;
 }
 
-<main class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 reveal-up">
-    <!-- Breadcrumb -->
-    <nav class="flex items-center gap-2 text-xs text-slate-400 mb-6 select-none">
-        <a class="hover:text-[#15803D] transition-colors flex items-center gap-1" asp-controller="Home" asp-action="Index">
-            <span class="material-symbols-outlined text-sm">home</span>
-            Accueil
+<main class="max-w-[1240px] mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-8 md:py-10 pb-28 md:pb-16">
+    
+    <!-- Top Navigation / Breadcrumb -->
+    <div class="flex items-center justify-between gap-2 text-xs text-slate-500 mb-4 sm:mb-6">
+        <!-- Mobile back button -->
+        <a href="javascript:history.back()" class="inline-flex md:hidden items-center gap-1.5 font-semibold text-slate-700 hover:text-[#15803D] transition-colors py-1">
+            <span class="material-symbols-outlined text-base">arrow_back</span>
+            <span>Retour</span>
         </a>
-        <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
-        <a class="hover:text-[#15803D] transition-colors" asp-controller="Products" asp-action="Index" asp-route-category="@Model.CategorySlug">@Model.CategoryName</a>
-        <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
-        <span class="text-emerald-800 font-bold line-clamp-1">@Model.Name</span>
-    </nav>
+
+        <!-- Desktop breadcrumb -->
+        <nav class="hidden md:flex items-center gap-2 text-xs text-slate-400 select-none">
+            <a class="hover:text-[#15803D] transition-colors flex items-center gap-1" asp-controller="Home" asp-action="Index">
+                <span class="material-symbols-outlined text-sm">home</span>
+                Accueil
+            </a>
+            <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
+            <a class="hover:text-[#15803D] transition-colors" asp-controller="Products" asp-action="Index" asp-route-category="@Model.CategorySlug">@Model.CategoryName</a>
+            <span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
+            <span class="text-emerald-800 font-bold line-clamp-1">@Model.Name</span>
+        </nav>
+
+        <a asp-controller="Products" asp-action="Index" asp-route-category="@Model.CategorySlug" 
+           class="text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-full border border-emerald-200/60 transition-colors">
+            @Model.CategoryName
+        </a>
+    </div>
 
     <!-- Product Hero Section -->
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-10 mb-16">
-        <!-- Image Showcase -->
-        <div class="md:col-span-6 lg:col-span-5 bg-white rounded-3xl border border-slate-200/90 p-6 md:p-8 flex flex-col items-center justify-center relative shadow-sm">
-            <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                @if (!Model.InStock)
-                {
-                    <span class="bg-slate-800 text-white text-[10px] px-3 py-1 rounded-full flex items-center gap-1 font-bold uppercase tracking-wider shadow-md">
-                        <span class="material-symbols-outlined text-xs">block</span>
-                        Rupture de Stock
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-8 lg:gap-12 mb-10 sm:mb-14">
+        
+        <!-- 1. Product Image Gallery Showcase -->
+        <div class="md:col-span-6 lg:col-span-5">
+            <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 p-4 sm:p-6 md:p-8 relative shadow-xs flex flex-col items-center justify-center">
+                
+                <!-- Status Badges Floating -->
+                <div class="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-wrap gap-1.5 z-10 max-w-[85%]">
+                    @if (!Model.InStock)
+                    {
+                        <span class="bg-slate-900 text-white text-[10px] sm:text-xs px-2.5 py-1 rounded-full flex items-center gap-1 font-bold uppercase tracking-wider shadow-xs">
+                            <span class="material-symbols-outlined text-xs">block</span>
+                            Épuisé
+                        </span>
+                    }
+                    else if (Model.StockQuantity <= 3)
+                    {
+                        <span class="bg-amber-500 text-white text-[10px] sm:text-xs px-2.5 py-1 rounded-full flex items-center gap-1 font-bold uppercase tracking-wider shadow-xs animate-pulse">
+                            <span class="material-symbols-outlined text-xs">local_fire_department</span>
+                            Plus que @Model.StockQuantity en stock !
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="bg-[#15803D] text-white text-[10px] sm:text-xs px-2.5 py-1 rounded-full flex items-center gap-1 font-bold uppercase tracking-wider shadow-xs">
+                            <span class="material-symbols-outlined text-xs">check_circle</span>
+                            En Stock
+                        </span>
+                    }
+
+                    @if (discountPct > 0)
+                    {
+                        <span class="bg-rose-600 text-white text-[10px] sm:text-xs px-2.5 py-1 rounded-full font-bold shadow-xs">
+                            -@discountPct%
+                        </span>
+                    }
+
+                    @if (Model.RxRequired)
+                    {
+                        <span class="bg-amber-50 text-amber-900 border border-amber-200 text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-semibold">
+                            Ordonnance requise
+                        </span>
+                    }
+                </div>
+
+                <!-- Main Image Container -->
+                <div class="w-full aspect-square max-w-[340px] sm:max-w-none rounded-xl overflow-hidden flex items-center justify-center py-2 sm:py-4">
+                    <img id="mainProductImage" 
+                         class="w-full h-full object-contain max-h-[300px] sm:max-h-[380px] transition-transform duration-300 hover:scale-105 @(!Model.InStock ? "grayscale-[50%]" : "")" 
+                         src="@Model.ImageUrl" 
+                         alt="@Model.Name" />
+                </div>
+
+                <!-- Officine Trust Micro-Note -->
+                <div class="mt-2 pt-2 border-t border-slate-100 w-full flex items-center justify-between text-[11px] text-slate-400">
+                    <span class="inline-flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm text-[#15803D]">verified</span>
+                        Produit 100% Authentique
                     </span>
-                }
-                else if (Model.StockQuantity <= 3)
-                {
-                    <span class="bg-amber-100 text-amber-950 border border-amber-300 text-[10px] px-3 py-1 rounded-full flex items-center gap-1 font-bold uppercase tracking-wider shadow-sm animate-pulse">
-                        <span class="material-symbols-outlined text-xs">warning</span>
-                        Plus que @Model.StockQuantity en stock !
-                    </span>
-                }
-                else if (Model.RxRequired)
-                {
-                    <span class="bg-white text-emerald-900 border border-emerald-300 text-[10px] px-3 py-1 rounded-full flex items-center gap-1 font-bold uppercase tracking-wider shadow-sm">
-                        <span class="material-symbols-outlined text-xs">verified</span>
-                        Sur Ordonnance
-                    </span>
-                }
-                else
-                {
-                    <span class="bg-[#15803D] text-white text-[10px] px-3 py-1 rounded-full flex items-center gap-1 font-bold uppercase tracking-wider shadow-sm">
-                        <span class="material-symbols-outlined text-xs">verified</span>
-                        En Stock Officine (@Model.StockQuantity unités)
-                    </span>
-                }
-            </div>
-            <div class="w-full aspect-square rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center p-4">
-                <img class="w-full h-full object-cover rounded-xl @(!Model.InStock ? "grayscale-[60%]" : "")" src="@Model.ImageUrl" alt="@Model.Name" />
+                    <span class="text-slate-400">Réf: #@Model.Id</span>
+                </div>
             </div>
         </div>
 
-        <!-- Product Info & Purchase -->
+        <!-- 2. Product Info & Buy Action -->
         <div class="md:col-span-6 lg:col-span-7 flex flex-col justify-center">
-            <div class="mb-2">
-                <a asp-controller="Products" asp-action="Index" asp-route-brand="@Model.Brand" class="text-xs font-bold uppercase tracking-wider text-[#15803D] hover:underline">
-                    Laboratoire @Model.Brand
+            
+            <!-- Brand & Badges -->
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+                <a asp-controller="Products" asp-action="Index" asp-route-brand="@Model.Brand" 
+                   class="text-xs font-bold uppercase tracking-widest text-[#15803D] hover:underline flex items-center gap-1">
+                    <span>Laboratoire @Model.Brand</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
                 </a>
+
+                @if (Model.Rating > 0)
+                {
+                    <div class="inline-flex items-center gap-1 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full text-xs font-bold text-amber-800">
+                        <span class="material-symbols-outlined text-amber-500 text-xs">star</span>
+                        <span>@Model.Rating.ToString("F1")</span>
+                    </div>
+                }
             </div>
 
-            <h1 class="text-3xl sm:text-4xl text-slate-900 mb-3 font-extrabold tracking-tight leading-tight">
+            <!-- Product Title -->
+            <h1 class="text-xl sm:text-2xl lg:text-3xl text-slate-900 font-extrabold tracking-tight leading-snug mb-2 sm:mb-3">
                 @Model.Name
             </h1>
 
-            <p class="text-sm text-slate-500 mb-6 font-light leading-relaxed max-w-xl">
+            <!-- Short Description -->
+            <p class="text-xs sm:text-sm text-slate-600 mb-4 sm:mb-5 font-normal leading-relaxed line-clamp-3 sm:line-clamp-none">
                 @Model.ShortDescription
             </p>
 
-            <div class="text-2xl sm:text-3xl text-slate-900 mb-6 font-bold flex items-baseline gap-3">
-                <span class="text-[#15803D]">@Model.Price.ToString("F2") Dinar</span>
-                @if (Model.OriginalPrice.HasValue && Model.OriginalPrice.Value > Model.Price)
-                {
-                    <span class="text-base text-slate-400 line-through font-light">@Model.OriginalPrice.Value.ToString("F2") Dinar</span>
-                }
-                <span class="text-xs text-slate-400 font-normal ml-2">TVA incluse — Officine Sousse, Enfidha</span>
+            <!-- Price Block -->
+            <div class="bg-slate-50/80 rounded-2xl p-3.5 sm:p-4 border border-slate-200/70 mb-5">
+                <div class="flex items-baseline gap-2.5 flex-wrap">
+                    <span class="text-2xl sm:text-3xl font-black text-[#15803D] tracking-tight">
+                        @Model.Price.ToString("F2") <span class="text-base sm:text-lg font-bold">DT</span>
+                    </span>
+
+                    @if (Model.OriginalPrice.HasValue && Model.OriginalPrice.Value > Model.Price)
+                    {
+                        <span class="text-sm sm:text-base text-slate-400 line-through font-normal">
+                            @Model.OriginalPrice.Value.ToString("F2") DT
+                        </span>
+                        <span class="bg-rose-100 text-rose-700 font-bold text-[11px] px-2 py-0.5 rounded-full">
+                            Économisez @((Model.OriginalPrice.Value - Model.Price).ToString("F2")) DT
+                        </span>
+                    }
+                </div>
+
+                <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-500 font-medium">
+                    <span class="material-symbols-outlined text-sm text-[#15803D]">price_check</span>
+                    <span>TVA incluse • Paiement sécurisé à la livraison</span>
+                </div>
             </div>
 
-            <!-- Purchase Box -->
-            <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-sm mb-6">
+            <!-- Desktop & Mobile Buy Box -->
+            <div class="space-y-3 mb-6">
                 @if (Model.InStock)
                 {
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                        <!-- Quantity Selector -->
-                        <div class="flex items-center justify-between border border-slate-200 rounded-xl h-12 w-full sm:w-36 bg-slate-50 px-2">
-                            <button type="button" id="btnDecreaseQty" class="w-8 h-8 text-slate-600 hover:bg-white rounded-lg transition-colors flex items-center justify-center">
+                    <div class="flex items-center gap-2.5 sm:gap-3">
+                        <!-- Compact Quantity Selector -->
+                        <div class="flex items-center justify-between border border-slate-200 rounded-xl h-12 w-28 sm:w-32 bg-white px-1 shadow-xs shrink-0">
+                            <button type="button" onclick="adjustQty(-1)" class="w-8 h-8 text-slate-600 hover:bg-slate-100 active:scale-95 rounded-lg transition-all flex items-center justify-center">
                                 <span class="material-symbols-outlined text-sm">remove</span>
                             </button>
-                            <input type="number" id="detailQty" value="1" min="1" max="@Model.StockQuantity" readonly class="font-bold text-slate-900 w-10 text-center bg-transparent border-0 focus:outline-none text-sm" />
-                            <button type="button" id="btnIncreaseQty" class="w-8 h-8 text-slate-600 hover:bg-white rounded-lg transition-colors flex items-center justify-center">
+                            <input type="number" id="detailQty" value="1" min="1" max="@Model.StockQuantity" readonly 
+                                   class="font-extrabold text-slate-900 w-8 text-center bg-transparent border-0 focus:outline-none text-sm select-none" />
+                            <button type="button" onclick="adjustQty(1)" class="w-8 h-8 text-slate-600 hover:bg-slate-100 active:scale-95 rounded-lg transition-all flex items-center justify-center">
                                 <span class="material-symbols-outlined text-sm">add</span>
                             </button>
                         </div>
 
-                        <!-- Action Buttons in Green Parapharmacie Identity -->
-                        <button type="button" onclick="addToCart(@Model.Id, parseInt(document.getElementById('detailQty').value))" class="h-12 flex-1 bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold uppercase tracking-[0.15em] rounded-xl flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all">
+                        <!-- Primary CTA Button (Add to cart) -->
+                        <button type="button" 
+                                onclick="addToCart(@Model.Id, parseInt(document.getElementById('detailQty').value))" 
+                                class="h-12 flex-1 bg-[#15803D] hover:bg-[#166534] active:scale-[0.99] text-white text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all cursor-pointer">
                             <span class="material-symbols-outlined text-lg">shopping_bag</span>
-                            Ajouter au Panier
-                        </button>
-
-                        <button type="button" onclick="buyNow(@Model.Id, parseInt(document.getElementById('detailQty').value))" class="h-12 flex-1 border-2 border-[#15803D] text-[#15803D] hover:bg-emerald-50 text-xs font-bold uppercase tracking-[0.15em] rounded-xl flex items-center justify-center gap-2 transition-all">
-                            Acheter Immédiatement
+                            <span>Ajouter au Panier</span>
                         </button>
                     </div>
+
+                    <!-- Secondary Quick Order Button -->
+                    <button type="button" 
+                            onclick="buyNow(@Model.Id, parseInt(document.getElementById('detailQty').value))" 
+                            class="w-full h-11 bg-white hover:bg-emerald-50 active:scale-[0.99] border border-emerald-600/70 text-[#15803D] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-base">flash_on</span>
+                        <span>Commander en 1 Clic (Livraison Express)</span>
+                    </button>
                 }
                 else
                 {
-                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-2">
-                        <div class="text-sm font-bold text-slate-900 uppercase tracking-wider">Ce soin est actuellement en rupture de stock</div>
-                        <p class="text-xs text-slate-500 font-light">Notre laboratoire prépare un réapprovisionnement sous 48 à 72h.</p>
-                        <button disabled class="w-full py-3 bg-slate-200 text-slate-400 font-bold text-xs uppercase tracking-wider rounded-xl cursor-not-allowed">
-                            Produit Épuisé
-                        </button>
+                    <div class="p-4 bg-slate-100/90 border border-slate-200 rounded-2xl text-center space-y-1.5">
+                        <div class="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center justify-center gap-1.5">
+                            <span class="material-symbols-outlined text-slate-500 text-base">inventory_2</span>
+                            Produit Momentanément Épuisé
+                        </div>
+                        <p class="text-xs text-slate-500 font-normal">
+                            Notre officine prépare un réapprovisionnement sous 48h.
+                        </p>
                     </div>
                 }
             </div>
 
-            <!-- Reassurance Banner -->
-            <div class="bg-gradient-to-r from-emerald-50/50 via-teal-50/30 to-white border border-emerald-100 p-4 rounded-2xl flex items-start gap-3.5">
-                <div class="w-9 h-9 rounded-xl bg-emerald-100 text-[#15803D] flex items-center justify-center shrink-0 border border-emerald-200 font-bold">
-                    <span class="material-symbols-outlined text-lg">local_shipping</span>
+            <!-- Reassurance Trust Badges Grid (Sleek, airy & clean) -->
+            <div class="grid grid-cols-3 gap-2 sm:gap-3 pt-3 border-t border-slate-200/70">
+                <div class="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-100 flex flex-col items-center text-center shadow-2xs">
+                    <span class="material-symbols-outlined text-lg text-[#15803D] mb-1">local_shipping</span>
+                    <span class="text-[11px] font-bold text-slate-800 leading-tight">Livraison 24/48h</span>
+                    <span class="text-[9px] text-slate-400 mt-0.5">Toute la Tunisie</span>
                 </div>
-                <div>
-                    <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Expédition Express Officine 24/48h</h4>
-                    <p class="text-xs text-slate-500 font-light mt-0.5">Emballage sécurisé de qualité pharmaceutique et suivi en temps réel.</p>
+                <div class="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-100 flex flex-col items-center text-center shadow-2xs">
+                    <span class="material-symbols-outlined text-lg text-[#15803D] mb-1">verified_user</span>
+                    <span class="text-[11px] font-bold text-slate-800 leading-tight">100% Officiel</span>
+                    <span class="text-[9px] text-slate-400 mt-0.5">Qualité garantie</span>
+                </div>
+                <div class="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-100 flex flex-col items-center text-center shadow-2xs">
+                    <span class="material-symbols-outlined text-lg text-[#15803D] mb-1">support_agent</span>
+                    <span class="text-[11px] font-bold text-slate-800 leading-tight">Conseil Pro</span>
+                    <span class="text-[9px] text-slate-400 mt-0.5">Officine Enfidha</span>
                 </div>
             </div>
+
         </div>
     </div>
 
-    <!-- Details Tabs -->
-    <div class="mb-16 bg-white rounded-3xl border border-slate-200/90 p-6 md:p-10 shadow-sm">
-        <div class="border-b border-slate-200 flex gap-8 mb-6">
-            <button id="tabBtnDesc" onclick="switchTab('desc')" class="tab-btn active-tab text-xs font-bold uppercase tracking-widest text-[#15803D] border-b-2 border-[#15803D] pb-3 whitespace-nowrap px-1">Description &amp; Bienfaits</button>
-            <button id="tabBtnIngr" onclick="switchTab('ingr')" class="tab-btn text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-[#15803D] pb-3 whitespace-nowrap px-1 transition-colors">Formule &amp; Ingrédients</button>
-            <button id="tabBtnDosage" onclick="switchTab('dosage')" class="tab-btn text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-[#15803D] pb-3 whitespace-nowrap px-1 transition-colors">Posologie &amp; Conseils</button>
+    <!-- Product Details Content: Clean Tabs System -->
+    <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-4 sm:p-7 md:p-9 shadow-xs mb-10">
+        
+        <!-- Modern Pill Tabs for Mobile & Desktop -->
+        <div class="flex gap-1.5 p-1 bg-slate-100 rounded-xl mb-6 overflow-x-auto hide-scrollbar max-w-fit">
+            <button id="tabBtnDesc" onclick="switchTab('desc')" 
+                    class="tab-btn px-3.5 sm:px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all bg-white text-[#15803D] shadow-xs whitespace-nowrap">
+                Description
+            </button>
+            <button id="tabBtnIngr" onclick="switchTab('ingr')" 
+                    class="tab-btn px-3.5 sm:px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all text-slate-500 hover:text-slate-800 whitespace-nowrap">
+                Ingrédients (@Model.Ingredients.Count)
+            </button>
+            <button id="tabBtnDosage" onclick="switchTab('dosage')" 
+                    class="tab-btn px-3.5 sm:px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all text-slate-500 hover:text-slate-800 whitespace-nowrap">
+                Conseils d'Utilisation
+            </button>
         </div>
 
-        <div id="tabContentDesc" class="tab-content text-slate-600 text-sm leading-relaxed space-y-4 max-w-3xl font-light">
-            <p>@Model.FullDescription</p>
-            <p class="p-4 rounded-xl bg-emerald-50/60 border border-emerald-100 text-emerald-900 text-xs">
-                ✦ Formulé sous contrôle dermatologique et biologique selon les standards européens BPF (Bonnes Pratiques de Fabrication), garantissant une pureté optimale et une tolérance maximale.
-            </p>
+        <!-- Tab 1: Description -->
+        <div id="tabContentDesc" class="tab-content text-slate-700 text-xs sm:text-sm leading-relaxed space-y-4 max-w-3xl">
+            <div class="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed text-slate-600">
+                <p class="whitespace-pre-line">@Model.FullDescription</p>
+            </div>
+            
+            <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-100 text-emerald-950 text-xs flex items-start gap-2.5">
+                <span class="material-symbols-outlined text-base text-[#15803D] shrink-0 mt-0.5">verified</span>
+                <span>Formulé selon les standards rigoureux de la parapharmacie française et européenne, garantissant pureté, efficacité dermatologique et tolérance maximale.</span>
+            </div>
         </div>
 
-        <div id="tabContentIngr" class="tab-content hidden text-slate-600 text-sm leading-relaxed space-y-4 max-w-3xl font-light">
-            <h4 class="font-bold text-slate-900 text-sm mb-3 uppercase tracking-wider">Composition Intégrale :</h4>
-            <ul class="space-y-2.5">
-                @foreach (var ing in Model.Ingredients)
-                {
-                    <li class="flex items-center gap-2.5">
-                        <span class="w-2 h-2 rounded-full bg-[#15803D]"></span>
-                        <span class="text-xs sm:text-sm text-slate-700">@ing</span>
-                    </li>
-                }
-            </ul>
+        <!-- Tab 2: Composition & Ingrédients -->
+        <div id="tabContentIngr" class="tab-content hidden text-slate-700 text-xs sm:text-sm leading-relaxed max-w-3xl">
+            <h3 class="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm text-[#15803D]">biotech</span>
+                Formule &amp; Actifs Majeurs
+            </h3>
+
+            @if (Model.Ingredients.Any())
+            {
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    @foreach (var ing in Model.Ingredients)
+                    {
+                        <div class="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl text-xs text-slate-700">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#15803D] shrink-0"></span>
+                            <span class="font-medium">@ing</span>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-xs text-slate-400 italic">Formule hypoallergénique, testée sous contrôle dermatologique.</p>
+            }
         </div>
 
-        <div id="tabContentDosage" class="tab-content hidden text-slate-600 text-sm leading-relaxed space-y-4 max-w-3xl font-light">
-            <h4 class="font-bold text-slate-900 text-sm mb-3 uppercase tracking-wider">Rituel &amp; Conseils d'Officine :</h4>
-            <ul class="space-y-2.5">
-                @foreach (var dose in Model.DosageInstructions)
-                {
-                    <li class="flex items-center gap-2.5">
-                        <span class="w-2 h-2 rounded-full bg-[#15803D]"></span>
-                        <span class="text-xs sm:text-sm text-slate-700">@dose</span>
-                    </li>
-                }
-            </ul>
+        <!-- Tab 3: Posologie & Conseils -->
+        <div id="tabContentDosage" class="tab-content hidden text-slate-700 text-xs sm:text-sm leading-relaxed max-w-3xl">
+            <h3 class="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm text-[#15803D]">spa</span>
+                Rituel d'Application Quotidien
+            </h3>
+
+            @if (Model.DosageInstructions.Any())
+            {
+                <div class="space-y-2">
+                    @{ int stepIndex = 1; }
+                    @foreach (var dose in Model.DosageInstructions)
+                    {
+                        <div class="flex items-start gap-3 p-2.5 bg-slate-50 border border-slate-100 rounded-xl">
+                            <span class="w-6 h-6 rounded-full bg-emerald-100 text-[#15803D] font-black text-xs flex items-center justify-center shrink-0">
+                                @stepIndex
+                            </span>
+                            <span class="text-xs sm:text-sm text-slate-700 pt-0.5">@dose</span>
+                        </div>
+                        stepIndex++;
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-xs text-slate-500">Appliquer quotidiennement sur peau propre et sèche selon les besoins. Éviter le contact direct avec les yeux.</p>
+            }
         </div>
     </div>
+
+    <!-- Related Products: Vous Aimerez Aussi -->
+    @if (relatedProducts.Any())
+    {
+        <div class="mt-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight">Soins Complémentaires Recommandés</h2>
+                    <p class="text-xs text-slate-400">Sélectionnés pour parfaire votre routine beauté et bien-être</p>
+                </div>
+                <a asp-controller="Products" asp-action="Index" asp-route-category="@Model.CategorySlug" 
+                   class="text-xs font-bold text-[#15803D] hover:underline flex items-center gap-0.5">
+                    <span>Tout voir</span>
+                    <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                </a>
+            </div>
+
+            <!-- Horizontal Scrollable Row on Mobile, Grid on Desktop -->
+            <div class="flex md:grid md:grid-cols-4 gap-3.5 sm:gap-4 overflow-x-auto hide-scrollbar pb-3 snap-x">
+                @foreach (var related in relatedProducts)
+                {
+                    <div class="w-[200px] sm:w-[220px] md:w-auto shrink-0 snap-start bg-white rounded-2xl border border-slate-100 p-3 flex flex-col justify-between hover:shadow-md transition-all">
+                        <div>
+                            <a asp-action="Details" asp-route-id="@related.Id" class="block aspect-square w-full rounded-xl overflow-hidden bg-slate-50/50 p-2 mb-2.5">
+                                <img src="@related.ImageUrl" alt="@related.Name" class="w-full h-full object-contain hover:scale-105 transition-transform" />
+                            </a>
+                            <div class="text-[10px] font-bold uppercase text-[#15803D] tracking-wider mb-0.5">@related.Brand</div>
+                            <a asp-action="Details" asp-route-id="@related.Id" class="text-xs font-bold text-slate-900 line-clamp-2 hover:text-[#15803D] transition-colors leading-snug">
+                                @related.Name
+                            </a>
+                        </div>
+                        <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-sm font-black text-[#15803D]">@related.Price.ToString("F2") DT</span>
+                            <button type="button" onclick="addToCart(@related.Id, 1)" class="w-8 h-8 rounded-lg bg-emerald-50 hover:bg-[#15803D] text-[#15803D] hover:text-white flex items-center justify-center transition-colors">
+                                <span class="material-symbols-outlined text-sm">add_shopping_cart</span>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
 </main>
 
-<script>
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('text-[#15803D]', 'border-[#15803D]', 'border-b-2');
-            btn.classList.add('text-slate-400');
-        });
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+<!-- Mobile Sticky Bottom Purchase Bar (Ultra-convenient & modern) -->
+@if (Model.InStock)
+{
+    <aside class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-4 py-2.5 shadow-lg flex items-center justify-between gap-3">
+        <div class="flex flex-col">
+            <span class="text-[10px] text-slate-400 font-medium">Prix total</span>
+            <span class="text-lg font-black text-[#15803D] leading-none" id="stickyPriceText">
+                @Model.Price.ToString("F2") <span class="text-xs font-bold">DT</span>
+            </span>
+        </div>
 
-        if (tab === 'desc') {
-            document.getElementById('tabBtnDesc').classList.add('text-[#15803D]', 'border-[#15803D]', 'border-b-2');
-            document.getElementById('tabBtnDesc').classList.remove('text-slate-400');
-            document.getElementById('tabContentDesc').classList.remove('hidden');
-        } else if (tab === 'ingr') {
-            document.getElementById('tabBtnIngr').classList.add('text-[#15803D]', 'border-[#15803D]', 'border-b-2');
-            document.getElementById('tabBtnIngr').classList.remove('text-slate-400');
-            document.getElementById('tabContentIngr').classList.remove('hidden');
-        } else if (tab === 'dosage') {
-            document.getElementById('tabBtnDosage').classList.add('text-[#15803D]', 'border-[#15803D]', 'border-b-2');
-            document.getElementById('tabBtnDosage').classList.remove('text-slate-400');
-            document.getElementById('tabContentDosage').classList.remove('hidden');
+        <button type="button" 
+                onclick="addToCart(@Model.Id, parseInt(document.getElementById('detailQty').value))" 
+                class="flex-1 max-w-[240px] h-11 bg-[#15803D] active:bg-[#166534] text-white text-xs font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-md">
+            <span class="material-symbols-outlined text-base">shopping_bag</span>
+            <span>Ajouter au Panier</span>
+        </button>
+    </aside>
+}
+
+<script>
+    const maxStock = @Model.StockQuantity;
+    const unitPrice = @Model.Price.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    function adjustQty(delta) {
+        const input = document.getElementById('detailQty');
+        let current = parseInt(input.value) || 1;
+        let next = current + delta;
+        if (next < 1) next = 1;
+        if (next > maxStock) next = maxStock;
+        input.value = next;
+
+        // Update sticky price preview on mobile
+        const stickyPrice = document.getElementById('stickyPriceText');
+        if (stickyPrice) {
+            const total = (unitPrice * next).toFixed(2);
+            stickyPrice.innerHTML = `${total} <span class="text-xs font-bold">DT</span>`;
         }
+    }
+
+    function switchTab(tab) {
+        const tabs = ['desc', 'ingr', 'dosage'];
+        tabs.forEach(t => {
+            const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+            const content = document.getElementById('tabContent' + t.charAt(0).toUpperCase() + t.slice(1));
+            
+            if (t === tab) {
+                btn.className = "tab-btn px-3.5 sm:px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all bg-white text-[#15803D] shadow-xs whitespace-nowrap";
+                content.classList.remove('hidden');
+            } else {
+                btn.className = "tab-btn px-3.5 sm:px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all text-slate-500 hover:text-slate-800 whitespace-nowrap";
+                content.classList.add('hidden');
+            }
+        });
     }
 </script>

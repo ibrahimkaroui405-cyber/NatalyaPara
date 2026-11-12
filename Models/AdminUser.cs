@@ -28,6 +28,10 @@ namespace PharmaTrust.Models
 
         public DateTime? LastLoginAt { get; set; }
 
+        public int AccessFailedCount { get; set; } = 0;
+
+        public DateTime? LockoutEnd { get; set; }
+
         public bool IsActive { get; set; } = true;
     }
 

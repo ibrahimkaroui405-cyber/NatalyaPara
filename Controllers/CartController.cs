@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using PharmaTrust.Models;
 using PharmaTrust.Services;
 
@@ -9,15 +10,18 @@ namespace PharmaTrust.Controllers
         private readonly ICartService _cartService;
         private readonly IProductService _productService;
         private readonly ITelegramService _telegramService;
+        private readonly ILogger<CartController> _logger;
 
         public CartController(
             ICartService cartService, 
             IProductService productService,
-            ITelegramService telegramService)
+            ITelegramService telegramService,
+            ILogger<CartController> logger)
         {
             _cartService = cartService;
             _productService = productService;
             _telegramService = telegramService;
+            _logger = logger;
         }
 
         // GET: /Cart
@@ -57,8 +61,20 @@ namespace PharmaTrust.Controllers
 
         // POST: /Cart/Add
         [HttpPost]
+        [EnableRateLimiting("cart-api")]
         public IActionResult Add(int id, int quantity = 1)
         {
+            if (id <= 0)
+            {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, message = "Identifiant de soin invalide." });
+                }
+                return RedirectToAction("Index");
+            }
+
+            quantity = Math.Clamp(quantity, 1, 50);
+
             var product = _productService.GetProductById(id);
             if (product == null)
             {
@@ -81,6 +97,8 @@ namespace PharmaTrust.Controllers
             }
 
             var cart = _cartService.AddToCart(id, quantity);
+            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "inconnu";
+            _logger.LogInformation("Ajout au panier: Produit #{ProductId} '{ProductName}' (Qté: {Quantity}) depuis l'adresse IP {ClientIp}", product.Id, product.Name, quantity, clientIp);
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
                 return Json(new
@@ -110,8 +128,20 @@ namespace PharmaTrust.Controllers
 
         // POST: /Cart/Update
         [HttpPost]
+        [EnableRateLimiting("cart-api")]
         public IActionResult Update(int id, int quantity)
         {
+            if (id <= 0)
+            {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, message = "Identifiant de soin invalide." });
+                }
+                return RedirectToAction("Index");
+            }
+
+            quantity = Math.Clamp(quantity, 0, 50);
+
             var product = _productService.GetProductById(id);
             if (product != null && quantity > product.StockQuantity)
             {
@@ -147,6 +177,7 @@ namespace PharmaTrust.Controllers
 
         // POST: /Cart/Remove
         [HttpPost]
+        [EnableRateLimiting("cart-api")]
         public IActionResult Remove(int id)
         {
             var cart = _cartService.RemoveFromCart(id);
@@ -207,6 +238,7 @@ namespace PharmaTrust.Controllers
 
         // POST: /Cart/ProcessCheckout
         [HttpPost]
+        [EnableRateLimiting("checkout")]
         public IActionResult ProcessCheckout(string? fullName, string? phone, string? email, string? city, string? postalCode, string? address, string? deliveryNotes)
         {
             var cart = _cartService.GetCart();
@@ -220,10 +252,11 @@ namespace PharmaTrust.Controllers
                 return RedirectToAction("Index", "Products");
             }
 
-            // Validate required customer information
-            if (string.IsNullOrWhiteSpace(fullName) || fullName.Trim().Length < 2)
+            // Sanitize & Validate full name
+            var cleanFullName = fullName?.Trim() ?? "";
+            if (cleanFullName.Length < 2 || cleanFullName.Length > 80)
             {
-                var msg = "Veuillez renseigner votre prénom et nom.";
+                var msg = "Veuillez renseigner un prénom et nom valide (entre 2 et 80 caractères).";
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 {
                     return Json(new { success = false, message = msg });
@@ -232,9 +265,47 @@ namespace PharmaTrust.Controllers
                 return RedirectToAction("Checkout");
             }
 
-            if (string.IsNullOrWhiteSpace(phone) || phone.Trim().Length < 8)
+            // Clean phone digits & validate Tunisian phone number
+            var digits = new string((phone ?? "").Where(char.IsDigit).ToArray());
+            if (digits.StartsWith("216") && digits.Length == 11)
             {
-                var msg = "Veuillez renseigner un numéro de téléphone valide (au moins 8 chiffres) pour le livreur.";
+                digits = digits.Substring(3);
+            }
+
+            if (digits.Length != 8 || !(digits.StartsWith("2") || digits.StartsWith("3") || digits.StartsWith("4") || digits.StartsWith("5") || digits.StartsWith("7") || digits.StartsWith("9")))
+            {
+                var msg = "Veuillez renseigner un numéro de téléphone tunisien valide à 8 chiffres pour le livreur (ex: 21 040 266).";
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, message = msg });
+                }
+                TempData["ErrorMessage"] = msg;
+                return RedirectToAction("Checkout");
+            }
+            var cleanPhone = digits;
+
+            // Validate optional email format
+            string? cleanEmail = null;
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                cleanEmail = email.Trim();
+                if (cleanEmail.Length > 120 || !System.Text.RegularExpressions.Regex.IsMatch(cleanEmail, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                {
+                    var msg = "Veuillez renseigner une adresse email valide ou laisser le champ vide.";
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return Json(new { success = false, message = msg });
+                    }
+                    TempData["ErrorMessage"] = msg;
+                    return RedirectToAction("Checkout");
+                }
+            }
+
+            // Validate city
+            var cleanCity = city?.Trim() ?? "";
+            if (cleanCity.Length < 2 || cleanCity.Length > 60)
+            {
+                var msg = "Veuillez indiquer votre ville ou région de livraison.";
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 {
                     return Json(new { success = false, message = msg });
@@ -243,9 +314,11 @@ namespace PharmaTrust.Controllers
                 return RedirectToAction("Checkout");
             }
 
-            if (string.IsNullOrWhiteSpace(city))
+            // Validate address
+            var cleanAddress = address?.Trim() ?? "";
+            if (cleanAddress.Length < 5 || cleanAddress.Length > 200)
             {
-                var msg = "Veuillez indiquer votre ville de livraison.";
+                var msg = "Veuillez indiquer votre adresse de livraison complète (numéro, rue, quartier... entre 5 et 200 caractères).";
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 {
                     return Json(new { success = false, message = msg });
@@ -254,15 +327,10 @@ namespace PharmaTrust.Controllers
                 return RedirectToAction("Checkout");
             }
 
-            if (string.IsNullOrWhiteSpace(address) || address.Trim().Length < 5)
+            var cleanNotes = string.IsNullOrWhiteSpace(deliveryNotes) ? null : deliveryNotes.Trim();
+            if (cleanNotes != null && cleanNotes.Length > 400)
             {
-                var msg = "Veuillez indiquer votre adresse de livraison complète (numéro, rue, quartier...).";
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                {
-                    return Json(new { success = false, message = msg });
-                }
-                TempData["ErrorMessage"] = msg;
-                return RedirectToAction("Checkout");
+                cleanNotes = cleanNotes.Substring(0, 400);
             }
 
             // Verify stock availability
@@ -287,17 +355,21 @@ namespace PharmaTrust.Controllers
             // Create Order and automatically decrement stock with audit log
             var order = _productService.CreateOrder(
                 cart,
-                fullName.Trim(),
-                phone.Trim(),
-                string.IsNullOrWhiteSpace(email) ? null : email.Trim(),
-                city.Trim(),
+                cleanFullName,
+                cleanPhone,
+                cleanEmail,
+                cleanCity,
                 string.IsNullOrWhiteSpace(postalCode) ? "4000" : postalCode.Trim(),
-                address.Trim(),
-                string.IsNullOrWhiteSpace(deliveryNotes) ? null : deliveryNotes.Trim()
+                cleanAddress,
+                cleanNotes
             );
 
             // Clear session cart
             _cartService.ClearCart();
+
+            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "inconnu";
+            _logger.LogInformation("Nouvelle commande {OrderNumber} VALIDÉE avec succès ! Client: '{CustomerName}', Tél: '{Phone}', Ville: '{City}', Total: {GrandTotal:F3} DT, Articles: {ItemCount}, IP: {ClientIp}",
+                order.OrderNumber, order.CustomerName, order.Phone, order.City, order.TotalAmount, order.Items.Count, clientIp);
 
             // Automatic push notification to Telegram
             _ = Task.Run(async () =>
@@ -348,6 +420,7 @@ namespace PharmaTrust.Controllers
         [HttpGet("Suivi")]
         [HttpGet("Cart/TrackOrder")]
         [HttpGet("Cart/Suivi")]
+        [EnableRateLimiting("cart-api")]
         public IActionResult TrackOrder(string? orderNumber, string? phone)
         {
             ViewData["CartCount"] = _cartService.GetCart().TotalItems;

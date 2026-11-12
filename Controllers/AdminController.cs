@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using PharmaTrust.Models;
 using PharmaTrust.Services;
 using System.Security.Claims;
@@ -9,6 +10,7 @@ using System.Security.Claims;
 namespace PharmaTrust.Controllers
 {
     [Authorize]
+    [AutoValidateAntiforgeryToken]
     public class AdminController : Controller
     {
         private readonly IProductService _productService;
@@ -16,19 +18,76 @@ namespace PharmaTrust.Controllers
         private readonly IAuthService _authService;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ITelegramService _telegramService;
+        private readonly ILogger<AdminController> _logger;
 
         public AdminController(
             IProductService productService, 
             ICartService cartService, 
             IAuthService authService,
             IWebHostEnvironment webHostEnvironment,
-            ITelegramService telegramService)
+            ITelegramService telegramService,
+            ILogger<AdminController> logger)
         {
             _productService = productService;
             _cartService = cartService;
             _authService = authService;
             _webHostEnvironment = webHostEnvironment;
             _telegramService = telegramService;
+            _logger = logger;
+        }
+
+        private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif"
+        };
+        private const long MaxImageSizeBytes = 10 * 1024 * 1024; // 10 Mo
+
+        private static readonly HashSet<string> AllowedVideoExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".mp4", ".webm", ".mov"
+        };
+        private const long MaxVideoSizeBytes = 100 * 1024 * 1024; // 100 Mo
+
+        private bool ValidateImageUpload(IFormFile? file, out string? errorMessage)
+        {
+            errorMessage = null;
+            if (file == null || file.Length == 0) return true;
+
+            if (file.Length > MaxImageSizeBytes)
+            {
+                errorMessage = "Le fichier image dépasse la taille maximale autorisée de 10 Mo.";
+                return false;
+            }
+
+            var ext = Path.GetExtension(file.FileName);
+            if (string.IsNullOrEmpty(ext) || !AllowedImageExtensions.Contains(ext))
+            {
+                errorMessage = $"Format de fichier '{ext}' non autorisé. Formats acceptés : JPG, JPEG, PNG, WEBP, AVIF, GIF.";
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool ValidateVideoUpload(IFormFile? file, out string? errorMessage)
+        {
+            errorMessage = null;
+            if (file == null || file.Length == 0) return true;
+
+            if (file.Length > MaxVideoSizeBytes)
+            {
+                errorMessage = "Le fichier vidéo dépasse la taille maximale autorisée de 100 Mo.";
+                return false;
+            }
+
+            var ext = Path.GetExtension(file.FileName);
+            if (string.IsNullOrEmpty(ext) || !AllowedVideoExtensions.Contains(ext))
+            {
+                errorMessage = $"Format vidéo '{ext}' non autorisé. Formats acceptés : MP4, WEBM, MOV.";
+                return false;
+            }
+
+            return true;
         }
 
         #region Authentication Actions
@@ -55,6 +114,7 @@ namespace PharmaTrust.Controllers
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Login(AdminLoginViewModel model)
         {
             if (!ModelState.IsValid)
@@ -62,12 +122,29 @@ namespace PharmaTrust.Controllers
                 return View(model);
             }
 
-            var admin = await _authService.ValidateAdminCredentialsAsync(model.UsernameOrEmail, model.Password);
-            if (admin == null)
+            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "inconnu";
+            var authResult = await _authService.AuthenticateAsync(model.UsernameOrEmail, model.Password);
+
+            if (authResult.IsLockedOut)
             {
-                ModelState.AddModelError("", "Identifiants invalides. Veuillez vérifier votre nom d'utilisateur/email et mot de passe.");
+                var remainingMinutes = authResult.LockoutEnd.HasValue 
+                    ? Math.Max(1, (int)Math.Ceiling((authResult.LockoutEnd.Value - DateTime.UtcNow).TotalMinutes)) 
+                    : 15;
+                _logger.LogWarning("Accès refusé: Compte '{UsernameOrEmail}' verrouillé pour {Minutes} min depuis l'adresse IP {ClientIp}", 
+                    model.UsernameOrEmail, remainingMinutes, clientIp);
+                ModelState.AddModelError("", $"Compte temporairement verrouillé par mesure de sécurité suite à plusieurs tentatives échouées. Veuillez patienter environ {remainingMinutes} minute(s) avant de réessayer.");
                 return View(model);
             }
+
+            if (!authResult.Succeeded || authResult.Admin == null)
+            {
+                _logger.LogWarning("Tentative de connexion Admin ÉCHOUÉE pour l'identifiant '{UsernameOrEmail}' depuis l'adresse IP {ClientIp}", model.UsernameOrEmail, clientIp);
+                ModelState.AddModelError("", authResult.ErrorMessage ?? "Identifiants invalides. Veuillez vérifier votre nom d'utilisateur/email et mot de passe.");
+                return View(model);
+            }
+
+            var admin = authResult.Admin;
+            _logger.LogInformation("Connexion Admin RÉUSSIE pour l'utilisateur '{Username}' (ID: {AdminId}, Rôle: {Role}) depuis l'adresse IP {ClientIp}", admin.Username, admin.Id, admin.Role, clientIp);
 
             var claims = new List<Claim>
             {
@@ -107,6 +184,10 @@ namespace PharmaTrust.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
+            var adminUser = User.Identity?.Name ?? "inconnu";
+            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "inconnu";
+            _logger.LogInformation("Déconnexion de l'administrateur '{Username}' depuis l'adresse IP {ClientIp}", adminUser, clientIp);
+
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             TempData["SuccessMessage"] = "Vous avez été déconnecté avec succès de la session d'administration.";
             return RedirectToAction(nameof(Login));
@@ -191,6 +272,14 @@ namespace PharmaTrust.Controllers
                 product.Brand = customBrand.Trim();
             }
 
+            if (!ValidateImageUpload(imageFile, out var uploadErr))
+            {
+                ModelState.AddModelError("", uploadErr!);
+                ViewBag.Categories = _productService.GetCategories();
+                ViewBag.Brands = _productService.GetAllBrandNames();
+                return View(product);
+            }
+
             if (string.IsNullOrWhiteSpace(product.Name) || product.Price <= 0 || string.IsNullOrWhiteSpace(product.Brand) || product.Brand == "__new__")
             {
                 ModelState.AddModelError("", "Veuillez renseigner un nom valide, une marque valide et un prix supérieur à 0.");
@@ -268,6 +357,14 @@ namespace PharmaTrust.Controllers
             if (!string.IsNullOrWhiteSpace(customBrand) && (product.Brand == "__new__" || string.IsNullOrWhiteSpace(product.Brand)))
             {
                 product.Brand = customBrand.Trim();
+            }
+
+            if (!ValidateImageUpload(imageFile, out var uploadErr))
+            {
+                ModelState.AddModelError("", uploadErr!);
+                ViewBag.Categories = _productService.GetCategories();
+                ViewBag.Brands = _productService.GetAllBrandNames();
+                return View(product);
             }
 
             if (string.IsNullOrWhiteSpace(product.Name) || product.Price <= 0 || string.IsNullOrWhiteSpace(product.Brand) || product.Brand == "__new__")
@@ -868,6 +965,12 @@ namespace PharmaTrust.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateSpecialOffer(SpecialOffer offer, IFormFile? imageFile)
         {
+            if (!ValidateImageUpload(imageFile, out var uploadErr))
+            {
+                TempData["ErrorMessage"] = uploadErr;
+                return RedirectToAction(nameof(SpecialOffers));
+            }
+
             if (string.IsNullOrWhiteSpace(offer.Title))
             {
                 TempData["ErrorMessage"] = "Le titre de l'offre est obligatoire.";
@@ -901,6 +1004,12 @@ namespace PharmaTrust.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditSpecialOffer(SpecialOffer offer, IFormFile? imageFile)
         {
+            if (!ValidateImageUpload(imageFile, out var uploadErr))
+            {
+                TempData["ErrorMessage"] = uploadErr;
+                return RedirectToAction(nameof(SpecialOffers));
+            }
+
             if (string.IsNullOrWhiteSpace(offer.Title))
             {
                 TempData["ErrorMessage"] = "Le titre de l'offre est obligatoire.";
@@ -966,6 +1075,17 @@ namespace PharmaTrust.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateStory(StoryReel story, IFormFile? videoFile, IFormFile? posterFile)
         {
+            if (!ValidateVideoUpload(videoFile, out var videoErr))
+            {
+                TempData["ErrorMessage"] = videoErr;
+                return RedirectToAction(nameof(Stories));
+            }
+            if (!ValidateImageUpload(posterFile, out var posterErr))
+            {
+                TempData["ErrorMessage"] = posterErr;
+                return RedirectToAction(nameof(Stories));
+            }
+
             if (string.IsNullOrWhiteSpace(story.Title))
             {
                 story.Title = "Démonstration Soin";
@@ -1012,6 +1132,17 @@ namespace PharmaTrust.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditStory(StoryReel story, IFormFile? videoFile, IFormFile? posterFile)
         {
+            if (!ValidateVideoUpload(videoFile, out var videoErr))
+            {
+                TempData["ErrorMessage"] = videoErr;
+                return RedirectToAction(nameof(Stories));
+            }
+            if (!ValidateImageUpload(posterFile, out var posterErr))
+            {
+                TempData["ErrorMessage"] = posterErr;
+                return RedirectToAction(nameof(Stories));
+            }
+
             if (string.IsNullOrWhiteSpace(story.Title))
             {
                 story.Title = "Démonstration Soin";

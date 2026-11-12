@@ -10,8 +10,8 @@ namespace PharmaTrust.Data
             using var scope = serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            // Ensure database and schema are created
-            context.Database.EnsureCreated();
+            // Apply official Entity Framework Core migrations cleanly
+            context.Database.Migrate();
 
             // Ensure newly added tables exist in existing SQLite database file
             context.Database.ExecuteSqlRaw(@"
@@ -75,11 +75,33 @@ namespace PharmaTrust.Data
                 CREATE UNIQUE INDEX IF NOT EXISTS ""IX_DeliveryRegions_Name"" ON ""DeliveryRegions"" (""Name"");
             ");
 
-            // Ensure new columns exist in SQLite database
-            try { context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Products"" ADD COLUMN ""SubCategory"" TEXT NULL;"); } catch { }
-            try { context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Products"" ADD COLUMN ""SubCategorySlug"" TEXT NULL;"); } catch { }
-            try { context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Categories"" ADD COLUMN ""ParentSlug"" TEXT NULL;"); } catch { }
-            try { context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Categories"" ADD COLUMN ""SubCategories"" TEXT NOT NULL DEFAULT '[]';"); } catch { }
+            // Ensure performance indexes exist in SQLite database
+            context.Database.ExecuteSqlRaw(@"
+                CREATE INDEX IF NOT EXISTS ""IX_Products_CategorySlug"" ON ""Products"" (""CategorySlug"");
+                CREATE INDEX IF NOT EXISTS ""IX_Products_SubCategorySlug"" ON ""Products"" (""SubCategorySlug"");
+                CREATE INDEX IF NOT EXISTS ""IX_Products_Brand"" ON ""Products"" (""Brand"");
+                CREATE INDEX IF NOT EXISTS ""IX_Products_StockQuantity"" ON ""Products"" (""StockQuantity"");
+                CREATE INDEX IF NOT EXISTS ""IX_Products_Price"" ON ""Products"" (""Price"");
+                CREATE INDEX IF NOT EXISTS ""IX_Products_Rating"" ON ""Products"" (""Rating"");
+                CREATE INDEX IF NOT EXISTS ""IX_Products_Category_Brand"" ON ""Products"" (""CategorySlug"", ""Brand"");
+                CREATE INDEX IF NOT EXISTS ""IX_Orders_OrderDate"" ON ""Orders"" (""OrderDate"");
+                CREATE INDEX IF NOT EXISTS ""IX_Orders_Status"" ON ""Orders"" (""Status"");
+                CREATE INDEX IF NOT EXISTS ""IX_Orders_Phone"" ON ""Orders"" (""Phone"");
+                CREATE INDEX IF NOT EXISTS ""IX_Orders_Email"" ON ""Orders"" (""Email"");
+                CREATE INDEX IF NOT EXISTS ""IX_OrderItems_ProductId"" ON ""OrderItems"" (""ProductId"");
+                CREATE INDEX IF NOT EXISTS ""IX_StockMovements_ProductId"" ON ""StockMovements"" (""ProductId"");
+                CREATE INDEX IF NOT EXISTS ""IX_StockMovements_Timestamp"" ON ""StockMovements"" (""Timestamp"");
+                CREATE INDEX IF NOT EXISTS ""IX_SpecialOffers_IsActive_DisplayOrder"" ON ""SpecialOffers"" (""IsActive"", ""DisplayOrder"");
+                CREATE INDEX IF NOT EXISTS ""IX_StoryReels_IsActive_DisplayOrder"" ON ""StoryReels"" (""IsActive"", ""DisplayOrder"");
+            ");
+
+            // Ensure new columns exist in SQLite database cleanly without failing commands
+            EnsureColumnExists(context, "Products", "SubCategory", "TEXT NULL");
+            EnsureColumnExists(context, "Products", "SubCategorySlug", "TEXT NULL");
+            EnsureColumnExists(context, "Categories", "ParentSlug", "TEXT NULL");
+            EnsureColumnExists(context, "Categories", "SubCategories", "TEXT NOT NULL DEFAULT '[]'");
+            EnsureColumnExists(context, "AdminUsers", "AccessFailedCount", "INTEGER NOT NULL DEFAULT 0");
+            EnsureColumnExists(context, "AdminUsers", "LockoutEnd", "TEXT NULL");
 
             // Initialize / Sync Categories with Subcategories matching Para Fendri
             var defaultCategories = new List<Category>
@@ -825,6 +847,45 @@ namespace PharmaTrust.Data
 
                 context.DeliveryRegions.AddRange(regions);
                 context.SaveChanges();
+            }
+        }
+
+        private static void EnsureColumnExists(AppDbContext context, string tableName, string columnName, string columnDefinition)
+        {
+            try
+            {
+                var conn = context.Database.GetDbConnection();
+                var wasOpen = conn.State == System.Data.ConnectionState.Open;
+                if (!wasOpen) conn.Open();
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = $"PRAGMA table_info(\"{tableName}\");";
+                bool exists = false;
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var name = reader["name"]?.ToString();
+                        if (string.Equals(name, columnName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            exists = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!exists)
+                {
+                    using var alterCmd = conn.CreateCommand();
+                    alterCmd.CommandText = $"ALTER TABLE \"{tableName}\" ADD COLUMN \"{columnName}\" {columnDefinition};";
+                    alterCmd.ExecuteNonQuery();
+                }
+
+                if (!wasOpen) conn.Close();
+            }
+            catch
+            {
+                // Suppress if column already added
             }
         }
     }

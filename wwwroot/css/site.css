@@ -278,19 +278,18 @@ input[type=number] {
     animation: pulse-emerald-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* 100% Full Screen Height Hero Section on Mobile & Desktop */
+/* Modern Pro Hero Slider Section */
 .hero-slider-section {
-    height: calc(100vh - 148px) !important;
-    height: calc(100dvh - 148px) !important;
-    min-height: calc(100vh - 148px) !important;
-    min-height: calc(100dvh - 148px) !important;
+    height: 380px;
+    min-height: 360px;
+    max-height: 400px;
 }
 
 @media (min-width: 640px) {
     .hero-slider-section {
-        height: calc(100vh - 160px) !important;
-        height: calc(100dvh - 160px) !important;
-        min-height: calc(100dvh - 160px) !important;
+        height: 500px;
+        min-height: 480px;
+        max-height: 540px;
     }
 }
 

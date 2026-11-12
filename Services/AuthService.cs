@@ -7,6 +7,9 @@ namespace PharmaTrust.Services
 {
     public class AuthService : IAuthService
     {
+        private const int MaxFailedAttempts = 5;
+        private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+
         private readonly AppDbContext _context;
         private readonly ILogger<AuthService> _logger;
 
@@ -16,11 +19,15 @@ namespace PharmaTrust.Services
             _logger = logger;
         }
 
-        public async Task<AdminUser?> ValidateAdminCredentialsAsync(string usernameOrEmail, string password)
+        public async Task<AdminAuthResult> AuthenticateAsync(string usernameOrEmail, string password)
         {
             if (string.IsNullOrWhiteSpace(usernameOrEmail) || string.IsNullOrWhiteSpace(password))
             {
-                return null;
+                return new AdminAuthResult
+                {
+                    Succeeded = false,
+                    ErrorMessage = "L'identifiant et le mot de passe sont requis."
+                };
             }
 
             var cleanInput = usernameOrEmail.Trim().ToLower();
@@ -31,29 +38,71 @@ namespace PharmaTrust.Services
 
             if (admin == null)
             {
-                // Fallback default admin if database is empty or not yet seeded
-                if ((cleanInput == "admin_natalya" || cleanInput == "admin" || cleanInput == "admin@natalyapara.com" || cleanInput == "admin@natalya.tn") && 
-                    (password == "Natalya@Pharma#2026!" || password == "admin123"))
+                return new AdminAuthResult
                 {
-                    return new AdminUser
-                    {
-                        Id = 1,
-                        Username = "admin_natalya",
-                        Email = "admin@natalyapara.com",
-                        FullName = "Dr. Natalya (Pharmacien Gérant)",
-                        Role = "Administrator",
-                        IsActive = true
-                    };
-                }
-                return null;
+                    Succeeded = false,
+                    ErrorMessage = "Identifiants invalides. Veuillez vérifier votre nom d'utilisateur/email et mot de passe."
+                };
             }
 
+            // Check if account is locked out
+            if (admin.LockoutEnd.HasValue && admin.LockoutEnd.Value > DateTime.UtcNow)
+            {
+                _logger.LogWarning("Connexion bloquée: Le compte '{Username}' est verrouillé jusqu'à {LockoutEnd}", admin.Username, admin.LockoutEnd.Value);
+                return new AdminAuthResult
+                {
+                    Succeeded = false,
+                    IsLockedOut = true,
+                    LockoutEnd = admin.LockoutEnd.Value,
+                    Admin = admin,
+                    ErrorMessage = "Compte temporairement verrouillé pour des raisons de sécurité suite à plusieurs tentatives échouées."
+                };
+            }
+
+            // Verify password using salted PBKDF2
             if (VerifyPassword(password, admin.PasswordHash))
             {
-                return admin;
+                // Reset failed attempts on successful login
+                if (admin.AccessFailedCount > 0 || admin.LockoutEnd.HasValue)
+                {
+                    admin.AccessFailedCount = 0;
+                    admin.LockoutEnd = null;
+                }
+
+                admin.LastLoginAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return new AdminAuthResult
+                {
+                    Succeeded = true,
+                    Admin = admin
+                };
             }
 
-            return null;
+            // Password mismatch: Increment failed attempts counter
+            admin.AccessFailedCount++;
+            if (admin.AccessFailedCount >= MaxFailedAttempts)
+            {
+                admin.LockoutEnd = DateTime.UtcNow.Add(LockoutDuration);
+                _logger.LogWarning("COMPTE VERROUILLÉ: {MaxFailedAttempts} tentatives échouées sur le compte '{Username}'. Verrouillé pour {DurationMinutes} minutes.", 
+                    MaxFailedAttempts, admin.Username, LockoutDuration.TotalMinutes);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new AdminAuthResult
+            {
+                Succeeded = false,
+                IsLockedOut = admin.LockoutEnd.HasValue && admin.LockoutEnd.Value > DateTime.UtcNow,
+                LockoutEnd = admin.LockoutEnd,
+                ErrorMessage = "Identifiants invalides. Veuillez vérifier votre nom d'utilisateur/email et mot de passe."
+            };
+        }
+
+        public async Task<AdminUser?> ValidateAdminCredentialsAsync(string usernameOrEmail, string password)
+        {
+            var result = await AuthenticateAsync(usernameOrEmail, password);
+            return result.Succeeded ? result.Admin : null;
         }
 
         public async Task<AdminUser?> GetAdminByIdAsync(int id)
@@ -82,7 +131,7 @@ namespace PharmaTrust.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to record login for admin ID {AdminId}", adminId);
+                _logger.LogError(ex, "Échec lors de l'enregistrement de connexion pour l'admin ID {AdminId}", adminId);
             }
             return false;
         }
@@ -105,12 +154,6 @@ namespace PharmaTrust.Services
             if (string.IsNullOrEmpty(storedHash) || string.IsNullOrEmpty(password))
             {
                 return false;
-            }
-
-            // Fallback for demo plain-text passwords or initial seed
-            if (storedHash == password || (storedHash == "admin123" && password == "admin123"))
-            {
-                return true;
             }
 
             try

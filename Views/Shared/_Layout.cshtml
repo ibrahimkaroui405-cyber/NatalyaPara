@@ -87,14 +87,14 @@
 <body class="bg-[#F8FAFC] text-slate-900 antialiased pt-[84px] sm:pt-[96px] lg:pt-[104px] pb-20 md:pb-0 min-h-screen flex flex-col justify-between selection:bg-emerald-800 selection:text-white">
 
     <!-- Top VIP Announcement Bar -->
-    <div class="fixed top-0 w-full z-50 bg-[#15803D] text-white text-xs font-medium h-7 sm:h-8 px-3 sm:px-8 border-b border-emerald-700/50 flex items-center justify-between overflow-hidden">
-        <div class="flex items-center gap-2 text-emerald-50 truncate">
-            <span class="material-symbols-outlined text-sm text-emerald-200">verified</span>
-            <span class="truncate">Produits 100% Authentiques — Officine Agréée</span>
+    <div class="fixed top-0 w-full z-50 bg-[#15803D] text-white text-[10.5px] sm:text-xs font-medium h-7 sm:h-8 px-3 sm:px-8 border-b border-emerald-700/50 flex items-center justify-center sm:justify-between overflow-hidden">
+        <div class="flex items-center gap-1.5 text-emerald-50 truncate font-semibold">
+            <span class="material-symbols-outlined text-xs sm:text-sm text-emerald-200">verified</span>
+            <span class="truncate">100% Authentique &bull; Officine Agréée &bull; Conseils 7j/7</span>
         </div>
-        <div class="flex items-center gap-1.5 text-emerald-50 font-medium flex-shrink-0">
+        <div class="hidden sm:flex items-center gap-1.5 text-emerald-50 font-medium flex-shrink-0">
             <span class="material-symbols-outlined text-sm text-emerald-200">support_agent</span>
-            <span>Conseils Pharmaciens 7j/7</span>
+            <span>Pharmaciens Experts</span>
         </div>
     </div>
 
@@ -220,6 +220,10 @@
                     <span class="material-symbols-outlined text-sm text-slate-400 group-focus-within/search:text-[#15803D] absolute left-3 pointer-events-none transition-colors">search</span>
                 </form>
 
+                <!-- Mobile Search Icon Button -->
+                <a asp-controller="Products" asp-action="Index" class="sm:hidden text-slate-700 hover:bg-emerald-50 w-9 h-9 rounded-xl border border-slate-200/80 hover:border-emerald-200 bg-slate-50/80 flex items-center justify-center transition-all" aria-label="Recherche">
+                    <span class="material-symbols-outlined text-slate-700 text-lg">search</span>
+                </a>
 
                 <!-- Cart Button -->
                 <button type="button" onclick="openCartDrawer()" class="text-slate-700 hover:bg-emerald-50 w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-slate-200/80 hover:border-emerald-200 bg-slate-50/80 flex items-center justify-center relative group transition-all" id="cartHeaderBtn" aria-label="Mon Panier">
@@ -641,7 +645,7 @@
                     </div>
                     <div class="border-t border-slate-100 pt-1.5 flex justify-between items-baseline">
                         <span class="font-bold text-slate-900 text-xs">Total TTC</span>
-                        <span id="drawerGrandTotal" class="font-editorial text-xl font-bold text-slate-900">0,00 Dinar</span>
+                        <span id="drawerGrandTotal" class="text-xl font-bold text-slate-900 tracking-tight">0,00 Dinar</span>
                     </div>
                 </div>
 
@@ -651,7 +655,7 @@
                         <span class="font-bold text-slate-900 text-xs">Total à payer à la livraison</span>
                         <span class="text-[10px] text-slate-400" id="drawerShippingNote">Livraison incluse &bull; Espèces à la livraison</span>
                     </div>
-                    <span id="drawerGrandTotalSlim" class="font-editorial text-2xl font-bold text-slate-900">0,00 Dinar</span>
+                    <span id="drawerGrandTotalSlim" class="text-2xl font-bold text-slate-900 tracking-tight">0,00 Dinar</span>
                 </div>
 
                 <!-- Step 1 Actions (Cart View) -->

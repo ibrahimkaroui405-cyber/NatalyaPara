@@ -45,6 +45,15 @@ namespace PharmaTrust.Data
                 entity.Property(p => p.Price).HasPrecision(18, 2);
                 entity.Property(p => p.OriginalPrice).HasPrecision(18, 2);
                 
+                // Optimized Database Indexes for Catalog & Search
+                entity.HasIndex(p => p.CategorySlug);
+                entity.HasIndex(p => p.SubCategorySlug);
+                entity.HasIndex(p => p.Brand);
+                entity.HasIndex(p => p.StockQuantity);
+                entity.HasIndex(p => p.Price);
+                entity.HasIndex(p => p.Rating);
+                entity.HasIndex(p => new { p.CategorySlug, p.Brand });
+
                 entity.Property(p => p.Ingredients)
                     .HasConversion(stringListConverter)
                     .Metadata.SetValueComparer(stringListComparer);
@@ -85,6 +94,12 @@ namespace PharmaTrust.Data
                 entity.Property(o => o.ShippingFee).HasPrecision(18, 2);
                 entity.Property(o => o.TotalAmount).HasPrecision(18, 2);
 
+                // Optimized Database Indexes for Admin Dashboard & Customer Tracking
+                entity.HasIndex(o => o.OrderDate);
+                entity.HasIndex(o => o.Status);
+                entity.HasIndex(o => o.Phone);
+                entity.HasIndex(o => o.Email);
+
                 entity.HasMany(o => o.Items)
                     .WithOne()
                     .HasForeignKey(i => i.OrderNumber)
@@ -95,12 +110,15 @@ namespace PharmaTrust.Data
             {
                 entity.HasKey(i => i.Id);
                 entity.Property(i => i.UnitPrice).HasPrecision(18, 2);
+                entity.HasIndex(i => i.ProductId);
             });
 
             // Configure StockMovement
             modelBuilder.Entity<StockMovement>(entity =>
             {
                 entity.HasKey(m => m.Id);
+                entity.HasIndex(m => m.ProductId);
+                entity.HasIndex(m => m.Timestamp);
             });
 
             // Configure SpecialOffer
@@ -109,12 +127,14 @@ namespace PharmaTrust.Data
                 entity.HasKey(s => s.Id);
                 entity.Property(s => s.OriginalPrice).HasPrecision(18, 2);
                 entity.Property(s => s.PromoPrice).HasPrecision(18, 2);
+                entity.HasIndex(s => new { s.IsActive, s.DisplayOrder });
             });
 
             // Configure StoryReel
             modelBuilder.Entity<StoryReel>(entity =>
             {
                 entity.HasKey(r => r.Id);
+                entity.HasIndex(r => new { r.IsActive, r.DisplayOrder });
             });
 
             // Configure AdminUser
