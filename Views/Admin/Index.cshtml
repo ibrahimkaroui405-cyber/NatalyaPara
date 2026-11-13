@@ -1,127 +1,417 @@
-@model PharmaTrust.Controllers.AdminDashboardViewModel
+@model PharmaTrust.Models.AdminDashboardViewModel
 @{
     Layout = "_AdminLayout";
-    ViewData["Title"] = "Tableau de Bord";
+    ViewData["Title"] = "Tableau de Bord & Finances";
+
+    var maxMonthAmount = Model.MonthlyTrendThisYear.Any() ? Math.Max(1m, Model.MonthlyTrendThisYear.Max(m => m.Amount)) : 1m;
+    var maxDailyAmount = Model.DailyTrendLast7Days.Any() ? Math.Max(1m, Model.DailyTrendLast7Days.Max(d => d.Amount)) : 1m;
 }
 
 <div class="space-y-6 sm:space-y-8">
     <!-- Welcome Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs">
         <div>
-            <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Tableau de Bord Officinal</h1>
-            <p class="text-xs text-slate-500 mt-1">Supervision de votre catalogue de soins, stocks et flux de commandes en temps réel.</p>
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold mb-2 border border-emerald-200/60">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Officine Natalya Sousse — Enfidha
+            </div>
+            <h1 class="font-editorial text-2xl sm:text-3xl font-bold text-slate-900">Tableau de Bord &amp; Pilotage Financier</h1>
+            <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+                Suivi des gains réels en espèces (Paiement à la livraison), performances des ventes de soins et supervision des stocks en temps réel.
+            </p>
         </div>
-        <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <a asp-controller="Admin" asp-action="Stock" class="flex-1 sm:flex-initial bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm">
-                <span class="material-symbols-outlined text-sm">shelves</span>
-                <span>Stocks</span>
-            </a>
-            <a asp-controller="Admin" asp-action="CreateProduct" class="flex-1 sm:flex-initial bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider px-3.5 sm:px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5">
+        <div class="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+            <a asp-controller="Admin" asp-action="CreateProduct" class="bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider px-3.5 sm:px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-95">
                 <span class="material-symbols-outlined text-sm">add</span>
                 <span>Nouveau Soin</span>
             </a>
-            <a asp-controller="Admin" asp-action="Orders" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider px-3.5 sm:px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5">
+            <a asp-controller="Admin" asp-action="Stock" class="bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider px-3.5 sm:px-4 py-2.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-amber-600">shelves</span>
+                <span>Stocks (@(Model.LowStockProductsCount + Model.OutOfStockProducts))</span>
+            </a>
+            <a asp-controller="Admin" asp-action="Orders" class="bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider px-3.5 sm:px-4 py-2.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5">
                 <span class="material-symbols-outlined text-sm text-emerald-600">local_shipping</span>
                 <span>Commandes (@Model.TotalOrdersCount)</span>
             </a>
         </div>
     </div>
 
-    <!-- Stats KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        <div class="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border @(Model.LowStockProductsCount > 0 || Model.OutOfStockProducts > 0 ? "border-amber-300 bg-amber-50/20" : "border-slate-200") shadow-sm flex items-center justify-between">
-            <div>
-                <div class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Stocks Critiques</div>
-                <div class="text-2xl sm:text-3xl font-bold @(Model.OutOfStockProducts > 0 ? "text-red-600" : Model.LowStockProductsCount > 0 ? "text-amber-600" : "text-slate-900")">
-                    @(Model.LowStockProductsCount + Model.OutOfStockProducts)
-                </div>
-                <div class="text-[10.5px] sm:text-[11px] text-slate-500 mt-1 flex items-center gap-1.5 flex-wrap">
-                    <span class="text-red-600 font-bold">@Model.OutOfStockProducts rupture(s)</span> &bull; 
-                    <span class="text-amber-700 font-semibold">@Model.LowStockProductsCount faible(s)</span>
-                </div>
+    <!-- 1. BLOC FINANCIER & GAINS (Cash on Delivery Model) -->
+    <div class="space-y-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#15803D]"></span>
+                <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800">Chiffre d'Affaires &amp; Revenus Officine (Espèces / COD)</h2>
             </div>
-            <a asp-controller="Admin" asp-action="Stock" class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 hover:bg-amber-100 transition-colors shrink-0">
-                <span class="material-symbols-outlined text-xl sm:text-2xl">notification_important</span>
-            </a>
+            <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">Calculé selon les encaissements à la livraison</span>
         </div>
 
-        <div class="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-                <div class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Commandes Clients</div>
-                <div class="text-2xl sm:text-3xl font-bold text-slate-900">@Model.TotalOrdersCount</div>
-                <div class="text-[10.5px] sm:text-[11px] text-slate-500 mt-1">Commandes enregistrées</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <!-- Aujourd'hui -->
+            <div class="bg-white p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-slate-400 mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Aujourd'hui</span>
+                        <span class="material-symbols-outlined text-slate-400 text-lg">today</span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                        @Model.RevenueDeliveredToday.ToString("F2") <span class="text-sm font-normal text-slate-500">DT</span>
+                    </div>
+                    <div class="text-[10.5px] font-semibold text-emerald-700 flex items-center gap-1 mt-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Encaissé (Livrées)
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span>En cours : <strong class="text-slate-800">@Model.RevenuePendingToday.ToString("F2") DT</strong></span>
+                    <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">@Model.OrdersTodayCount cmd(s)</span>
+                </div>
             </div>
-            <a asp-controller="Admin" asp-action="Orders" class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-900 hover:bg-slate-200 transition-colors shrink-0">
-                <span class="material-symbols-outlined text-xl sm:text-2xl">shopping_cart_checkout</span>
+
+            <!-- Ce Mois-ci -->
+            <div class="bg-gradient-to-br from-emerald-900 to-slate-900 text-white p-5 rounded-2xl sm:rounded-3xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-emerald-500/10 pointer-events-none"></div>
+                <div>
+                    <div class="flex items-center justify-between text-emerald-200/80 mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-300">Ce Mois (@DateTime.Now.ToString("MMMM yyyy"))</span>
+                        <span class="material-symbols-outlined text-emerald-300 text-lg">calendar_month</span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                        @Model.RevenueDeliveredMonth.ToString("F2") <span class="text-sm font-normal text-emerald-200/70">DT</span>
+                    </div>
+                    <div class="text-[10.5px] font-semibold text-emerald-300 flex items-center gap-1 mt-1">
+                        <span class="material-symbols-outlined text-[13px]">check_circle</span>
+                        Revenu Net Encaissé
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-emerald-100/80">
+                    <span>À encaisser : <strong class="text-white">@Model.RevenuePendingMonth.ToString("F2") DT</strong></span>
+                    <span class="font-mono bg-white/10 px-1.5 py-0.5 rounded text-[10px] text-emerald-200">@Model.OrdersMonthCount cmd(s)</span>
+                </div>
+            </div>
+
+            <!-- Cette Année -->
+            <div class="bg-white p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-slate-400 mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Année @DateTime.Now.Year</span>
+                        <span class="material-symbols-outlined text-slate-400 text-lg">trending_up</span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                        @Model.RevenueDeliveredYear.ToString("F2") <span class="text-sm font-normal text-slate-500">DT</span>
+                    </div>
+                    <div class="text-[10.5px] font-semibold text-emerald-700 flex items-center gap-1 mt-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Total Encaissé Annuel
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span>En transit : <strong class="text-slate-800">@Model.RevenuePendingYear.ToString("F2") DT</strong></span>
+                    <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">@Model.OrdersYearCount cmd(s)</span>
+                </div>
+            </div>
+
+            <!-- Panier Moyen & Cumul -->
+            <div class="bg-white p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-slate-400 mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Panier Moyen</span>
+                        <span class="material-symbols-outlined text-slate-400 text-lg">shopping_basket</span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-bold text-[#15803D] tracking-tight">
+                        @Model.AverageOrderValue.ToString("F2") <span class="text-sm font-normal text-slate-500">DT</span>
+                    </div>
+                    <div class="text-[10.5px] text-slate-500 mt-1">
+                        Dépense moyenne par client
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span>Total Historique :</span>
+                    <strong class="text-slate-900">@Model.RevenueDeliveredAllTime.ToString("F2") DT</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. PIPELINE DE TRAITEMENT DES COMMANDES (COD FUNNEL) -->
+    <div class="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-xs">
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center justify-between">
+            <span>État des Commandes en Cours</span>
+            <a asp-controller="Admin" asp-action="Orders" class="text-emerald-700 hover:underline text-[11px] font-semibold lowercase first-letter:uppercase">
+                gérer les expéditions &rarr;
+            </a>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3">
+            <a asp-controller="Admin" asp-action="Orders" class="p-3 rounded-2xl border @(Model.OrdersPendingCount > 0 ? "bg-amber-50/50 border-amber-300" : "bg-slate-50 border-slate-200/80") text-center hover:shadow-xs transition-all">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">À Valider</span>
+                <span class="text-xl font-bold @(Model.OrdersPendingCount > 0 ? "text-amber-700" : "text-slate-900") block my-0.5">@Model.OrdersPendingCount</span>
+                <span class="text-[10px] text-slate-400 font-medium">En attente</span>
+            </a>
+            <a asp-controller="Admin" asp-action="Orders" class="p-3 rounded-2xl border bg-slate-50 border-slate-200/80 text-center hover:shadow-xs transition-all">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Préparation</span>
+                <span class="text-xl font-bold text-slate-900 block my-0.5">@Model.OrdersProcessingCount</span>
+                <span class="text-[10px] text-slate-400 font-medium">En colis</span>
+            </a>
+            <a asp-controller="Admin" asp-action="Orders" class="p-3 rounded-2xl border bg-slate-50 border-slate-200/80 text-center hover:shadow-xs transition-all">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">En Route</span>
+                <span class="text-xl font-bold text-indigo-700 block my-0.5">@Model.OrdersShippedCount</span>
+                <span class="text-[10px] text-slate-400 font-medium">Chez transporteur</span>
+            </a>
+            <a asp-controller="Admin" asp-action="Orders" class="p-3 rounded-2xl border bg-emerald-50/40 border-emerald-200/90 text-center hover:shadow-xs transition-all">
+                <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">Livrées</span>
+                <span class="text-xl font-bold text-emerald-700 block my-0.5">@Model.OrdersDeliveredCount</span>
+                <span class="text-[10px] text-emerald-600 font-medium">Argent Encaissé</span>
+            </a>
+            <a asp-controller="Admin" asp-action="Orders" class="p-3 rounded-2xl border bg-slate-50 border-slate-200/80 text-center hover:shadow-xs transition-all">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Annulées</span>
+                <span class="text-xl font-bold text-slate-400 block my-0.5">@Model.OrdersCancelledCount</span>
+                <span class="text-[10px] text-slate-400 font-medium">Exclues du CA</span>
             </a>
         </div>
     </div>
 
-    <!-- Quick Navigation Shortcuts on Phone -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <a asp-controller="Admin" asp-action="Products" class="bg-white border border-slate-200 rounded-2xl p-4 text-center hover:border-black hover:shadow-md transition-all group">
-            <span class="material-symbols-outlined text-2xl text-slate-700 group-hover:text-black mb-1">inventory_2</span>
-            <span class="block text-xs font-bold text-slate-900">Produits</span>
-            <span class="text-[10px] text-slate-400 font-medium">Catalogue</span>
-        </a>
-        <a asp-controller="Admin" asp-action="Stock" class="bg-white border border-slate-200 rounded-2xl p-4 text-center hover:border-black hover:shadow-md transition-all group">
-            <span class="material-symbols-outlined text-2xl text-emerald-600 group-hover:text-emerald-700 mb-1">shelves</span>
-            <span class="block text-xs font-bold text-slate-900">Stocks</span>
-            <span class="text-[10px] text-slate-400 font-medium">Réapprovisionner</span>
-        </a>
-        <a asp-controller="Admin" asp-action="Categories" class="bg-white border border-slate-200 rounded-2xl p-4 text-center hover:border-black hover:shadow-md transition-all group">
-            <span class="material-symbols-outlined text-2xl text-slate-700 group-hover:text-black mb-1">category</span>
-            <span class="block text-xs font-bold text-slate-900">Catégories</span>
-            <span class="text-[10px] text-slate-400 font-medium">Rayons &amp; Icônes</span>
-        </a>
-        <a asp-controller="Admin" asp-action="Brands" class="bg-white border border-slate-200 rounded-2xl p-4 text-center hover:border-black hover:shadow-md transition-all group">
-            <span class="material-symbols-outlined text-2xl text-slate-700 group-hover:text-black mb-1">verified</span>
-            <span class="block text-xs font-bold text-slate-900">Marques</span>
-            <span class="text-[10px] text-slate-400 font-medium">Laboratoires</span>
-        </a>
-    </div>
-
-    <!-- Recent Orders Section -->
-    <div class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3 sm:pb-4">
+    <!-- 3. DEUX COLONNES : BEST-SELLERS & COURBE DES VENTES -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+        
+        <!-- PALMARÈS DES VENTES (TOP BEST-SELLERS) -->
+        <div class="lg:col-span-6 bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
             <div>
-                <h3 class="font-editorial text-base sm:text-lg font-bold text-slate-900">Dernières Commandes</h3>
-                <p class="text-[11px] sm:text-xs text-slate-400">Flux d'achats récents</p>
-            </div>
-            <a asp-controller="Admin" asp-action="Orders" class="text-xs font-bold uppercase tracking-wider text-black hover:underline flex items-center gap-1">
-                <span>Voir Tout</span>
-                <span class="material-symbols-outlined text-xs">arrow_forward</span>
-            </a>
-        </div>
-
-        <div class="space-y-2.5 sm:space-y-3">
-            @if (Model.RecentOrders.Any())
-            {
-                @foreach (var ord in Model.RecentOrders)
-                {
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-xs hover:border-slate-300 transition-all gap-2">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-amber-500">stars</span>
                         <div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-slate-900 font-mono">@ord.OrderNumber</span>
-                                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full sm:hidden @(ord.Status == "Livrée" ? "bg-emerald-50 text-emerald-800" : ord.Status == "Annulée" ? "bg-red-50 text-red-800" : "bg-amber-50 text-amber-800")">
-                                    @ord.Status
-                                </span>
-                            </div>
-                            <div class="text-[11px] text-slate-500 mt-0.5">@ord.CustomerName &bull; @ord.City</div>
-                        </div>
-                        <div class="flex items-center justify-between sm:text-right sm:block">
-                            <div class="font-bold text-slate-900 text-sm sm:text-xs">@ord.TotalAmount.ToString("F2") DT</div>
-                            <span class="hidden sm:inline-block text-[9.5px] font-bold px-2 py-0.5 rounded-full @(ord.Status == "Livrée" ? "bg-emerald-50 text-emerald-800" : ord.Status == "Annulée" ? "bg-red-50 text-red-800" : "bg-amber-50 text-amber-800")">
-                                @ord.Status
-                            </span>
+                            <h3 class="font-editorial text-base sm:text-lg font-bold text-slate-900">Produits Best-Sellers</h3>
+                            <p class="text-[11px] text-slate-400">Les soins les plus vendus de votre officine</p>
                         </div>
                     </div>
+                    <a asp-controller="Admin" asp-action="Products" class="text-xs font-bold text-slate-700 hover:text-black flex items-center gap-1">
+                        <span>Catalogue</span>
+                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                    </a>
+                </div>
+
+                @if (Model.TopSellingProducts.Any())
+                {
+                    <div class="space-y-3">
+                        @for (int i = 0; i < Model.TopSellingProducts.Count; i++)
+                        {
+                            var prod = Model.TopSellingProducts[i];
+                            <div class="flex items-center justify-between p-3 rounded-2xl border border-slate-100 hover:border-slate-200 transition-all bg-slate-50/40 gap-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-6 h-6 rounded-full bg-slate-900 text-white text-[11px] font-bold flex items-center justify-center shrink-0">
+                                        @(i + 1)
+                                    </div>
+                                    <img src="@prod.ImageUrl" alt="@prod.ProductName" class="w-12 h-12 object-contain rounded-xl bg-white border border-slate-200/60 p-0.5 shrink-0" />
+                                    <div class="min-w-0">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">@prod.Brand</div>
+                                        <a asp-controller="Admin" asp-action="EditProduct" asp-route-id="@prod.ProductId" class="text-xs font-bold text-slate-900 hover:text-[#15803D] line-clamp-1 transition-colors">
+                                            @prod.ProductName
+                                        </a>
+                                        <div class="flex items-center gap-2 mt-0.5 text-[10.5px]">
+                                            @if (prod.CurrentStock <= 0)
+                                            {
+                                                <span class="text-red-600 font-bold flex items-center gap-0.5">
+                                                    <span class="material-symbols-outlined text-xs">warning</span>
+                                                    Rupture stock !
+                                                </span>
+                                            }
+                                            else if (prod.CurrentStock <= 5)
+                                            {
+                                                <span class="text-amber-700 font-bold flex items-center gap-0.5">
+                                                    <span class="material-symbols-outlined text-xs">warning</span>
+                                                    Plus que @prod.CurrentStock en stock
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-emerald-700 font-medium">Stock : @prod.CurrentStock</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <div class="font-bold text-sm text-[#15803D]">@prod.TotalRevenue.ToString("F2") DT</div>
+                                    <div class="text-[10.5px] font-bold text-slate-600">@prod.UnitsSold unité(s) vendue(s)</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 }
-            }
-            else
-            {
-                <div class="py-8 text-center text-slate-400 text-xs">Aucune commande enregistrée.</div>
-            }
+                else
+                {
+                    <div class="py-12 text-center text-slate-400">
+                        <span class="material-symbols-outlined text-3xl mb-1 text-slate-300">inventory_2</span>
+                        <p class="text-xs">Aucune commande enregistrée pour l'instant.</p>
+                        <p class="text-[11px] text-slate-400 mt-1">Dès les premiers achats, le palmarès de vente s'affichera ici.</p>
+                    </div>
+                }
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
+                <span>Optimisation du réassort</span>
+                <a asp-controller="Admin" asp-action="Stock" class="font-semibold text-slate-700 hover:text-black">
+                    Ajuster les stocks &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- GRAPHIQUE ÉVOLUTION DES VENTES (MENSUEL) -->
+        <div class="lg:col-span-6 bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-emerald-600">bar_chart</span>
+                        <div>
+                            <h3 class="font-editorial text-base sm:text-lg font-bold text-slate-900">Activité Commerciale @DateTime.Now.Year</h3>
+                            <p class="text-[11px] text-slate-400">Chiffre d'affaires mensuel généré sur l'année</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                        12 Mois
+                    </span>
+                </div>
+
+                <!-- Bar Chart Visualisation -->
+                <div class="space-y-2.5">
+                    @foreach (var m in Model.MonthlyTrendThisYear)
+                    {
+                        var pct = maxMonthAmount > 0 ? (m.Amount / maxMonthAmount) * 100m : 0m;
+                        var isCurrentMonth = m.Month == DateTime.Now.Month;
+                        
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="w-10 text-[11px] font-bold @(isCurrentMonth ? "text-emerald-700" : "text-slate-500") shrink-0">
+                                @m.MonthLabel
+                            </span>
+                            <div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden relative">
+                                <div class="h-full rounded-full transition-all duration-700 @(isCurrentMonth ? "bg-[#15803D]" : m.Amount > 0 ? "bg-slate-800" : "bg-transparent")" style="width: @pct%;"></div>
+                            </div>
+                            <span class="w-24 text-right font-mono font-bold text-[11px] @(m.Amount > 0 ? "text-slate-900" : "text-slate-300") shrink-0">
+                                @(m.Amount > 0 ? m.Amount.ToString("F2") + " DT" : "-")
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+                <span>Valeur totale estimée du stock officinal :</span>
+                <strong class="text-slate-900 font-mono text-xs">@Model.EstimatedStockValue.ToString("F2") DT</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. ALERTES STOCKS & DERNIÈRES COMMANDES -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+        
+        <!-- ALERTES STOCKS -->
+        <div class="lg:col-span-5 bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-amber-600">shelves</span>
+                        <div>
+                            <h3 class="font-editorial text-base sm:text-lg font-bold text-slate-900">Santé de l'Inventaire</h3>
+                            <p class="text-[11px] text-slate-400">Surveillance des ruptures et seuils d'alerte</p>
+                        </div>
+                    </div>
+                    <a asp-controller="Admin" asp-action="Stock" class="text-xs font-bold text-slate-700 hover:text-black">
+                        Gérer
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="p-3.5 rounded-2xl border @(Model.OutOfStockProducts > 0 ? "bg-red-50/60 border-red-200" : "bg-slate-50 border-slate-100")">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Ruptures Totales</span>
+                        <span class="text-2xl font-bold @(Model.OutOfStockProducts > 0 ? "text-red-600" : "text-slate-900") block my-0.5">@Model.OutOfStockProducts</span>
+                        <span class="text-[10px] text-slate-400">Articles à 0 unité</span>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl border @(Model.LowStockProductsCount > 0 ? "bg-amber-50/60 border-amber-200" : "bg-slate-50 border-slate-100")">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Stock Faible</span>
+                        <span class="text-2xl font-bold @(Model.LowStockProductsCount > 0 ? "text-amber-700" : "text-slate-900") block my-0.5">@Model.LowStockProductsCount</span>
+                        <span class="text-[10px] text-slate-400">Moins de 5 unités</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Quick Actions -->
+                <div class="grid grid-cols-2 gap-2 text-center text-xs font-bold">
+                    <a asp-controller="Admin" asp-action="Stock" class="p-2.5 rounded-xl border border-slate-200 hover:border-black hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">shelves</span>
+                        <span>Réassort Stock</span>
+                    </a>
+                    <a asp-controller="Admin" asp-action="SpecialOffers" class="p-2.5 rounded-xl border border-slate-200 hover:border-black hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5">
+                        <span class="material-symbols-outlined text-base text-rose-600">local_offer</span>
+                        <span>Offres Promo</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
+                <span>Total unités actives en rayon :</span>
+                <strong class="text-slate-900">@Model.TotalUnitsInStock unités</strong>
+            </div>
+        </div>
+
+        <!-- DERNIÈRES COMMANDES -->
+        <div class="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-slate-700">receipt_long</span>
+                        <div>
+                            <h3 class="font-editorial text-base sm:text-lg font-bold text-slate-900">Flux des Dernières Commandes</h3>
+                            <p class="text-[11px] text-slate-400">Achats récents passés sur la boutique</p>
+                        </div>
+                    </div>
+                    <a asp-controller="Admin" asp-action="Orders" class="text-xs font-bold uppercase tracking-wider text-black hover:underline flex items-center gap-1">
+                        <span>Voir Tout (@Model.TotalOrdersCount)</span>
+                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                    </a>
+                </div>
+
+                <div class="space-y-2.5">
+                    @if (Model.RecentOrders.Any())
+                    {
+                        @foreach (var ord in Model.RecentOrders)
+                        {
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-xs hover:border-slate-300 transition-all gap-2">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-slate-900 font-mono">@ord.OrderNumber</span>
+                                        <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full @(ord.Status == "Livrée" ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : ord.Status == "Annulée" ? "bg-red-50 text-red-800 border border-red-200" : "bg-amber-50 text-amber-800 border border-amber-200")">
+                                            @ord.Status
+                                        </span>
+                                        <span class="text-[10px] text-slate-400 font-normal">@ord.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+                                    <div class="text-[11px] text-slate-600 mt-1 flex items-center gap-2">
+                                        <span class="font-semibold text-slate-900">@ord.CustomerName</span>
+                                        <span>&bull;</span>
+                                        <span>@ord.City</span>
+                                        <span>&bull;</span>
+                                        <span class="font-mono text-slate-500">@ord.Phone</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between sm:text-right sm:block shrink-0">
+                                    <div class="font-bold text-slate-900 text-sm">@ord.TotalAmount.ToString("F2") DT</div>
+                                    <span class="text-[10.5px] text-slate-400">@ord.Items.Count article(s)</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="py-8 text-center text-slate-400 text-xs">Aucune commande enregistrée pour le moment.</div>
+                    }
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <span class="text-slate-400 text-[11px]">Commandes avec paiement à la livraison</span>
+                <a asp-controller="Admin" asp-action="Orders" class="font-bold text-[#15803D] hover:underline flex items-center gap-1">
+                    <span>Accéder aux commandes</span>
+                    <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                </a>
+            </div>
         </div>
     </div>
 </div>

@@ -204,6 +204,104 @@ namespace PharmaTrust.Controllers
             var orders = _productService.GetAllOrders();
             var movements = _productService.GetStockMovements(limit: 6);
 
+            var now = DateTime.Now;
+            var today = now.Date;
+            var startOfMonth = new DateTime(now.Year, now.Month, 1);
+            var startOfYear = new DateTime(now.Year, 1, 1);
+
+            // Filter out cancelled orders for financial metrics
+            var activeOrders = orders.Where(o => !o.Status.Equals("Annulée", StringComparison.OrdinalIgnoreCase)).ToList();
+            var deliveredOrders = orders.Where(o => o.Status.Equals("Livrée", StringComparison.OrdinalIgnoreCase)).ToList();
+            var pendingOrders = orders.Where(o => 
+                o.Status.Equals("En attente", StringComparison.OrdinalIgnoreCase) ||
+                o.Status.Equals("En préparation", StringComparison.OrdinalIgnoreCase) ||
+                o.Status.Equals("Expédiée", StringComparison.OrdinalIgnoreCase)).ToList();
+
+            // 1. Financials Today
+            var ordersToday = activeOrders.Where(o => o.OrderDate.Date == today).ToList();
+            var revDeliveredToday = ordersToday.Where(o => o.Status.Equals("Livrée", StringComparison.OrdinalIgnoreCase)).Sum(o => o.TotalAmount);
+            var revPendingToday = ordersToday.Where(o => !o.Status.Equals("Livrée", StringComparison.OrdinalIgnoreCase)).Sum(o => o.TotalAmount);
+
+            // 2. Financials This Month
+            var ordersMonth = activeOrders.Where(o => o.OrderDate >= startOfMonth).ToList();
+            var revDeliveredMonth = ordersMonth.Where(o => o.Status.Equals("Livrée", StringComparison.OrdinalIgnoreCase)).Sum(o => o.TotalAmount);
+            var revPendingMonth = ordersMonth.Where(o => !o.Status.Equals("Livrée", StringComparison.OrdinalIgnoreCase)).Sum(o => o.TotalAmount);
+
+            // 3. Financials This Year
+            var ordersYear = activeOrders.Where(o => o.OrderDate >= startOfYear).ToList();
+            var revDeliveredYear = ordersYear.Where(o => o.Status.Equals("Livrée", StringComparison.OrdinalIgnoreCase)).Sum(o => o.TotalAmount);
+            var revPendingYear = ordersYear.Where(o => !o.Status.Equals("Livrée", StringComparison.OrdinalIgnoreCase)).Sum(o => o.TotalAmount);
+
+            // 4. Financials All-Time
+            var revDeliveredAll = deliveredOrders.Sum(o => o.TotalAmount);
+            var revPendingAll = pendingOrders.Sum(o => o.TotalAmount);
+
+            // 5. Average Order Value (AOV)
+            decimal avgOrderValue = activeOrders.Any() ? Math.Round(activeOrders.Average(o => o.TotalAmount), 2) : 0m;
+
+            // 6. Order Status Counts
+            int countPending = orders.Count(o => o.Status.Equals("En attente", StringComparison.OrdinalIgnoreCase));
+            int countPrep = orders.Count(o => o.Status.Equals("En préparation", StringComparison.OrdinalIgnoreCase));
+            int countShipped = orders.Count(o => o.Status.Equals("Expédiée", StringComparison.OrdinalIgnoreCase));
+            int countDelivered = orders.Count(o => o.Status.Equals("Livrée", StringComparison.OrdinalIgnoreCase));
+            int countCancelled = orders.Count(o => o.Status.Equals("Annulée", StringComparison.OrdinalIgnoreCase));
+
+            // 7. Top Selling Products (Best-Sellers)
+            var productStockMap = products.ToDictionary(p => p.Id, p => p);
+            var topSelling = activeOrders
+                .SelectMany(o => o.Items)
+                .GroupBy(i => i.ProductId)
+                .Select(g =>
+                {
+                    productStockMap.TryGetValue(g.Key, out var prod);
+                    var firstItem = g.First();
+                    return new TopSellingProductViewModel
+                    {
+                        ProductId = g.Key,
+                        ProductName = prod?.Name ?? firstItem.ProductName,
+                        Brand = prod?.Brand ?? firstItem.Brand,
+                        ImageUrl = prod?.ImageUrl ?? firstItem.ImageUrl,
+                        UnitsSold = g.Sum(x => x.Quantity),
+                        TotalRevenue = g.Sum(x => x.Subtotal > 0 ? x.Subtotal : x.UnitPrice * x.Quantity),
+                        CurrentStock = prod?.StockQuantity ?? 0
+                    };
+                })
+                .OrderByDescending(x => x.UnitsSold)
+                .ThenByDescending(x => x.TotalRevenue)
+                .Take(5)
+                .ToList();
+
+            // 8. Daily Sales Trend (Last 7 Days)
+            var cultureFr = new System.Globalization.CultureInfo("fr-FR");
+            var dailyTrend = new List<DailySalesTrend>();
+            for (int d = 6; d >= 0; d--)
+            {
+                var dt = today.AddDays(-d);
+                var dayOrders = activeOrders.Where(o => o.OrderDate.Date == dt).ToList();
+                dailyTrend.Add(new DailySalesTrend
+                {
+                    Date = dt,
+                    DayLabel = dt.ToString("ddd d", cultureFr),
+                    Amount = dayOrders.Sum(o => o.TotalAmount),
+                    OrderCount = dayOrders.Count
+                });
+            }
+
+            // 9. Monthly Sales Trend (12 Months of Current Year)
+            var monthlyTrend = new List<MonthlySalesTrend>();
+            for (int m = 1; m <= 12; m++)
+            {
+                var monthOrders = activeOrders.Where(o => o.OrderDate.Year == now.Year && o.OrderDate.Month == m).ToList();
+                var monthName = new DateTime(now.Year, m, 1).ToString("MMM", cultureFr);
+                monthlyTrend.Add(new MonthlySalesTrend
+                {
+                    Month = m,
+                    MonthLabel = char.ToUpper(monthName[0]) + monthName.Substring(1),
+                    Amount = monthOrders.Sum(o => o.TotalAmount),
+                    OrderCount = monthOrders.Count
+                });
+            }
+
             var vm = new AdminDashboardViewModel
             {
                 TotalProducts = products.Count,
@@ -216,6 +314,33 @@ namespace PharmaTrust.Controllers
                 TotalCategories = categories.Count,
                 TotalBrands = brands.Count,
                 EstimatedStockValue = products.Sum(p => p.Price * p.StockQuantity),
+
+                RevenueDeliveredToday = revDeliveredToday,
+                RevenuePendingToday = revPendingToday,
+                OrdersTodayCount = ordersToday.Count,
+
+                RevenueDeliveredMonth = revDeliveredMonth,
+                RevenuePendingMonth = revPendingMonth,
+                OrdersMonthCount = ordersMonth.Count,
+
+                RevenueDeliveredYear = revDeliveredYear,
+                RevenuePendingYear = revPendingYear,
+                OrdersYearCount = ordersYear.Count,
+
+                RevenueDeliveredAllTime = revDeliveredAll,
+                RevenuePendingAllTime = revPendingAll,
+                AverageOrderValue = avgOrderValue,
+
+                OrdersPendingCount = countPending,
+                OrdersProcessingCount = countPrep,
+                OrdersShippedCount = countShipped,
+                OrdersDeliveredCount = countDelivered,
+                OrdersCancelledCount = countCancelled,
+
+                TopSellingProducts = topSelling,
+                DailyTrendLast7Days = dailyTrend,
+                MonthlyTrendThisYear = monthlyTrend,
+
                 RecentProducts = products.Take(6).ToList(),
                 RecentOrders = orders.Take(5).ToList(),
                 RecentMovements = movements,
@@ -1263,23 +1388,5 @@ namespace PharmaTrust.Controllers
         }
 
         #endregion
-    }
-
-    public class AdminDashboardViewModel
-    {
-        public int TotalProducts { get; set; }
-        public int InStockProducts { get; set; }
-        public int LowStockProductsCount { get; set; }
-        public int OutOfStockProducts { get; set; }
-        public int TotalUnitsInStock { get; set; }
-        public int TotalOrdersCount { get; set; }
-        public int RxProducts { get; set; }
-        public int TotalCategories { get; set; }
-        public int TotalBrands { get; set; }
-        public decimal EstimatedStockValue { get; set; }
-        public List<Product> RecentProducts { get; set; } = new();
-        public List<Order> RecentOrders { get; set; } = new();
-        public List<StockMovement> RecentMovements { get; set; } = new();
-        public List<Category> Categories { get; set; } = new();
     }
 }
