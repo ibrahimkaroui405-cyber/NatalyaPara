@@ -83,3 +83,4 @@ namespace PharmaTrust.Models
         public List<Category> Categories { get; set; } = new();
     }
 }
+
