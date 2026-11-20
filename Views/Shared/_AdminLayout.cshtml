@@ -243,31 +243,26 @@
     </div>
 
     <!-- Mobile Quick Bottom Navigation Bar (< md) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#090D16]/95 backdrop-blur-lg border-t border-slate-800/90 text-white flex items-center justify-around px-2 py-2 shadow-2xl safe-area-bottom">
-        <a asp-controller="Admin" asp-action="Index" class="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "text-emerald-400 font-bold" : "text-slate-400 hover:text-white")">
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#090D16]/95 backdrop-blur-lg border-t border-slate-800/90 text-white grid grid-cols-4 px-2 py-2 shadow-2xl safe-area-bottom">
+        <a asp-controller="Admin" asp-action="Index" class="flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "text-emerald-400 font-bold" : "text-slate-400 hover:text-white")">
             <span class="material-symbols-outlined text-xl">dashboard</span>
             <span class="text-[9.5px] uppercase tracking-wider font-semibold">Accueil</span>
         </a>
 
-        <a asp-controller="Admin" asp-action="Products" class="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" || ViewContext.RouteData.Values["action"]?.ToString() == "CreateProduct" || ViewContext.RouteData.Values["action"]?.ToString() == "EditProduct" ? "text-emerald-400 font-bold" : "text-slate-400 hover:text-white")">
+        <a asp-controller="Admin" asp-action="Products" class="flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" || ViewContext.RouteData.Values["action"]?.ToString() == "CreateProduct" || ViewContext.RouteData.Values["action"]?.ToString() == "EditProduct" ? "text-emerald-400 font-bold" : "text-slate-400 hover:text-white")">
             <span class="material-symbols-outlined text-xl">inventory_2</span>
             <span class="text-[9.5px] uppercase tracking-wider font-semibold">Produits</span>
         </a>
 
-        <a asp-controller="Admin" asp-action="Stock" class="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all @(ViewContext.RouteData.Values["action"]?.ToString() == "Stock" ? "text-emerald-400 font-bold" : "text-slate-400 hover:text-white")">
+        <a asp-controller="Admin" asp-action="Stock" class="flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all @(ViewContext.RouteData.Values["action"]?.ToString() == "Stock" ? "text-emerald-400 font-bold" : "text-slate-400 hover:text-white")">
             <span class="material-symbols-outlined text-xl">shelves</span>
             <span class="text-[9.5px] uppercase tracking-wider font-semibold">Stocks</span>
         </a>
 
-        <a asp-controller="Admin" asp-action="Orders" class="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all @(ViewContext.RouteData.Values["action"]?.ToString() == "Orders" ? "text-emerald-400 font-bold" : "text-slate-400 hover:text-white")">
+        <a asp-controller="Admin" asp-action="Orders" class="flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all @(ViewContext.RouteData.Values["action"]?.ToString() == "Orders" ? "text-emerald-400 font-bold" : "text-slate-400 hover:text-white")">
             <span class="material-symbols-outlined text-xl">local_shipping</span>
             <span class="text-[9.5px] uppercase tracking-wider font-semibold">Commandes</span>
         </a>
-
-        <button type="button" id="mobileAdminMenuBtnBottom" class="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-slate-400 hover:text-white transition-all">
-            <span class="material-symbols-outlined text-xl">menu</span>
-            <span class="text-[9.5px] uppercase tracking-wider font-semibold">Menu</span>
-        </button>
     </nav>
 
     <!-- Mobile Admin Drawer Navigation with Smooth Slide-in -->
@@ -383,7 +378,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const mobileAdminBtn = document.getElementById('mobileAdminMenuBtn');
-            const mobileAdminBtnBottom = document.getElementById('mobileAdminMenuBtnBottom');
             const closeAdminBtn = document.getElementById('closeAdminDrawerBtn');
             const mobileAdminDrawer = document.getElementById('mobileAdminDrawer');
             const mobileAdminDrawerPanel = document.getElementById('mobileAdminDrawerPanel');
@@ -407,7 +401,6 @@
             }
 
             if (mobileAdminBtn) mobileAdminBtn.addEventListener('click', openDrawer);
-            if (mobileAdminBtnBottom) mobileAdminBtnBottom.addEventListener('click', openDrawer);
             if (closeAdminBtn) closeAdminBtn.addEventListener('click', closeDrawer);
 
             if (mobileAdminDrawer) {
